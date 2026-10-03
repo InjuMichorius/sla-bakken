@@ -27,7 +27,7 @@ export function QuitGameButton() {
         style={({ pressed }) => [styles.button, pressed && styles.pressed]}
       >
         <View style={styles.dot}>
-          <LogOut size={13} color="#000000" strokeWidth={2.75} />
+          <LogOut size={13} color="#2A0707" strokeWidth={2.75} />
         </View>
       </Pressable>
       <ConfirmDialog
@@ -60,7 +60,7 @@ const styles = StyleSheet.create({
     borderRadius: 11,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.dangerDark,
+    backgroundColor: colors.danger,
   },
   pressed: { opacity: 0.7 },
 });

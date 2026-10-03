@@ -7,6 +7,7 @@ import { RoundIcon } from '@/components/RoundIcon';
 import { Screen } from '@/components/Screen';
 import { QuitGameButton } from '@/components/QuitGameButton';
 import { Standings } from '@/components/Standings';
+import { TeamScoreboard } from '@/components/TeamScoreboard';
 import { teamColor } from '@/game/colors';
 import { ROUNDS } from '@/game/constants';
 import { useGameContext } from '@/game/GameProvider';
@@ -41,7 +42,12 @@ export default function PlayScreen() {
     };
     return (
       <Screen
-        topBar={<QuitGameButton />}
+        topBar={
+          <>
+            <QuitGameButton />
+            <TeamScoreboard />
+          </>
+        }
         scroll={false}
         contentStyle={styles.reviewContent}
         footer={<AppButton label={isLastRound ? 'Eindstand bekijken' : `Naar ronde ${state.currentRound + 1}`} size="xl" onPress={finish} />}
@@ -52,7 +58,7 @@ export default function PlayScreen() {
           </View>
           <Text style={styles.reviewTitle}>Ronde {state.currentRound} afgelopen</Text>
           <Text style={styles.reviewBody}>
-            {isLastRound ? 'Alle drie de rondes zijn gespeeld. Dit is de eindstand.' : `Alle ${totalWords} woorden zijn geraad. De pot wordt opnieuw gevuld voor ronde ${state.currentRound + 1}.`}
+            {isLastRound ? 'Alle drie de rondes zijn gespeeld. Dit is de eindstand.' : `Alle ${totalWords} woorden zijn geraden. De pot wordt opnieuw gevuld voor ronde ${state.currentRound + 1}.`}
           </Text>
         </View>
         <View style={styles.reviewBlock}>
@@ -73,6 +79,7 @@ export default function PlayScreen() {
   if (state.phase === 'handoff') {
     return (
       <Screen
+        topBar={<TeamScoreboard />}
         scroll={false}
         contentStyle={styles.handoffContent}
         footer={
@@ -123,7 +130,16 @@ export default function PlayScreen() {
   };
 
   return (
-    <Screen topBar={<QuitGameButton />} scroll={false} contentStyle={styles.playContent}>
+    <Screen
+      topBar={
+        <>
+          <QuitGameButton />
+          <TeamScoreboard />
+        </>
+      }
+      scroll={false}
+      contentStyle={styles.playContent}
+    >
       <View style={styles.playTop}>
         <View style={styles.playTopRow}>
           <Badge tone="accent">

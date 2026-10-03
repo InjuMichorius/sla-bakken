@@ -3,6 +3,7 @@ import { PartyPopper, RotateCcw, Trophy } from 'lucide-react-native';
 import { AppButton } from '@/components/AppButton';
 import { Screen } from '@/components/Screen';
 import { QuitGameButton } from '@/components/QuitGameButton';
+import { TeamScoreboard } from '@/components/TeamScoreboard';
 import { ROUNDS } from '@/game/constants';
 import { useGameContext } from '@/game/GameProvider';
 import { haptics } from '@/lib/haptics';
@@ -22,7 +23,12 @@ export default function SummaryScreen() {
 
   return (
     <Screen
-      topBar={<QuitGameButton />}
+      topBar={
+        <>
+          <QuitGameButton />
+          <TeamScoreboard />
+        </>
+      }
       scroll={false}
       contentStyle={styles.content}
       footer={<AppButton label="Nieuw spel" size="xl" onPress={playAgain} icon={<RotateCcw size={20} color="#241A00" />} />}

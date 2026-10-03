@@ -14,7 +14,6 @@ export const colors = {
   successSoft: 'rgba(52, 211, 153, 0.14)',
   danger: '#F87171',
   dangerSoft: 'rgba(248, 113, 113, 0.14)',
-  dangerDark: '#7F1D1D',
   warning: '#FB923C',
 } as const;
 

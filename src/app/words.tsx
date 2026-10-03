@@ -6,6 +6,7 @@ import { Avatar } from '@/components/Avatar';
 import { Badge } from '@/components/Badge';
 import { Screen } from '@/components/Screen';
 import { QuitGameButton } from '@/components/QuitGameButton';
+import { TeamScoreboard } from '@/components/TeamScoreboard';
 import { teamColor } from '@/game/colors';
 import { useGameContext } from '@/game/GameProvider';
 import type { Player, Team } from '@/game/types';
@@ -27,7 +28,7 @@ export default function WordEntryScreen() {
 
   if (!entry) {
     return (
-      <Screen topBar={<QuitGameButton />} scroll={false} contentStyle={styles.centered}>
+      <Screen topBar={<TeamScoreboard />} scroll={false} contentStyle={styles.centered}>
         <Text style={styles.muted}>Iedereen heeft zijn woorden ingevoerd.</Text>
         <AppButton label="Naar de regels" size="lg" onPress={startGame} />
       </Screen>
@@ -43,7 +44,7 @@ export default function WordEntryScreen() {
           <>
             <QuitGameButton />
             <RosterDots roster={roster} index={index} />
-            <View style={styles.topBarSpacer} />
+            <TeamScoreboard />
           </>
         }
         scroll={false}
@@ -143,7 +144,7 @@ function PlayerWordForm({ team, player, color, position, isLast, roster, index, 
         <>
           <QuitGameButton />
           <RosterDots roster={roster} index={index} />
-          <View style={styles.topBarSpacer} />
+          <TeamScoreboard />
         </>
       }
       footer={
@@ -156,7 +157,7 @@ function PlayerWordForm({ team, player, color, position, isLast, roster, index, 
           />
           <Text style={styles.footerHint}>
             {missing === 0
-              ? 'Alles ingevuld — je kunt doorgaan.'
+              ? 'Alles ingevuld, je kunt doorgaan.'
               : `Nog ${missing} woord${missing === 1 ? '' : 'en'} te gaan (minimaal 1 woord nodig).`}
           </Text>
         </>
@@ -176,8 +177,7 @@ function PlayerWordForm({ team, player, color, position, isLast, roster, index, 
       </View>
 
       <Text style={styles.instruction}>
-        Typ {perPlayer} woorden die alleen jij kent. Je team gaat ze straks proberen te raden. Weet je er geen? Tik op de dobbelsteen — je mag
-        steeds opnieuw rollen.
+        Bedenk {perPlayer} willekeurige woorden. Je team gaat ze straks proberen te raden.
       </Text>
 
       <View style={styles.fields}>
@@ -257,7 +257,6 @@ const styles = StyleSheet.create({
   teamDot: { width: 10, height: 10, borderRadius: 5 },
   teamTagText: { color: colors.text, fontSize: 15, fontWeight: '800' },
   dots: { flex: 1, flexDirection: 'row', justifyContent: 'center', gap: spacing.sm },
-  topBarSpacer: { width: 44 },
   dot: { width: 10, height: 10, borderRadius: 5 },
   headRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   headText: { flex: 1 },
