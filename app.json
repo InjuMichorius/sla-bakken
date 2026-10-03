@@ -1,0 +1,58 @@
+{
+  "expo": {
+    "name": "Sla Bakken",
+    "slug": "sla-bakken",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "scheme": "slabakken",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.inju.slabakken",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#E6F4FE",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "package": "com.inju.slabakken"
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./assets/favicon.png",
+      "name": "Sla Bakken",
+      "shortName": "Sla Bakken",
+      "lang": "nl",
+      "description": "Het hoedenspel voor één telefoon: teams, geheime woorden en drie rondes.",
+      "themeColor": "#0B0E14",
+      "backgroundColor": "#0B0E14",
+      "display": "standalone",
+      "orientation": "portrait"
+    },
+    "experiments": {
+      "typedRoutes": true
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "plugins": [
+      "expo-router",
+      "expo-audio",
+      "expo-asset"
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "13a014e6-8d4e-4a47-9396-9bcf7ba86ca9"
+      }
+    },
+    "owner": "inju"
+  }
+}
