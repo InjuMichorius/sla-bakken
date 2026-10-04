@@ -2,7 +2,7 @@ export const WORDS_PER_PLAYER = 3;
 export const MIN_WORDS_PER_PLAYER = 1;
 export const MAX_WORDS_PER_PLAYER = 10;
 export const MAX_PLAYER_NAME_LENGTH = 10;
-export const MAX_TEAM_NAME_LENGTH = 24;
+export const MAX_TEAM_NAME_LENGTH = 12;
 export const DEFAULT_WORDS_PER_PLAYER = WORDS_PER_PLAYER;
 
 export const TURN_SECONDS_OPTIONS = [30, 45, 60, 90, 120] as const;
@@ -30,6 +30,7 @@ export const ROUNDS: RoundMeta[] = [
     rules: [
       'Omschrijf het woord zo dat je team het kan raden.',
       'Zeg nooit het woord zelf, ook niet deels of per letter.',
+      'Geen vertalingen of een andere taal gebruiken.',
       'Geen directe synoniemen of woorden die het meteen weggeven.',
       'Moeilijke woorden mag je gerust overslaan met "Pas".',
     ],

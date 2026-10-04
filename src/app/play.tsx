@@ -294,13 +294,15 @@ const styles = StyleSheet.create({
   handoffRuleText: { color: colors.muted, fontSize: 13, textAlign: 'center' },
   handoffStandings: { width: '100%' },
 
-  reviewContent: { justifyContent: 'center', gap: spacing.xl },
+  reviewContent: { justifyContent: 'flex-start', gap: spacing.xl },
   reviewHeader: { alignItems: 'center', gap: spacing.md },
   reviewIcon: {
     width: 72,
     height: 72,
     borderRadius: 36,
     backgroundColor: colors.successSoft,
+    borderWidth: 1,
+    borderColor: 'rgba(52, 211, 153, 0.35)',
     alignItems: 'center',
     justifyContent: 'center',
   },

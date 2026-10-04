@@ -7,8 +7,9 @@
 export const TEAM_COLORS = [
   { id: '#60A5FA', name: 'blauw' },
   { id: '#FB923C', name: 'oranje' },
-  { id: '#A78BFA', name: 'paars' },
   { id: '#F472B6', name: 'roze' },
+  { id: '#22D3EE', name: 'cyaan' },
+  { id: '#818CF8', name: 'indigo' },
 ] as const;
 
 export type TeamColorId = (typeof TEAM_COLORS)[number]['id'];

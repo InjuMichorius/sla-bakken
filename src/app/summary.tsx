@@ -118,6 +118,8 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255, 197, 61, 0.35)',
     alignItems: 'center',
     justifyContent: 'center',
+    marginTop: -spacing.md,
+    marginBottom: spacing.md,
   },
   eyebrow: { color: colors.muted, fontSize: 12, fontWeight: '800', letterSpacing: 1.4, textTransform: 'uppercase' },
   winner: { color: colors.text, fontSize: 36, fontWeight: '900', letterSpacing: -1, textAlign: 'center' },
