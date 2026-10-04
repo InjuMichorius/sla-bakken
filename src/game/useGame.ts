@@ -28,6 +28,7 @@ export type GameContextValue = {
   addTeam: (name: string) => void;
   removeTeam: (teamId: string) => void;
   renameTeam: (teamId: string, name: string) => void;
+  setTeamColor: (teamId: string, color: string) => void;
   addPlayer: (teamId: string, name: string) => void;
   renamePlayer: (teamId: string, playerId: string, name: string) => void;
   removePlayer: (teamId: string, playerId: string) => void;
@@ -87,6 +88,7 @@ export function useGame(): GameContextValue {
     addTeam: (name) => send({ type: 'ADD_TEAM', name }),
     removeTeam: (teamId) => send({ type: 'REMOVE_TEAM', teamId }),
     renameTeam: (teamId, name) => send({ type: 'RENAME_TEAM', teamId, name }),
+    setTeamColor: (teamId, color) => send({ type: 'SET_TEAM_COLOR', teamId, color }),
     addPlayer: (teamId, name) => send({ type: 'ADD_PLAYER', teamId, name }),
     renamePlayer: (teamId, playerId, name) => send({ type: 'RENAME_PLAYER', teamId, playerId, name }),
     removePlayer: (teamId, playerId) => send({ type: 'REMOVE_PLAYER', teamId, playerId }),

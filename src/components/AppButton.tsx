@@ -2,7 +2,7 @@ import { ReactNode } from 'react';
 import { Platform, Pressable, PressableProps, StyleSheet, Text, View, ViewStyle } from 'react-native';
 import { colors, radius, spacing } from '@/theme';
 
-type Variant = 'primary' | 'secondary' | 'ghost' | 'success' | 'danger';
+type Variant = 'primary' | 'secondary' | 'ghost' | 'success' | 'danger' | 'dangerOutline';
 type Size = 'sm' | 'md' | 'lg' | 'xl';
 
 const background: Record<Variant, string> = {
@@ -11,6 +11,7 @@ const background: Record<Variant, string> = {
   ghost: 'transparent',
   success: colors.success,
   danger: colors.danger,
+  dangerOutline: 'transparent',
 };
 
 const foreground: Record<Variant, string> = {
@@ -19,6 +20,13 @@ const foreground: Record<Variant, string> = {
   ghost: colors.muted,
   success: '#04231A',
   danger: '#2A0707',
+  dangerOutline: colors.danger,
+};
+
+/** Variants that read as a bordered button instead of a filled one. */
+const outline: Partial<Record<Variant, string>> = {
+  ghost: colors.border,
+  dangerOutline: colors.danger,
 };
 
 const sizes: Record<Size, { height: number; fontSize: number; paddingHorizontal: number }> = {
@@ -51,8 +59,8 @@ export function AppButton({ label, variant = 'primary', size = 'md', icon, iconO
           height: dims.height,
           paddingHorizontal: dims.paddingHorizontal,
           backgroundColor: background[variant],
-          borderColor: variant === 'ghost' ? colors.border : 'transparent',
-          borderWidth: variant === 'ghost' ? 1 : 0,
+          borderColor: outline[variant] ?? 'transparent',
+          borderWidth: outline[variant] ? 1 : 0,
           opacity: disabled ? 0.4 : state.pressed ? 0.75 : 1,
         },
         fullWidth ? styles.fullWidth : styles.autoWidth,

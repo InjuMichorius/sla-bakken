@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
-import { ArrowLeft, ArrowRight, Check, Minus, Plus, SquarePen, Trash, UserPlus } from 'lucide-react-native';
+import { CircleArrowLeft, CircleArrowRight, Check, Lock, Minus, Plus, SquarePen, Trash, UserPlus } from 'lucide-react-native';
 import { AppButton } from '@/components/AppButton';
 import { Avatar } from '@/components/Avatar';
 import { Screen } from '@/components/Screen';
-import { teamColor } from '@/game/colors';
+import { TEAM_COLORS } from '@/game/colors';
 import {
   MAX_PLAYER_NAME_LENGTH,
   MAX_TEAM_NAME_LENGTH,
@@ -15,6 +15,7 @@ import {
   TURN_SECONDS_OPTIONS,
 } from '@/game/constants';
 import { useGameContext } from '@/game/GameProvider';
+import { isNameTaken } from '@/game/names';
 import type { Team } from '@/game/types';
 import { haptics } from '@/lib/haptics';
 import { colors, noOutline, radius, spacing } from '@/theme';
@@ -28,6 +29,7 @@ export default function SetupScreen() {
     canProceed,
     ensureDefaultTeams,
     renameTeam,
+    setTeamColor,
     addPlayer,
     renamePlayer,
     removePlayer,
@@ -65,13 +67,13 @@ export default function SetupScreen() {
       footer={
         <View style={styles.footerRow}>
           {step > 0 ? (
-            <AppButton label="Terug" variant="ghost" size="lg" onPress={goBack} fullWidth={false} icon={<ArrowLeft size={18} color={colors.muted} />} />
+            <AppButton label="Terug" variant="ghost" size="lg" onPress={goBack} fullWidth={false} icon={<CircleArrowLeft size={18} color={colors.muted} />} />
           ) : null}
           <View style={styles.footerGrow}>
             {isLastStep ? (
-              <AppButton label="Start het spel" size="lg" onPress={start} disabled={!canProceed} icon={<ArrowRight size={18} color="#241A00" />} />
+              <AppButton label="Start het spel" size="lg" onPress={start} disabled={!canProceed} icon={<CircleArrowRight size={18} color="#241A00" />} />
             ) : (
-              <AppButton label="Volgende" size="lg" onPress={goNext} icon={<ArrowRight size={18} color="#241A00" />} />
+              <AppButton label="Volgende" size="lg" onPress={goNext} icon={<CircleArrowRight size={18} color="#241A00" />} />
             )}
           </View>
         </View>
@@ -105,8 +107,9 @@ export default function SetupScreen() {
         <TeamCard
           key={currentTeam.id}
           team={currentTeam}
-          index={step}
+          otherTeams={teams.filter((t) => t.id !== currentTeam.id)}
           onRename={(name) => renameTeam(currentTeam.id, name)}
+          onPickColor={(color) => setTeamColor(currentTeam.id, color)}
           onRenamePlayer={(playerId, name) => renamePlayer(currentTeam.id, playerId, name)}
           onRemovePlayer={(playerId) => removePlayer(currentTeam.id, playerId)}
           onAddPlayer={() => addPlayer(currentTeam.id, `Speler ${currentTeam.players.length + 1}`)}
@@ -118,17 +121,19 @@ export default function SetupScreen() {
 
 type TeamCardProps = {
   team: Team;
-  index: number;
+  otherTeams: Team[];
   onRename: (name: string) => void;
+  onPickColor: (color: string) => void;
   onRenamePlayer: (playerId: string, name: string) => void;
   onRemovePlayer: (playerId: string) => void;
   onAddPlayer: () => void;
 };
 
-function TeamCard({ team, index, onRename, onRenamePlayer, onRemovePlayer, onAddPlayer }: TeamCardProps) {
+function TeamCard({ team, otherTeams, onRename, onPickColor, onRenamePlayer, onRemovePlayer, onAddPlayer }: TeamCardProps) {
   const [editingTeam, setEditingTeam] = useState(false);
   const [editingPlayerId, setEditingPlayerId] = useState<string | null>(null);
-  const color = teamColor(index);
+  const color = team.color;
+  const otherTeamNames = otherTeams.map((t) => t.name);
 
   return (
     <View style={styles.teamBlock}>
@@ -136,6 +141,7 @@ function TeamCard({ team, index, onRename, onRenamePlayer, onRemovePlayer, onAdd
         <View style={styles.teamNameEditRow}>
           <NameInput
             initialValue={team.name}
+            takenNames={otherTeamNames}
             onCancel={() => setEditingTeam(false)}
             onSubmit={(name) => {
               onRename(name);
@@ -160,49 +166,87 @@ function TeamCard({ team, index, onRename, onRenamePlayer, onRemovePlayer, onAdd
         </Pressable>
       )}
 
+      <View style={styles.swatches}>
+        {TEAM_COLORS.map((option) => {
+          const active = option.id.toLowerCase() === color.toLowerCase();
+          const takenBy = otherTeams.find((t) => t.color.toLowerCase() === option.id.toLowerCase());
+          const locked = !active && takenBy !== undefined;
+          return (
+            <Pressable
+              key={option.id}
+              onPress={() => {
+                if (locked) return;
+                haptics.light();
+                onPickColor(option.id);
+              }}
+              disabled={locked}
+              accessibilityRole="button"
+              accessibilityState={{ selected: active, disabled: locked }}
+              accessibilityLabel={locked ? `Teamkleur ${option.name}, al gekozen door ${takenBy.name}` : `Teamkleur ${option.name}`}
+              style={({ pressed }) => [styles.swatchTouch, pressed && styles.pressed]}
+            >
+              <View
+                style={[
+                  styles.swatch,
+                  { backgroundColor: option.id },
+                  active && styles.swatchActive,
+                  locked && styles.swatchLocked,
+                ]}
+              >
+                {active ? <Check size={16} color="#10131A" strokeWidth={3} /> : null}
+                {locked ? <Lock size={13} color={colors.text} strokeWidth={2.6} /> : null}
+              </View>
+            </Pressable>
+          );
+        })}
+      </View>
+
       <View style={styles.players}>
         {team.players.map((player) => (
-          <View key={player.id} style={[styles.playerPill, editingPlayerId === player.id && styles.playerPillEditing]}>
-            {editingPlayerId === player.id ? (
-              <NameInput
-                framed={false}
-                maxLength={MAX_PLAYER_NAME_LENGTH}
-                initialValue={player.name}
-                onCancel={() => setEditingPlayerId(null)}
-                onSubmit={(name) => {
-                  onRenamePlayer(player.id, name);
-                  setEditingPlayerId(null);
-                }}
-              />
-            ) : (
-              <>
-                <Avatar seed={`${team.name} ${player.name}`} name={player.name} color={color} size={40} />
-                <Pressable
-                  onPress={() => {
-                    haptics.light();
-                    setEditingPlayerId(player.id);
+          <View key={player.id} style={styles.playerRow}>
+            <View style={[styles.playerPill, editingPlayerId === player.id && styles.playerPillEditing]}>
+              {editingPlayerId === player.id ? (
+                <NameInput
+                  framed={false}
+                  maxLength={MAX_PLAYER_NAME_LENGTH}
+                  initialValue={player.name}
+                  takenNames={team.players.filter((p) => p.id !== player.id).map((p) => p.name)}
+                  onCancel={() => setEditingPlayerId(null)}
+                  onSubmit={(name) => {
+                    onRenamePlayer(player.id, name);
+                    setEditingPlayerId(null);
                   }}
-                  accessibilityRole="button"
-                  accessibilityLabel={`Naam van ${player.name} aanpassen`}
-                  style={({ pressed }) => [styles.playerNameWrap, pressed && styles.pressed]}
-                >
-                  <Text style={styles.playerName} numberOfLines={1}>
-                    {player.name}
-                  </Text>
-                  <SquarePen size={16} color={colors.muted} />
-                </Pressable>
-                {team.players.length > MIN_PLAYERS_PER_TEAM ? (
+                />
+              ) : (
+                <>
+                  <Avatar name={player.name} color={color} size={40} />
                   <Pressable
-                    onPress={() => onRemovePlayer(player.id)}
+                    onPress={() => {
+                      haptics.light();
+                      setEditingPlayerId(player.id);
+                    }}
                     accessibilityRole="button"
-                    accessibilityLabel={`${player.name} verwijderen`}
-                    style={({ pressed }) => [styles.removeButton, pressed && styles.pressed]}
+                    accessibilityLabel={`Naam van ${player.name} aanpassen`}
+                    style={({ pressed }) => [styles.playerNameWrap, pressed && styles.pressed]}
                   >
-                    <Trash size={16} color={colors.accent} />
+                    <Text style={styles.playerName} numberOfLines={1}>
+                      {player.name}
+                    </Text>
+                    <SquarePen size={16} color={colors.muted} />
                   </Pressable>
-                ) : null}
-              </>
-            )}
+                  {team.players.length > MIN_PLAYERS_PER_TEAM ? (
+                    <Pressable
+                      onPress={() => onRemovePlayer(player.id)}
+                      accessibilityRole="button"
+                      accessibilityLabel={`${player.name} verwijderen`}
+                      style={({ pressed }) => [styles.removeButton, pressed && styles.pressed]}
+                    >
+                      <Trash size={16} color={colors.accent} />
+                    </Pressable>
+                  ) : null}
+                </>
+              )}
+            </View>
           </View>
         ))}
 
@@ -227,12 +271,14 @@ function NameInput({
   initialValue,
   onSubmit,
   onCancel,
+  takenNames = [],
   framed = true,
   maxLength = MAX_TEAM_NAME_LENGTH,
 }: {
   initialValue: string;
   onSubmit: (value: string) => void;
   onCancel: () => void;
+  takenNames?: string[];
   framed?: boolean;
   maxLength?: number;
 }) {
@@ -243,30 +289,43 @@ function NameInput({
     ref.current?.focus();
   }, []);
 
+  const trimmed = value.trim();
+  const canSubmit = trimmed.length > 0 && !isNameTaken(trimmed, takenNames);
+
   const submit = () => {
-    const next = value.trim();
-    if (next) onSubmit(next);
+    if (canSubmit) onSubmit(trimmed);
     else onCancel();
   };
 
   return (
-    <View style={styles.editRow}>
-      <TextInput
-        ref={ref}
-        value={value}
-        onChangeText={setValue}
-        onSubmitEditing={submit}
-        onBlur={submit}
-        autoCapitalize="words"
-        returnKeyType="done"
-        maxLength={maxLength}
-        placeholderTextColor={colors.muted}
-        selectionColor={colors.accent}
-        style={[styles.editInput, noOutline, framed && styles.editInputFramed]}
-      />
-      <Pressable onPress={submit} accessibilityRole="button" accessibilityLabel="Opslaan" style={({ pressed }) => [styles.editOk, pressed && styles.pressed]}>
-        <Check size={18} color="#241A00" strokeWidth={3} />
-      </Pressable>
+    <View style={styles.editBlock}>
+      <View style={styles.editRow}>
+        <TextInput
+          ref={ref}
+          value={value}
+          onChangeText={setValue}
+          onSubmitEditing={submit}
+          onBlur={submit}
+          autoCapitalize="words"
+          returnKeyType="done"
+          maxLength={maxLength}
+          placeholderTextColor={colors.muted}
+          selectionColor={colors.accent}
+          selectTextOnFocus
+          style={[styles.editInput, noOutline, framed && styles.editInputFramed]}
+        />
+        <Pressable
+          onPress={submit}
+          disabled={!canSubmit}
+          accessibilityRole="button"
+          accessibilityState={{ disabled: !canSubmit }}
+          accessibilityLabel="Opslaan"
+          style={({ pressed }) => [styles.editOk, !canSubmit && styles.editOkDisabled, canSubmit && pressed && styles.pressed]}
+        >
+          <Check size={18} color={canSubmit ? '#241A00' : colors.muted} strokeWidth={3} />
+        </Pressable>
+      </View>
+      {trimmed.length > 0 && !canSubmit ? <Text style={styles.editError}>Deze naam is al in gebruik</Text> : null}
     </View>
   );
 }
@@ -397,10 +456,27 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
   },
   teamNameEditRow: { width: '100%', maxWidth: 360, alignSelf: 'center' },
+  swatches: { flexDirection: 'row', justifyContent: 'center', gap: spacing.sm },
+  swatchTouch: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...Platform.select({
+      web: { cursor: 'pointer' as const },
+      default: {},
+    }),
+  },
+  swatch: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
+  swatchActive: { borderWidth: 2, borderColor: colors.text },
+  swatchLocked: { opacity: 0.4 },
   headingRow: { alignItems: 'center', justifyContent: 'center', minHeight: 48 },
   heading: { color: colors.text, fontSize: 30, fontWeight: '900', letterSpacing: -0.7 },
 
   players: { gap: spacing.sm },
+  /** Column so the "naam in gebruik" error can sit below the pill, outside the field. */
+  playerRow: { gap: spacing.xs },
   playerPill: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -439,7 +515,9 @@ const styles = StyleSheet.create({
   },
   addPlayerText: { color: 'rgba(255, 255, 255, 0.72)', fontSize: 15, fontWeight: '400' },
 
+  editBlock: { flex: 1, gap: spacing.xs },
   editRow: { flex: 1, height: 48, flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  editError: { color: colors.danger, fontSize: 13, fontWeight: '700', paddingHorizontal: spacing.lg },
   editInput: {
     flex: 1,
     height: 48,
@@ -458,9 +536,16 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
+    borderWidth: 1,
+    borderColor: 'transparent',
     backgroundColor: colors.accent,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  editOkDisabled: {
+    backgroundColor: colors.surfaceAlt,
+    borderColor: colors.border,
+    opacity: 0.7,
   },
 
   settingRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },

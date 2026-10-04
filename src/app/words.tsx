@@ -1,13 +1,12 @@
 import { useRef, useState } from 'react';
 import { StyleSheet, Text, TextInput, View } from 'react-native';
-import { ArrowRight, RotateCcw } from 'lucide-react-native';
+import { CircleArrowRight, Check, RefreshCcw } from 'lucide-react-native';
 import { AppButton } from '@/components/AppButton';
 import { Avatar } from '@/components/Avatar';
 import { Badge } from '@/components/Badge';
 import { Screen } from '@/components/Screen';
 import { QuitGameButton } from '@/components/QuitGameButton';
 import { TeamScoreboard } from '@/components/TeamScoreboard';
-import { teamColor } from '@/game/colors';
 import { useGameContext } from '@/game/GameProvider';
 import type { Player, Team } from '@/game/types';
 import { pickRandomWord } from '@/game/randomWord';
@@ -35,7 +34,7 @@ export default function WordEntryScreen() {
     );
   }
 
-  const color = teamColor(entry.teamIndex);
+  const color = entry.team.color;
 
   if (stage === 'handoff') {
     return (
@@ -43,7 +42,7 @@ export default function WordEntryScreen() {
         topBar={
           <>
             <QuitGameButton />
-            <RosterDots roster={roster} index={index} />
+            <RosterDots roster={roster} index={index} currentFill={0.5} />
             <TeamScoreboard />
           </>
         }
@@ -57,18 +56,17 @@ export default function WordEntryScreen() {
               haptics.light();
               setStage('entry');
             }}
-            icon={<ArrowRight size={20} color="#241A00" />}
+            icon={<CircleArrowRight size={20} color="#241A00" />}
           />
         }
       >
         <View style={styles.handoffBody}>
           <Text style={styles.handoffTitle}>Geef de telefoon aan</Text>
-          <Avatar seed={`${entry.team.name} ${entry.player.name}`} name={entry.player.name} color={color} size={104} />
+          <Avatar name={entry.player.name} color={color} size={104} />
           <Text style={styles.handoffName}>{entry.player.name}</Text>
-          <View style={[styles.teamTag, { borderColor: color }]}>
-            <View style={[styles.teamDot, { backgroundColor: color }]} />
-            <Text style={styles.teamTagText}>{entry.team.name}</Text>
-          </View>
+          <Badge color={color} style={styles.teamBadge}>
+            {entry.team.name}
+          </Badge>
         </View>
       </Screen>
     );
@@ -122,6 +120,7 @@ function PlayerWordForm({ team, player, color, position, isLast, roster, index, 
 
   const filled = words.filter((w) => w.trim().length > 0).length;
   const missing = Math.max(0, perPlayer - filled);
+  const [focused, setFocused] = useState<number | null>(null);
 
   const roll = (index: number) => {
     const used = [
@@ -130,6 +129,14 @@ function PlayerWordForm({ team, player, color, position, isLast, roster, index, 
     ];
     setWords((prev) => prev.map((w, i) => (i === index ? pickRandomWord(used) : w)));
     haptics.light();
+  };
+
+  /** The check commits this word: on to the next field, or close the keyboard on the last one. */
+  const confirm = (index: number) => {
+    haptics.light();
+    const next = inputs.current[index + 1];
+    if (next) next.focus();
+    else inputs.current[index]?.blur();
   };
 
   const save = () => {
@@ -143,7 +150,7 @@ function PlayerWordForm({ team, player, color, position, isLast, roster, index, 
       topBar={
         <>
           <QuitGameButton />
-          <RosterDots roster={roster} index={index} />
+          <RosterDots roster={roster} index={index} currentFill={1} />
           <TeamScoreboard />
         </>
       }
@@ -164,7 +171,7 @@ function PlayerWordForm({ team, player, color, position, isLast, roster, index, 
       }
     >
       <View style={styles.headRow}>
-        <Avatar seed={`${team.name} ${player.name}`} name={player.name} color={color} size={46} />
+        <Avatar name={player.name} color={color} size={46} />
         <View style={styles.headText}>
           <Text style={styles.headLabel}>Aan de beurt</Text>
           <Text style={styles.headName} numberOfLines={1}>
@@ -195,25 +202,43 @@ function PlayerWordForm({ team, player, color, position, isLast, roster, index, 
                 if (next) next.focus();
                 else save();
               }}
+              onFocus={() => setFocused(i)}
+              onBlur={() => setFocused((current) => (current === i ? null : current))}
+              selectTextOnFocus
+              selectionColor={colors.accent}
               placeholder={`Geheim woord ${i + 1}`}
               placeholderTextColor={colors.muted}
               autoCapitalize="none"
               autoCorrect={false}
               returnKeyType={i === perPlayer - 1 ? 'done' : 'next'}
-              style={[styles.input, noOutline, value.trim().length > 0 ? { borderColor: color } : null]}
+              style={[styles.input, noOutline, focused === i && styles.inputFocused]}
             />
-            <AppButton
-              label=""
-              accessibilityLabel={value.trim() ? `Opnieuw rollen voor woord ${i + 1}` : `Random woord voor veld ${i + 1}`}
-              accessibilityHint="Vult dit veld met een willekeurig woord uit de woordenbank"
-              iconOnly
-              icon={<RotateCcw size={20} color={colors.text} />}
-              variant="secondary"
-              size="md"
-              fullWidth={false}
-              onPress={() => roll(i)}
-              style={styles.rollButton}
-            />
+            {focused === i ? (
+              <AppButton
+                label=""
+                accessibilityLabel={`Woord ${i + 1} bevestigen`}
+                accessibilityHint="Slaat dit woord op en gaat naar het volgende veld"
+                iconOnly
+                icon={<Check size={20} color="#241A00" strokeWidth={3} />}
+                size="md"
+                fullWidth={false}
+                onPress={() => confirm(i)}
+                style={styles.fieldAction}
+              />
+            ) : (
+              <AppButton
+                label=""
+                accessibilityLabel={value.trim() ? `Opnieuw rollen voor woord ${i + 1}` : `Random woord voor veld ${i + 1}`}
+                accessibilityHint="Vult dit veld met een willekeurig woord uit de woordenbank"
+                iconOnly
+                icon={<RefreshCcw size={20} color={colors.text} />}
+                variant="secondary"
+                size="md"
+                fullWidth={false}
+                onPress={() => roll(i)}
+                style={styles.fieldAction}
+              />
+            )}
           </View>
         ))}
       </View>
@@ -221,19 +246,29 @@ function PlayerWordForm({ team, player, color, position, isLast, roster, index, 
   );
 }
 
-function RosterDots({ roster, index }: { roster: RosterEntry[]; index: number }) {
+/**
+ * One dot per player in the roster. Every player takes two steps: handing the
+ * phone over counts as half, picking the words as a full one. So the current
+ * player's dot sits at half on the handoff screen and fills up on the form.
+ * A half dot is split vertically, like a pie chart, so the next player is easy
+ * to spot in the row.
+ */
+function RosterDots({ roster, index, currentFill }: { roster: RosterEntry[]; index: number; currentFill: number }) {
   return (
-    <View style={styles.dots}>
-      {roster.map((r, i) => (
-        <View
-          key={r.player.id}
-          style={[
-            styles.dot,
-            { backgroundColor: i < index ? teamColor(r.teamIndex) : 'transparent' },
-            i === index ? { borderColor: colors.accent, borderWidth: 2 } : { borderColor: colors.border, borderWidth: 1 },
-          ]}
-        />
-      ))}
+    <View
+      style={styles.dots}
+      accessible
+      accessibilityRole="progressbar"
+      accessibilityLabel={`Speler ${index + 1} van ${roster.length}`}
+    >
+      {roster.map((r, i) => {
+        const fill = i < index ? 1 : i > index ? 0 : currentFill;
+        return (
+          <View key={r.player.id} style={[styles.dot, i === index && styles.dotCurrent, fill === 1 && styles.dotFull]}>
+            {fill > 0 && fill < 1 ? <View style={[styles.dotFill, { width: `${fill * 100}%` }]} /> : null}
+          </View>
+        );
+      })}
     </View>
   );
 }
@@ -245,19 +280,14 @@ const styles = StyleSheet.create({
   handoffBody: { flex: 1, alignItems: 'center', justifyContent: 'flex-start', gap: spacing.lg, paddingTop: spacing.xl },
   handoffTitle: { color: colors.text, fontSize: 30, fontWeight: '900', letterSpacing: -0.7, textAlign: 'center' },
   handoffName: { color: colors.text, fontSize: 36, fontWeight: '900', letterSpacing: -1, textAlign: 'center' },
-  teamTag: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    borderWidth: 1,
-    borderRadius: radius.pill,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
-  },
-  teamDot: { width: 10, height: 10, borderRadius: 5 },
-  teamTagText: { color: colors.text, fontSize: 15, fontWeight: '800' },
-  dots: { flex: 1, flexDirection: 'row', justifyContent: 'center', gap: spacing.sm },
-  dot: { width: 10, height: 10, borderRadius: 5 },
+  /** Badge stretches to the start by default, which breaks the centred handoff column. */
+  teamBadge: { alignSelf: 'center' },
+  dots: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm },
+  dot: { width: 12, height: 12, borderRadius: 6, borderWidth: 1, borderColor: colors.border, overflow: 'hidden' },
+  dotCurrent: { borderWidth: 2, borderColor: colors.accent },
+  dotFull: { backgroundColor: colors.accent },
+  /** Half fill splits the dot vertically, so the halves read as pie slices. */
+  dotFill: { position: 'absolute', top: 0, bottom: 0, left: 0, backgroundColor: colors.accent },
   headRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   headText: { flex: 1 },
   headLabel: { color: colors.muted, fontSize: 11, fontWeight: '800', letterSpacing: 1.2, textTransform: 'uppercase' },
@@ -265,7 +295,7 @@ const styles = StyleSheet.create({
   instruction: { color: colors.muted, fontSize: 14, lineHeight: 20 },
   fields: { gap: spacing.md },
   fieldRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
-  rollButton: { width: FIELD_SIZE, height: FIELD_SIZE, borderRadius: FIELD_SIZE / 2, paddingHorizontal: 0 },
+  fieldAction: { width: FIELD_SIZE, height: FIELD_SIZE, borderRadius: FIELD_SIZE / 2, paddingHorizontal: 0 },
   indexText: { width: 16, color: colors.text, fontSize: 15, fontWeight: '800', textAlign: 'center' },
   input: {
     flex: 1,
@@ -280,5 +310,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
   },
+  inputFocused: { borderColor: colors.accent },
   footerHint: { color: colors.muted, fontSize: 13, lineHeight: 18, textAlign: 'center' },
 });

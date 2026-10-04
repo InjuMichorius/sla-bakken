@@ -1,7 +1,8 @@
 import { useEffect } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { Check, SkipForward, Timer, X } from 'lucide-react-native';
+import { Check, Flag, SkipForward, Timer, X } from 'lucide-react-native';
 import { AppButton } from '@/components/AppButton';
+import { Avatar } from '@/components/Avatar';
 import { Badge } from '@/components/Badge';
 import { RoundIcon } from '@/components/RoundIcon';
 import { Screen } from '@/components/Screen';
@@ -20,12 +21,32 @@ function formatTime(seconds: number) {
   return `${m}:${String(s).padStart(2, '0')}`;
 }
 
+/**
+ * Top bar for the in-round screens. The round badge is centred across the full
+ * row instead of sitting in a flex slot, so a long title keeps its pill shape
+ * rather than wrapping to a second line. The exit button and scoreboard stay in
+ * the normal flow on either side.
+ */
+function RoundTopBar({ round, title }: { round: number; title: string }) {
+  return (
+    <>
+      <QuitGameButton />
+      <View style={styles.topCenter} pointerEvents="none">
+        <Badge tone="accent" style={styles.roundPill}>
+          Ronde {round} · {title}
+        </Badge>
+      </View>
+      <TeamScoreboard />
+    </>
+  );
+}
+
 export default function PlayScreen() {
-  const { state, currentTeam, currentPlayer, currentTeamIndexInRoster, standings, wordsLeft, totalWords, startTurn, correctGuess, passGuess, tick, endTurn, endRound, nextRound } =
+  const { state, currentTeam, currentPlayer, standings, totalWords, startTurn, correctGuess, passGuess, tick, endTurn, endRound, nextRound } =
     useGameContext();
 
   const meta = ROUNDS.find((r) => r.number === state.currentRound) ?? ROUNDS[0];
-  const color = teamColor(currentTeamIndexInRoster >= 0 ? currentTeamIndexInRoster : 0);
+  const color = currentTeam?.color ?? teamColor(0);
 
   useEffect(() => {
     if (state.phase !== 'playing') return;
@@ -54,7 +75,7 @@ export default function PlayScreen() {
       >
         <View style={styles.reviewHeader}>
           <View style={styles.reviewIcon}>
-            <Check size={30} color={colors.success} />
+            <Flag size={30} color={colors.success} />
           </View>
           <Text style={styles.reviewTitle}>Ronde {state.currentRound} afgelopen</Text>
           <Text style={styles.reviewBody}>
@@ -68,7 +89,7 @@ export default function PlayScreen() {
           <View style={styles.nextRoundHint}>
             <RoundIcon name={ROUNDS[state.currentRound].icon} size={18} />
             <Text style={styles.nextRoundText}>
-              Volgende ronde: <Text style={styles.strong}>{ROUNDS[state.currentRound].title}</Text> — {ROUNDS[state.currentRound].verb}
+              Volgende ronde: <Text style={styles.strong}>{ROUNDS[state.currentRound].title}</Text>
             </Text>
           </View>
         ) : null}
@@ -79,7 +100,7 @@ export default function PlayScreen() {
   if (state.phase === 'handoff') {
     return (
       <Screen
-        topBar={<TeamScoreboard />}
+topBar={<RoundTopBar round={state.currentRound} title={meta.title} />}
         scroll={false}
         contentStyle={styles.handoffContent}
         footer={
@@ -91,25 +112,23 @@ export default function PlayScreen() {
           />
         }
       >
-        <View style={styles.eyebrowRow}>
-          <Badge tone="accent">Ronde {state.currentRound} · {meta.title}</Badge>
-          <Badge tone="muted">{wordsLeft} van {totalWords} in de pot</Badge>
-        </View>
-
-        <View style={styles.handoffCenter}>
-          <Text style={styles.handoffLead}>Geef de telefoon aan</Text>
-          <Text style={[styles.handoffName, { color }]}>{currentPlayer?.name ?? 'Onbekend'}</Text>
-          <View style={[styles.teamTag, { borderColor: color }]}>
-            <View style={[styles.teamDot, { backgroundColor: color }]} />
-            <Text style={styles.teamTagText}>{currentTeam?.name}</Text>
+        <View style={styles.handoffBody}>
+          <Text style={styles.handoffTitle}>Geef de telefoon aan</Text>
+          <Avatar name={currentPlayer?.name ?? 'Onbekend'} color={color} size={104} />
+          <Text style={styles.handoffName}>{currentPlayer?.name ?? 'Onbekend'}</Text>
+          <Badge color={color} style={styles.teamBadge}>
+            {currentTeam?.name}
+          </Badge>
+          <View style={styles.handoffRule}>
+            <RoundIcon name={meta.icon} size={15} color={colors.muted} />
+            <Text style={styles.handoffRuleText}>
+              {meta.verb.toLowerCase()} / {meta.tagline}
+            </Text>
           </View>
-          <Text style={styles.handoffRule}>
-            <RoundIcon name={meta.icon} size={15} /> {meta.verb.toLowerCase()} — {meta.tagline}
-          </Text>
         </View>
 
         <View style={styles.handoffStandings}>
-          <Standings standings={standings} compact title="Tussenstand" />
+          <Standings standings={standings} compact title="Tussenstand" centerTitle />
         </View>
       </Screen>
     );
@@ -131,31 +150,10 @@ export default function PlayScreen() {
 
   return (
     <Screen
-      topBar={
-        <>
-          <QuitGameButton />
-          <TeamScoreboard />
-        </>
-      }
+      topBar={<RoundTopBar round={state.currentRound} title={meta.title} />}
       scroll={false}
       contentStyle={styles.playContent}
     >
-      <View style={styles.playTop}>
-        <View style={styles.playTopRow}>
-          <Badge tone="accent">
-            Ronde {state.currentRound} · {meta.title}
-          </Badge>
-          <Badge tone="muted">{wordsLeft} in de pot</Badge>
-        </View>
-
-        <View style={styles.timerRow}>
-          <View style={[styles.timerRing, urgent && styles.timerRingUrgent, urgentCritical && styles.timerRingCritical]}>
-            <Text style={[styles.timerText, urgent && styles.timerTextUrgent]}>{formatTime(remaining)}</Text>
-            <Text style={styles.timerUnit}>seconden</Text>
-          </View>
-        </View>
-      </View>
-
       <View style={styles.turnRow}>
         <View style={[styles.colorBar, { backgroundColor: color }]} />
         <View style={styles.turnText}>
@@ -163,8 +161,17 @@ export default function PlayScreen() {
           <Text style={styles.turnPlayer}>{currentPlayer?.name}</Text>
         </View>
         <View style={styles.turnPoints}>
-          <Text style={styles.turnPointsValue}>{state.turnPoints}</Text>
-          <Text style={styles.turnPointsLabel}>deze beurt</Text>
+          <Text style={styles.turnPointsValue}>{state.totalWords}</Text>
+          <Text style={styles.turnPointsLabel}>geraden</Text>
+        </View>
+      </View>
+
+      <View style={styles.playTop}>
+        <View style={styles.timerRow}>
+          <View style={[styles.timerRing, urgent && styles.timerRingUrgent, urgentCritical && styles.timerRingCritical]}>
+            <Text style={[styles.timerText, urgent && styles.timerTextUrgent]}>{formatTime(remaining)}</Text>
+            <Text style={styles.timerUnit}>seconden</Text>
+          </View>
         </View>
       </View>
 
@@ -192,16 +199,17 @@ export default function PlayScreen() {
             variant="secondary"
             onPress={onPass}
             icon={<SkipForward size={20} color={colors.text} />}
+            style={styles.actionPass}
           />
           <AppButton
             label="Beurt stoppen"
             size="lg"
-            variant="ghost"
+            variant="dangerOutline"
             onPress={endTurn}
-            icon={<X size={20} color={colors.muted} />}
+            icon={<X size={20} color={colors.danger} />}
+            style={styles.actionStop}
           />
         </View>
-        <Text style={styles.passHint}>Bij “Pas” gaat het woord terug in de pot en krijgt je team geen punt.</Text>
       </View>
     </Screen>
   );
@@ -209,8 +217,7 @@ export default function PlayScreen() {
 
 const styles = StyleSheet.create({
   playContent: { padding: 0 },
-  playTop: { padding: spacing.lg, paddingBottom: 0, gap: spacing.lg },
-  playTopRow: { flexDirection: 'row', gap: spacing.sm, flexWrap: 'wrap' },
+  playTop: { padding: spacing.lg, paddingBottom: 0 },
   timerRow: { alignItems: 'center' },
   timerRing: {
     width: 128,
@@ -231,11 +238,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
-    marginTop: spacing.lg,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
     backgroundColor: colors.surface,
-    borderTopWidth: 1,
     borderBottomWidth: 1,
     borderColor: colors.border,
   },
@@ -270,25 +275,23 @@ const styles = StyleSheet.create({
   actions: { paddingHorizontal: spacing.lg, paddingBottom: spacing.lg, gap: spacing.md },
   goedButton: { width: '100%' },
   actionRow: { flexDirection: 'row', gap: spacing.md },
-  passHint: { color: colors.muted, fontSize: 12, textAlign: 'center' },
+  /** "Beurt stoppen" carries more text, so it gets the larger share of the row. */
+  actionPass: { flex: 0.7, paddingHorizontal: spacing.md },
+  actionStop: { flex: 1.3, paddingHorizontal: spacing.md },
 
-  handoffContent: { justifyContent: 'center', gap: spacing.xl },
-  eyebrowRow: { flexDirection: 'row', gap: spacing.sm, flexWrap: 'wrap', justifyContent: 'center' },
-  handoffCenter: { alignItems: 'center', gap: spacing.sm },
-  handoffLead: { color: colors.muted, fontSize: 15, fontWeight: '700', letterSpacing: 0.4 },
-  handoffName: { fontSize: 44, fontWeight: '900', letterSpacing: -1.2, textAlign: 'center' },
-  teamTag: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    borderWidth: 1,
-    borderRadius: radius.pill,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
-  },
-  teamDot: { width: 10, height: 10, borderRadius: 5 },
-  teamTagText: { color: colors.text, fontSize: 15, fontWeight: '800' },
-  handoffRule: { color: colors.muted, fontSize: 13, marginTop: spacing.md, textAlign: 'center' },
+  topCenter: { position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, alignItems: 'center', justifyContent: 'center' },
+  /** Badge pins itself to the start by default, which would pull the pill off-centre. */
+  roundPill: { alignSelf: 'center' },
+
+  /** Mirrors the word-entry handoff, so both handovers share the same title height. */
+  handoffContent: { justifyContent: 'flex-start', gap: spacing.lg },
+  handoffBody: { flex: 1, alignItems: 'center', justifyContent: 'flex-start', gap: spacing.lg, paddingTop: spacing.xl },
+  handoffTitle: { color: colors.text, fontSize: 30, fontWeight: '900', letterSpacing: -0.7, textAlign: 'center' },
+  handoffName: { color: colors.text, fontSize: 36, fontWeight: '900', letterSpacing: -1, textAlign: 'center' },
+  /** Badge stretches to the start by default, which breaks the centred handoff column. */
+  teamBadge: { alignSelf: 'center' },
+  handoffRule: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm },
+  handoffRuleText: { color: colors.muted, fontSize: 13, textAlign: 'center' },
   handoffStandings: { width: '100%' },
 
   reviewContent: { justifyContent: 'center', gap: spacing.xl },

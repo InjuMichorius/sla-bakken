@@ -2,10 +2,11 @@ import { useState } from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
 import { colors, radius } from '@/theme';
 
-const AVATAR_STYLE = 'toon-head';
+// const AVATAR_STYLE = 'toon-head';
+const AVATAR_STYLE = 'critters';
 
 type AvatarProps = {
-  seed: string;
+  /** Doubles as the DiceBear seed, so one name always yields one face. */
   name: string;
   color: string;
   size?: number;
@@ -19,9 +20,9 @@ function initials(name: string): string {
 }
 
 /** DiceBear avatar with a coloured initial badge as offline/error fallback. */
-export function Avatar({ seed, name, color, size = 44 }: AvatarProps) {
+export function Avatar({ name, color, size = 44 }: AvatarProps) {
   const [failed, setFailed] = useState(false);
-  const url = `https://api.dicebear.com/9.x/${AVATAR_STYLE}/png?seed=${encodeURIComponent(seed || name)}&backgroundColor=16161a&radius=50`;
+  const url = `https://api.dicebear.com/10.x/${AVATAR_STYLE}/png?seed=${encodeURIComponent(name)}&backgroundColor=16161a&radius=50`;
 
   if (failed) {
     return (

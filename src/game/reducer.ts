@@ -1,5 +1,6 @@
-import { teamColor } from './colors';
-import { MAX_PLAYER_NAME_LENGTH, MAX_WORDS_PER_PLAYER, MIN_PLAYERS_PER_TEAM, MIN_TEAMS, MIN_WORDS_PER_PLAYER, ROUNDS } from './constants';
+import { nextFreeTeamColor, teamColor, isTeamColor } from './colors';
+import { MAX_WORDS_PER_PLAYER, MIN_PLAYERS_PER_TEAM, MIN_TEAMS, MIN_WORDS_PER_PLAYER, ROUNDS } from './constants';
+import { isNameTaken, nextFreePlayerName, normalizePlayerName, normalizeTeamName } from './names';
 import type { GameState, Point, Team } from './types';
 import { initialGameState } from './types';
 
@@ -10,6 +11,7 @@ export type GameAction =
   | { type: 'ADD_TEAM'; name: string }
   | { type: 'REMOVE_TEAM'; teamId: string }
   | { type: 'RENAME_TEAM'; teamId: string; name: string }
+  | { type: 'SET_TEAM_COLOR'; teamId: string; color: string }
   | { type: 'ADD_PLAYER'; teamId: string; name: string }
   | { type: 'RENAME_PLAYER'; teamId: string; playerId: string; name: string }
   | { type: 'REMOVE_PLAYER'; teamId: string; playerId: string }
@@ -57,7 +59,15 @@ function redraw(rest: string[], returned: string | null): { pot: string[]; curre
 }
 
 export function allWords(state: GameState): string[] {
-  return state.wordEntries.map((e) => e.word);
+  const seen = new Set<string>();
+  return state.wordEntries
+    .map((e) => e.word)
+    .filter((w) => {
+      const key = w.toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
 }
 
 function freshScores(teams: Team[]): Record<string, number> {
@@ -101,16 +111,23 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
 
     case 'ENSURE_DEFAULT_TEAMS': {
       if (state.teams.length > 0) return state;
-      const teams: Team[] = [1, 2].map((n) => ({
+      const teams: Team[] = [1, 2].map((teamNumber) => ({
         id: uid(),
-        name: `Team ${n}`,
-        players: [1, 2].map((p) => ({ id: uid(), name: `Speler ${p}` })),
+        name: `Team ${teamNumber}`,
+        color: teamColor(teamNumber - 1),
+        players: Array.from({ length: MIN_PLAYERS_PER_TEAM }, (_, i) => ({
+          id: uid(),
+          name: `Speler ${(teamNumber - 1) * MIN_PLAYERS_PER_TEAM + i + 1}`,
+        })),
       }));
       return { ...state, teams, scores: freshScores(teams) };
     }
 
     case 'ADD_TEAM': {
-      const team: Team = { id: uid(), name: action.name.trim() || `Team ${state.teams.length + 1}`, players: [] };
+      const name = normalizeTeamName(action.name);
+      if (!name) return state;
+      if (isNameTaken(name, state.teams.map((t) => t.name))) return state;
+      const team: Team = { id: uid(), name, color: nextFreeTeamColor(state.teams.map((t) => t.color)), players: [] };
       return { ...state, teams: [...state.teams, team], scores: { ...state.scores, [team.id]: 0 } };
     }
 
@@ -128,28 +145,43 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
     }
 
     case 'RENAME_TEAM': {
-      return { ...state, teams: state.teams.map((t) => (t.id === action.teamId ? { ...t, name: action.name } : t)) };
+      const name = normalizeTeamName(action.name);
+      if (!name) return state;
+      if (isNameTaken(name, state.teams.filter((t) => t.id !== action.teamId).map((t) => t.name))) return state;
+      return { ...state, teams: state.teams.map((t) => (t.id === action.teamId ? { ...t, name } : t)) };
+    }
+
+    case 'SET_TEAM_COLOR': {
+      if (!isTeamColor(action.color)) return state;
+      // Colours are exclusive: a team can only take one no other team holds.
+      const inUse = state.teams.some((t) => t.id !== action.teamId && t.color.toLowerCase() === action.color.toLowerCase());
+      if (inUse) return state;
+      return { ...state, teams: state.teams.map((t) => (t.id === action.teamId ? { ...t, color: action.color } : t)) };
     }
 
     case 'ADD_PLAYER': {
       return {
         ...state,
-        teams: state.teams.map((t) =>
-          t.id === action.teamId
-            ? { ...t, players: [...t.players, { id: uid(), name: action.name.trim().slice(0, MAX_PLAYER_NAME_LENGTH) || `Speler ${t.players.length + 1}` }] }
-            : t
-        ),
+        teams: state.teams.map((t) => {
+          if (t.id !== action.teamId) return t;
+          const taken = t.players.map((p) => p.name);
+          const requested = normalizePlayerName(action.name);
+          const name = !requested || isNameTaken(requested, taken) ? nextFreePlayerName(taken) : requested;
+          return { ...t, players: [...t.players, { id: uid(), name }] };
+        }),
       };
     }
 
     case 'RENAME_PLAYER': {
-      const name = action.name.trim().slice(0, MAX_PLAYER_NAME_LENGTH);
+      const name = normalizePlayerName(action.name);
       if (!name) return state;
       return {
         ...state,
-        teams: state.teams.map((t) =>
-          t.id === action.teamId ? { ...t, players: t.players.map((p) => (p.id === action.playerId ? { ...p, name } : p)) } : t
-        ),
+        teams: state.teams.map((t) => {
+          if (t.id !== action.teamId) return t;
+          if (isNameTaken(name, t.players.filter((p) => p.id !== action.playerId).map((p) => p.name))) return t;
+          return { ...t, players: t.players.map((p) => (p.id === action.playerId ? { ...p, name } : p)) };
+        }),
       };
     }
 
@@ -326,10 +358,10 @@ export type TeamScore = {
 };
 
 export function teamScoresOf(teams: Team[], scores: Record<string, number>): Omit<TeamScore, 'rank' | 'isWinner'>[] {
-  return teams.map((team, index) => ({
+  return teams.map((team) => ({
     teamId: team.id,
     name: team.name,
-    color: teamColor(index),
+    color: team.color,
     score: scores[team.id] ?? 0,
   }));
 }

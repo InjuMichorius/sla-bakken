@@ -8,6 +8,8 @@ export type Player = {
 export type Team = {
   id: string;
   name: string;
+  /** One of TEAM_COLORS; picked on the setup screen. */
+  color: string;
   players: Player[];
 };
 

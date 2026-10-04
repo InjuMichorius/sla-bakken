@@ -1,5 +1,4 @@
 import { StyleSheet, Text, View } from 'react-native';
-import { teamColor } from '@/game/colors';
 import { useGameContext } from '@/game/GameProvider';
 import { spacing } from '@/theme';
 
@@ -21,10 +20,10 @@ export function TeamScoreboard() {
       accessibilityRole="text"
       accessibilityLabel={`Stand: ${teams.map((team, i) => `${team.name} ${scores[team.id] ?? 0} punten`).join(', ')}`}
     >
-      {teams.map((team, i) => (
+      {teams.map((team) => (
         <View key={team.id} style={styles.entry}>
-          <View style={[styles.dot, { backgroundColor: teamColor(i) }]} />
-          <Text style={[styles.score, { color: teamColor(i) }]}>{scores[team.id] ?? 0}</Text>
+          <View style={[styles.dot, { backgroundColor: team.color }]} />
+          <Text style={[styles.score, { color: team.color }]}>{scores[team.id] ?? 0}</Text>
         </View>
       ))}
     </View>

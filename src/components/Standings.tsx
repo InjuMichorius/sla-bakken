@@ -1,5 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native';
 import { Trophy } from 'lucide-react-native';
+import { ROUNDS } from '@/game/constants';
+import { useGameContext } from '@/game/GameProvider';
 import { TeamScore } from '@/game/reducer';
 import { colors, radius, spacing } from '@/theme';
 
@@ -7,13 +9,19 @@ type StandingsProps = {
   standings: TeamScore[];
   compact?: boolean;
   title?: string;
+  /** Centres the title, for screens where the block itself is centred. */
+  centerTitle?: boolean;
 };
 
-export function Standings({ standings, compact = false, title }: StandingsProps) {
-  const best = Math.max(1, ...standings.map((s) => s.score));
+export function Standings({ standings, compact = false, title, centerTitle = false }: StandingsProps) {
+  const { totalWords } = useGameContext();
+  // Scores accumulate over all rounds while the pot is refilled every round, so
+  // the bar scales to the most points a team can collect in the whole game.
+  // Otherwise a team that swept round 1 already shows a full bar in round 2.
+  const max = Math.max(1, ROUNDS.length * totalWords);
   return (
     <View style={styles.wrap}>
-      {title ? <Text style={styles.title}>{title}</Text> : null}
+      {title ? <Text style={[styles.title, centerTitle && styles.titleCenter]}>{title}</Text> : null}
       {standings.map((row) => (
         <View key={row.teamId} style={[styles.row, row.isWinner && styles.rowWinner]}>
           <View style={[styles.dot, { backgroundColor: row.color }]} />
@@ -25,7 +33,7 @@ export function Standings({ standings, compact = false, title }: StandingsProps)
             <View
               style={[
                 styles.barFill,
-                { width: `${Math.max(4, (row.score / best) * 100)}%`, backgroundColor: row.color },
+                { width: `${Math.min(100, Math.max(4, (row.score / max) * 100))}%`, backgroundColor: row.color },
               ]}
             />
           </View>
@@ -39,6 +47,7 @@ export function Standings({ standings, compact = false, title }: StandingsProps)
 const styles = StyleSheet.create({
   wrap: { gap: spacing.sm },
   title: { color: colors.muted, fontSize: 12, fontWeight: '800', letterSpacing: 1, textTransform: 'uppercase' },
+  titleCenter: { alignSelf: 'stretch', textAlign: 'center' },
   row: {
     flexDirection: 'row',
     alignItems: 'center',

@@ -1,4 +1,4 @@
-export const WORDS_PER_PLAYER = 5;
+export const WORDS_PER_PLAYER = 3;
 export const MIN_WORDS_PER_PLAYER = 1;
 export const MAX_WORDS_PER_PLAYER = 10;
 export const MAX_PLAYER_NAME_LENGTH = 10;
@@ -6,7 +6,7 @@ export const MAX_TEAM_NAME_LENGTH = 24;
 export const DEFAULT_WORDS_PER_PLAYER = WORDS_PER_PLAYER;
 
 export const TURN_SECONDS_OPTIONS = [30, 45, 60, 90, 120] as const;
-export const DEFAULT_TURN_SECONDS = 60;
+export const DEFAULT_TURN_SECONDS = 30;
 
 export const MIN_TEAMS = 2;
 export const MIN_PLAYERS_PER_TEAM = 2;

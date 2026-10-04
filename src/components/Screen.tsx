@@ -9,7 +9,7 @@ type ScreenProps = {
   children: ReactNode;
   title?: string;
   subtitle?: string;
-  /** Pinned above the title, e.g. the quit button. */
+  /** Pinned above the content, outside of the scroll area, e.g. the quit button. */
   topBar?: ReactNode;
   /** Pinned to the bottom, outside of the scroll area. */
   footer?: ReactNode;
@@ -22,7 +22,6 @@ export function Screen({ children, title, subtitle, topBar, footer, contentStyle
   const insets = useSafeAreaInsets();
   const body = (
     <View style={[styles.content, contentStyle]}>
-      {topBar ? <View style={styles.topBar}>{topBar}</View> : null}
       {title ? <Text style={styles.title}>{title}</Text> : null}
       {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
       {children}
@@ -34,6 +33,11 @@ export function Screen({ children, title, subtitle, topBar, footer, contentStyle
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       style={[styles.root, { backgroundColor: background, paddingTop: insets.top }]}
     >
+      {topBar ? (
+        <View style={styles.topBarOuter}>
+          <View style={styles.topBar}>{topBar}</View>
+        </View>
+      ) : null}
       {scroll ? (
         <ScrollView
           style={styles.scroll}
@@ -68,6 +72,13 @@ const styles = StyleSheet.create({
     gap: spacing.lg,
   },
   title: { color: colors.text, fontSize: 28, fontWeight: '900', letterSpacing: -0.5 },
+  topBarOuter: {
+    width: '100%',
+    maxWidth: MAX_WIDTH,
+    alignSelf: 'center',
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.md,
+  },
   topBar: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, minHeight: 44 },
   subtitle: { color: colors.muted, fontSize: 15, lineHeight: 22, marginTop: -spacing.sm },
   footer: {

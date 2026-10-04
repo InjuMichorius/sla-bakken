@@ -1,6 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native';
 import { PartyPopper, RotateCcw, Trophy } from 'lucide-react-native';
 import { AppButton } from '@/components/AppButton';
+import { Avatar } from '@/components/Avatar';
 import { Screen } from '@/components/Screen';
 import { QuitGameButton } from '@/components/QuitGameButton';
 import { TeamScoreboard } from '@/components/TeamScoreboard';
@@ -8,8 +9,6 @@ import { ROUNDS } from '@/game/constants';
 import { useGameContext } from '@/game/GameProvider';
 import { haptics } from '@/lib/haptics';
 import { colors, radius, spacing } from '@/theme';
-
-const MEDALS = ['🥇', '🥈', '🥉'];
 
 export default function SummaryScreen() {
   const { state, standings, totalWords, reset } = useGameContext();
@@ -29,7 +28,6 @@ export default function SummaryScreen() {
           <TeamScoreboard />
         </>
       }
-      scroll={false}
       contentStyle={styles.content}
       footer={<AppButton label="Nieuw spel" size="xl" onPress={playAgain} icon={<RotateCcw size={20} color="#241A00" />} />}
     >
@@ -45,32 +43,38 @@ export default function SummaryScreen() {
       </View>
 
       <View style={styles.podium}>
-        {standings.slice(0, 3).map((row, i) => (
-          <View
-            key={row.teamId}
-            style={[
-              styles.podiumRow,
-              { borderColor: row.isWinner ? colors.accent : colors.border, backgroundColor: row.isWinner ? colors.accentSoft : colors.surface },
-            ]}
-          >
-            <Text style={styles.medal}>{MEDALS[i]}</Text>
-            <View style={[styles.podiumDot, { backgroundColor: row.color }]} />
-            <Text style={styles.podiumName} numberOfLines={1}>
-              {row.name}
-            </Text>
-            <Text style={[styles.podiumScore, row.isWinner && { color: colors.accent }]}>{row.score}</Text>
-          </View>
-        ))}
-        {standings.length > 3
-          ? standings.slice(3).map((row) => (
-              <View key={row.teamId} style={styles.extraRow}>
-                <Text style={styles.extraName} numberOfLines={1}>
+        {standings.map((row) => {
+          const team = state.teams.find((t) => t.id === row.teamId);
+          return (
+            <View
+              key={row.teamId}
+              style={[
+                styles.podiumRow,
+                { borderColor: row.isWinner ? colors.accent : colors.border, backgroundColor: row.isWinner ? colors.accentSoft : colors.surface },
+              ]}
+            >
+              <View style={styles.podiumHeader}>
+                <View style={[styles.podiumDot, { backgroundColor: row.color }]} />
+                <Text style={styles.podiumName} numberOfLines={1}>
                   {row.name}
                 </Text>
-                <Text style={styles.extraScore}>{row.score}</Text>
+                <Text style={[styles.podiumScore, row.isWinner && { color: colors.accent }]}>{row.score}</Text>
               </View>
-            ))
-          : null}
+              {team ? (
+                <View style={styles.roster}>
+                  {team.players.map((player) => (
+                    <View key={player.id} style={styles.player}>
+                      <Avatar name={player.name} color={row.color} size={28} />
+                      <Text style={styles.playerName} numberOfLines={1}>
+                        {player.name}
+                      </Text>
+                    </View>
+                  ))}
+                </View>
+              ) : null}
+            </View>
+          );
+        })}
       </View>
 
       <View style={styles.stats}>
@@ -103,7 +107,7 @@ export default function SummaryScreen() {
 }
 
 const styles = StyleSheet.create({
-  content: { justifyContent: 'center', gap: spacing.lg },
+  content: { justifyContent: 'flex-start', gap: spacing.lg },
   hero: { alignItems: 'center', gap: spacing.xs },
   iconWrap: {
     width: 68,
@@ -114,28 +118,25 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255, 197, 61, 0.35)',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: spacing.sm,
   },
   eyebrow: { color: colors.muted, fontSize: 12, fontWeight: '800', letterSpacing: 1.4, textTransform: 'uppercase' },
   winner: { color: colors.text, fontSize: 36, fontWeight: '900', letterSpacing: -1, textAlign: 'center' },
   winnerLabel: { color: colors.accent, fontSize: 15, fontWeight: '700' },
   podium: { gap: spacing.sm },
   podiumRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
+    gap: spacing.sm,
     borderWidth: 1,
     borderRadius: radius.md,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
   },
-  medal: { fontSize: 24 },
+  podiumHeader: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   podiumDot: { width: 12, height: 12, borderRadius: 6 },
   podiumName: { color: colors.text, fontSize: 17, fontWeight: '800', flex: 1 },
   podiumScore: { color: colors.text, fontSize: 24, fontWeight: '900' },
-  extraRow: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: spacing.lg, paddingVertical: spacing.sm },
-  extraName: { color: colors.muted, fontSize: 14, fontWeight: '600', flex: 1 },
-  extraScore: { color: colors.muted, fontSize: 14, fontWeight: '800' },
+  roster: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md },
+  player: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  playerName: { color: colors.muted, fontSize: 13, fontWeight: '700' },
   stats: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   stat: {
     flexGrow: 1,

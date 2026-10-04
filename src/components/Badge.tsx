@@ -5,6 +5,8 @@ import { colors, radius, spacing } from '@/theme';
 type BadgeProps = {
   children: ReactNode;
   tone?: 'neutral' | 'accent' | 'success' | 'danger' | 'muted';
+  /** Overrides the palette with a custom colour, e.g. the colour of a team. */
+  color?: string;
   style?: ViewStyle;
 };
 
@@ -16,11 +18,16 @@ const tones = {
   muted: { bg: 'rgba(141, 153, 174, 0.14)', fg: colors.muted },
 } as const;
 
-export function Badge({ children, tone = 'neutral', style }: BadgeProps) {
+/** Matches the 0.14 alpha the theme uses for its soft tints. */
+const SOFT_ALPHA = '24';
+
+export function Badge({ children, tone = 'neutral', color, style }: BadgeProps) {
   const palette = tones[tone];
   return (
-    <View style={[styles.badge, { backgroundColor: palette.bg }, style]}>
-      <Text style={[styles.text, { color: palette.fg }]}>{children}</Text>
+    <View style={[styles.badge, { backgroundColor: color ? `${color}${SOFT_ALPHA}` : palette.bg }, style]}>
+      <Text numberOfLines={1} style={[styles.text, { color: color ?? palette.fg }]}>
+        {children}
+      </Text>
     </View>
   );
 }

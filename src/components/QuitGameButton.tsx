@@ -27,7 +27,7 @@ export function QuitGameButton() {
         style={({ pressed }) => [styles.button, pressed && styles.pressed]}
       >
         <View style={styles.dot}>
-          <LogOut size={13} color="#2A0707" strokeWidth={2.75} />
+          <LogOut size={13} color="#2A0707" strokeWidth={2.75} style={styles.icon} />
         </View>
       </Pressable>
       <ConfirmDialog
@@ -62,5 +62,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: colors.danger,
   },
+  /** The arrow points right, but the button sits top-left, so leaving means going back. */
+  icon: { transform: [{ scaleX: -1 }] },
   pressed: { opacity: 0.7 },
 });

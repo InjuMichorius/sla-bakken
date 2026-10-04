@@ -1,7 +1,6 @@
 import { StyleSheet, Text, View } from 'react-native';
 import { AppButton } from '@/components/AppButton';
 import { Badge } from '@/components/Badge';
-import { HintTooltip } from '@/components/HintTooltip';
 import { RoundIcon } from '@/components/RoundIcon';
 import { Screen } from '@/components/Screen';
 import { QuitGameButton } from '@/components/QuitGameButton';
@@ -11,9 +10,6 @@ import { ROUNDS } from '@/game/constants';
 import { useGameContext } from '@/game/GameProvider';
 import { haptics } from '@/lib/haptics';
 import { colors, radius, spacing } from '@/theme';
-
-/** ruleIndex width + ruleRow gap, so the hint aligns with the rule text. */
-const RULE_TEXT_INSET = 22 + spacing.md;
 
 export default function RoundIntroScreen() {
   const { state, standings, totalWords, startRound } = useGameContext();
@@ -34,7 +30,6 @@ export default function RoundIntroScreen() {
           <TeamScoreboard />
         </>
       }
-      scroll={false}
       contentStyle={styles.content}
       footer={<AppButton label={`Start ronde ${meta.number}`} size="xl" onPress={begin} />}
     >
@@ -58,12 +53,6 @@ export default function RoundIntroScreen() {
               <Text style={styles.ruleText}>{rule}</Text>
             </View>
           ))}
-
-          <HintTooltip label="Hoe een beurt werkt" style={styles.hint}>
-            De beurt wisselt telkens van team; binnen een team komen de spelers om de beurt. Elke speler krijgt {state.turnSeconds} seconden. Elk goed
-            geraden woord is één punt voor het team. Bij <Text style={styles.strong}>Pas</Text> gaat het woord terug in de pot zonder punt. De ronde stopt
-            zodra de pot leeg is.
-          </HintTooltip>
         </View>
 
         {previousDone ? (
@@ -78,8 +67,8 @@ export default function RoundIntroScreen() {
 }
 
 const styles = StyleSheet.create({
-  content: { justifyContent: 'center' },
-  top: { gap: spacing.lg, flex: 1, justifyContent: 'center' },
+  content: { justifyContent: 'flex-start' },
+  top: { gap: spacing.lg },
   hero: { alignItems: 'center', gap: spacing.sm },
   potBadge: { alignSelf: 'center' },
   heroIcon: {
@@ -113,8 +102,6 @@ const styles = StyleSheet.create({
   },
   ruleIndexText: { color: colors.accent, fontSize: 12, fontWeight: '900' },
   ruleText: { color: colors.text, fontSize: 14, lineHeight: 20, flex: 1 },
-  /** Aligns the hint trigger with the rule text, so it reads as a footnote on rule 4. */
-  hint: { marginLeft: RULE_TEXT_INSET },
   review: {
     backgroundColor: colors.surface,
     borderRadius: radius.lg,
@@ -124,5 +111,4 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   reviewTitle: { color: colors.muted, fontSize: 12, fontWeight: '800', letterSpacing: 1, textTransform: 'uppercase' },
-  strong: { color: colors.text, fontWeight: '800' },
 });
