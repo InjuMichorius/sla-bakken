@@ -22,7 +22,7 @@ function initials(name: string): string {
 /** DiceBear avatar with a coloured initial badge as offline/error fallback. */
 export function Avatar({ name, color, size = 44 }: AvatarProps) {
   const [failed, setFailed] = useState(false);
-  const url = `https://api.dicebear.com/10.x/${AVATAR_STYLE}/png?seed=${encodeURIComponent(name)}&backgroundColor=16161a&radius=50`;
+  const url = `https://api.dicebear.com/10.x/${AVATAR_STYLE}/png?seed=${encodeURIComponent(name)}&backgroundColor=16161a&radius=50&bodyColor=${color.slice(1)}`;
 
   if (failed) {
     return (

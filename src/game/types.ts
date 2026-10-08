@@ -1,4 +1,4 @@
-import { DEFAULT_WORDS_PER_PLAYER } from './constants';
+import { DEFAULT_TURN_SECONDS, DEFAULT_WORDS_PER_PLAYER } from './constants';
 
 export type Player = {
   id: string;
@@ -33,6 +33,11 @@ export type Point = {
   playerIndex: number;
 };
 
+export type GuessTiming = {
+  word: string;
+  seconds: number;
+};
+
 export type GameState = {
   teams: Team[];
   wordEntries: WordEntry[];
@@ -49,6 +54,14 @@ export type GameState = {
   timerRemaining: number;
   /** Deadline-based so backgrounding the app cannot freeze or skip the clock. */
   timerStartedAt: number | null;
+  /** Moment waarop het huidige woord voor het eerst zichtbaar werd (bij start van de beurt of na een wissel). */
+  wordOpenedAt: number | null;
+  /** Per correct geraden woord de tijd die het open stond. */
+  guessTimes: GuessTiming[];
+  /** Langste reeks direct goed geraden woorden binnen één beurt. */
+  maxGuessStreak: number;
+  /** Lopende reeks in de huidige beurt. */
+  guessStreak: number;
   /** Shuffled queue. The last element is the word that is currently open. */
   pot: string[];
   currentWord: string | null;
@@ -69,9 +82,13 @@ export const initialGameState: GameState = {
   currentPlayerIndex: 0,
   turnsThisRound: 0,
   wordsPerPlayer: DEFAULT_WORDS_PER_PLAYER,
-  turnSeconds: 60,
-  timerRemaining: 60,
+  turnSeconds: DEFAULT_TURN_SECONDS,
+  timerRemaining: DEFAULT_TURN_SECONDS,
   timerStartedAt: null,
+  wordOpenedAt: null,
+  guessTimes: [],
+  maxGuessStreak: 0,
+  guessStreak: 0,
   pot: [],
   currentWord: null,
   turnPoints: 0,

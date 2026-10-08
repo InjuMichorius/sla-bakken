@@ -1,5 +1,7 @@
+import { useEffect, useRef } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { PartyPopper, RotateCcw, Trophy } from 'lucide-react-native';
+import { useFeedback } from '@/audio/FeedbackProvider';
 import { AppButton } from '@/components/AppButton';
 import { Avatar } from '@/components/Avatar';
 import { Screen } from '@/components/Screen';
@@ -11,13 +13,41 @@ import { haptics } from '@/lib/haptics';
 import { colors, radius, spacing } from '@/theme';
 
 export default function SummaryScreen() {
-  const { state, standings, totalWords, reset } = useGameContext();
+  const { state, standings, newGame } = useGameContext();
+  const { play } = useFeedback();
   const winners = standings.filter((s) => s.isWinner);
   const isTie = winners.length > 1;
 
+  const guessTimes = state.guessTimes;
+  const fastest = guessTimes.reduce<{ word: string; seconds: number } | null>(
+    (best, guess) => (best === null || guess.seconds < best.seconds ? guess : best),
+    null
+  );
+  const avgSeconds = guessTimes.length > 0 ? guessTimes.reduce((sum, guess) => sum + guess.seconds, 0) / guessTimes.length : null;
+  const hasGuesses = guessTimes.length > 0;
+
+  const stats = [
+    {
+      key: 'fastest',
+      label: fastest != null ? `Snelst geraden (${fastest.seconds.toFixed(1)}s)` : 'Snelst geraden',
+      value: fastest?.word ?? '–',
+      wide: true,
+    },
+    { key: 'avg', label: 'Gemiddeld per woord', value: avgSeconds != null ? `${avgSeconds.toFixed(1)}s` : '–', wide: false },
+    { key: 'streak', label: 'Langste reeks', value: hasGuesses ? String(state.maxGuessStreak) : '–', wide: false },
+  ] as const;
+
+  /** Een keer bij het openen van de eindstand, niet opnieuw bij elke settings-wijziging. */
+  const celebrated = useRef(false);
+  useEffect(() => {
+    if (celebrated.current) return;
+    celebrated.current = true;
+    play('victory');
+  }, [play]);
+
   const playAgain = () => {
     haptics.medium();
-    reset();
+    newGame();
   };
 
   return (
@@ -78,15 +108,12 @@ export default function SummaryScreen() {
       </View>
 
       <View style={styles.stats}>
-        {[
-          ['Rondes gespeeld', '3'],
-          ['Woorden in de pot', String(totalWords)],
-          ['Totaal geraad', String(state.totalWords)],
-          ['Seconden per beurt', `${state.turnSeconds}`],
-        ].map(([label, value]) => (
-          <View key={label} style={styles.stat}>
-            <Text style={styles.statValue}>{value}</Text>
-            <Text style={styles.statLabel}>{label}</Text>
+        {stats.map((stat) => (
+          <View key={stat.key} style={[styles.stat, stat.wide && styles.statWide]}>
+            <Text style={[styles.statValue, stat.wide && styles.statValueWord]} numberOfLines={1}>
+              {stat.value}
+            </Text>
+            <Text style={styles.statLabel}>{stat.label}</Text>
           </View>
         ))}
       </View>
@@ -150,7 +177,9 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     alignItems: 'center',
   },
-  statValue: { color: colors.text, fontSize: 20, fontWeight: '900' },
+  statWide: { flexGrow: 2 },
+  statValue: { color: colors.text, fontSize: 22, fontWeight: '900' },
+  statValueWord: { fontSize: 18, maxWidth: '100%' },
   statLabel: { color: colors.muted, fontSize: 11, fontWeight: '600', textAlign: 'center' },
   rounds: { gap: spacing.xs },
   roundRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },

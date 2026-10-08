@@ -1,6 +1,7 @@
-import { useEffect } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { Animated, StyleSheet, Text, View } from 'react-native';
 import { Check, Flag, SkipForward, Timer, X } from 'lucide-react-native';
+import { useFeedback } from '@/audio/FeedbackProvider';
 import { AppButton } from '@/components/AppButton';
 import { Avatar } from '@/components/Avatar';
 import { Badge } from '@/components/Badge';
@@ -44,15 +45,65 @@ function RoundTopBar({ round, title }: { round: number; title: string }) {
 export default function PlayScreen() {
   const { state, currentTeam, currentPlayer, standings, totalWords, startTurn, correctGuess, passGuess, tick, endTurn, endRound, nextRound } =
     useGameContext();
+  const { play } = useFeedback();
 
   const meta = ROUNDS.find((r) => r.number === state.currentRound) ?? ROUNDS[0];
   const color = currentTeam?.color ?? teamColor(0);
 
+  /** Tik- en tijd-op-geluiden lokaal uit de deadline, zodat ze precies op de seconde vallen. */
+  const lastTickSecond = useRef<number | null>(null);
+  const timeUpPlayed = useRef(false);
+
+  const remaining = state.timerRemaining;
+  const urgent = remaining <= 10;
+  const urgentCritical = remaining <= 5;
+
+  /** Pulserende schaalanimatie voor de timer in de laatste 10 seconden. */
+  const [pulse] = useState(() => new Animated.Value(1));
+
   useEffect(() => {
-    if (state.phase !== 'playing') return;
-    const id = setInterval(() => tick(Date.now()), 200);
+    if (state.phase !== 'playing') {
+      lastTickSecond.current = null;
+      timeUpPlayed.current = false;
+      return;
+    }
+    const startedAt = state.timerStartedAt;
+    const turnSeconds = state.turnSeconds;
+    if (startedAt == null) return;
+
+    const id = setInterval(() => {
+      const left = turnSeconds - Math.floor((Date.now() - startedAt) / 1000);
+      if (left <= 0) {
+        if (!timeUpPlayed.current) {
+          timeUpPlayed.current = true;
+          play('timeUp');
+          haptics.sustained();
+        }
+      } else if (left !== lastTickSecond.current) {
+        lastTickSecond.current = left;
+        if (left <= 10 && left % 2 === 0) {
+          play('tick');
+        }
+      }
+      tick(Date.now());
+    }, 200);
     return () => clearInterval(id);
-  }, [state.phase, tick]);
+  }, [state.phase, state.timerStartedAt, state.turnSeconds, tick, play]);
+
+  useEffect(() => {
+    if (!urgent || state.phase !== 'playing') {
+      pulse.setValue(1);
+      return;
+    }
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulse, { toValue: 1.15, duration: 450, useNativeDriver: true }),
+        Animated.timing(pulse, { toValue: 1, duration: 450, useNativeDriver: true }),
+      ])
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [urgent, state.phase, pulse]);
 
   if (state.phase === 'roundReview') {
     const isLastRound = state.currentRound >= 3;
@@ -108,6 +159,7 @@ topBar={<RoundTopBar round={state.currentRound} title={meta.title} />}
             label="Start beurt"
             size="xl"
             onPress={startTurn}
+            sound="turnStart"
             icon={<Timer size={20} color="#241A00" />}
           />
         }
@@ -133,10 +185,6 @@ topBar={<RoundTopBar round={state.currentRound} title={meta.title} />}
       </Screen>
     );
   }
-
-  const remaining = state.timerRemaining;
-  const urgent = remaining <= 10;
-  const urgentCritical = remaining <= 5;
 
   const onCorrect = () => {
     haptics.success();
@@ -169,7 +217,9 @@ topBar={<RoundTopBar round={state.currentRound} title={meta.title} />}
       <View style={styles.playTop}>
         <View style={styles.timerRow}>
           <View style={[styles.timerRing, urgent && styles.timerRingUrgent, urgentCritical && styles.timerRingCritical]}>
-            <Text style={[styles.timerText, urgent && styles.timerTextUrgent]}>{formatTime(remaining)}</Text>
+            <Animated.Text style={[styles.timerText, urgent && styles.timerTextUrgent, urgent && { transform: [{ scale: pulse }] }]}>
+              {formatTime(remaining)}
+            </Animated.Text>
             <Text style={styles.timerUnit}>seconden</Text>
           </View>
         </View>
@@ -189,6 +239,7 @@ topBar={<RoundTopBar round={state.currentRound} title={meta.title} />}
           size="xl"
           variant="success"
           onPress={onCorrect}
+          sound="correct"
           icon={<Check size={26} color="#04231A" />}
           style={styles.goedButton}
         />
@@ -198,6 +249,7 @@ topBar={<RoundTopBar round={state.currentRound} title={meta.title} />}
             size="lg"
             variant="secondary"
             onPress={onPass}
+            sound="decline"
             icon={<SkipForward size={20} color={colors.text} />}
             style={styles.actionPass}
           />
@@ -206,6 +258,7 @@ topBar={<RoundTopBar round={state.currentRound} title={meta.title} />}
             size="lg"
             variant="dangerOutline"
             onPress={endTurn}
+            sound="decline"
             icon={<X size={20} color={colors.danger} />}
             style={styles.actionStop}
           />
@@ -232,7 +285,7 @@ const styles = StyleSheet.create({
   timerRingUrgent: { borderColor: colors.warning, backgroundColor: 'rgba(251, 146, 60, 0.14)' },
   timerRingCritical: { borderColor: colors.danger, backgroundColor: colors.dangerSoft },
   timerText: { color: colors.text, fontSize: 44, fontWeight: '900', letterSpacing: -1.5, fontVariant: ['tabular-nums'] },
-  timerTextUrgent: { color: colors.warning },
+  timerTextUrgent: { color: colors.danger },
   timerUnit: { color: colors.muted, fontSize: 11, fontWeight: '800', letterSpacing: 1.4, textTransform: 'uppercase' },
   turnRow: {
     flexDirection: 'row',

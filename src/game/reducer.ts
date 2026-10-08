@@ -12,24 +12,25 @@ export type GameAction =
   | { type: 'REMOVE_TEAM'; teamId: string }
   | { type: 'RENAME_TEAM'; teamId: string; name: string }
   | { type: 'SET_TEAM_COLOR'; teamId: string; color: string }
-  | { type: 'ADD_PLAYER'; teamId: string; name: string }
+  | { type: 'ADD_PLAYER'; teamId: string; name: string; playerId?: string }
   | { type: 'RENAME_PLAYER'; teamId: string; playerId: string; name: string }
   | { type: 'REMOVE_PLAYER'; teamId: string; playerId: string }
   | { type: 'START_WORD_ENTRY' }
   | { type: 'SET_PLAYER_WORDS'; teamId: string; playerId: string; words: string[] }
   | { type: 'START_GAME' }
   | { type: 'START_ROUND'; round: number }
-  | { type: 'START_TURN' }
-  | { type: 'CORRECT_GUESS' }
-  | { type: 'PASS_GUESS' }
+  | { type: 'START_TURN'; now?: number }
+  | { type: 'CORRECT_GUESS'; now?: number }
+  | { type: 'PASS_GUESS'; now?: number }
   | { type: 'TICK'; now: number }
   | { type: 'END_TURN' }
   | { type: 'END_ROUND' }
   | { type: 'NEXT_ROUND' }
+  | { type: 'NEW_GAME' }
   | { type: 'RESET' };
 
 let idCounter = 0;
-function uid(): string {
+export function uid(): string {
   idCounter += 1;
   return `id-${idCounter}-${Math.random().toString(36).slice(2, 8)}`;
 }
@@ -167,7 +168,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
           const taken = t.players.map((p) => p.name);
           const requested = normalizePlayerName(action.name);
           const name = !requested || isNameTaken(requested, taken) ? nextFreePlayerName(taken) : requested;
-          return { ...t, players: [...t.players, { id: uid(), name }] };
+          return { ...t, players: [...t.players, { id: action.playerId ?? uid(), name }] };
         }),
       };
     }
@@ -211,6 +212,10 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         roundResults: [],
         winners: [],
         timerRemaining: state.turnSeconds,
+        wordOpenedAt: null,
+        guessTimes: [],
+        maxGuessStreak: 0,
+        guessStreak: 0,
       };
     }
 
@@ -252,12 +257,15 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         turnPasses: 0,
         timerRemaining: state.turnSeconds,
         timerStartedAt: null,
+        guessStreak: 0,
+        wordOpenedAt: null,
         roundResults: [...state.roundResults.filter((r) => r.round !== action.round), { round: action.round, completed: false }],
       };
     }
 
     case 'START_TURN': {
-      return { ...state, phase: 'playing', timerRemaining: state.turnSeconds, timerStartedAt: Date.now() };
+      const now = action.now ?? Date.now();
+      return { ...state, phase: 'playing', timerRemaining: state.turnSeconds, timerStartedAt: now, wordOpenedAt: now };
     }
 
     case 'CORRECT_GUESS': {
@@ -265,6 +273,11 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       if (current == null) return state;
       const teamId = state.teams[state.currentTeamIndex]?.id;
       const scores = teamId ? { ...state.scores, [teamId]: (state.scores[teamId] ?? 0) + 1 } : state.scores;
+      const now = action.now ?? Date.now();
+      const guessTimes =
+        state.wordOpenedAt != null
+          ? [...state.guessTimes, { word: current, seconds: Math.max(0, Math.round((now - state.wordOpenedAt) / 100) / 10) }]
+          : state.guessTimes;
       const { pot, current: next } = redraw(rest, null);
       return {
         ...state,
@@ -273,6 +286,10 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         currentWord: next,
         turnPoints: state.turnPoints + 1,
         totalWords: state.totalWords + 1,
+        guessStreak: state.guessStreak + 1,
+        maxGuessStreak: Math.max(state.maxGuessStreak, state.guessStreak + 1),
+        guessTimes,
+        wordOpenedAt: next == null ? null : now,
         phase: next == null ? 'roundReview' : 'playing',
       };
     }
@@ -280,8 +297,16 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
     case 'PASS_GUESS': {
       const { rest, current } = popCurrent(state.pot);
       if (current == null) return state;
+      const now = action.now ?? Date.now();
       const { pot, current: next } = redraw(rest, current);
-      return { ...state, pot, currentWord: next, turnPasses: state.turnPasses + 1 };
+      return {
+        ...state,
+        pot,
+        currentWord: next,
+        turnPasses: state.turnPasses + 1,
+        guessStreak: 0,
+        wordOpenedAt: next == null ? null : now,
+      };
     }
 
     case 'TICK': {
@@ -305,6 +330,8 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         turnsThisRound: state.turnsThisRound + 1,
         turnPoints: 0,
         turnPasses: 0,
+        guessStreak: 0,
+        wordOpenedAt: null,
         timerRemaining: state.turnSeconds,
         timerStartedAt: null,
       };
@@ -334,8 +361,20 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         currentWord: null,
         turnPoints: 0,
         turnPasses: 0,
+        guessStreak: 0,
+        wordOpenedAt: null,
         timerRemaining: state.turnSeconds,
         timerStartedAt: null,
+      };
+    }
+
+    case 'NEW_GAME': {
+      return {
+        ...initialGameState,
+        teams: state.teams,
+        turnSeconds: state.turnSeconds,
+        timerRemaining: state.turnSeconds,
+        wordsPerPlayer: state.wordsPerPlayer,
       };
     }
 

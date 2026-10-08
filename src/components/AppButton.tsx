@@ -1,5 +1,7 @@
 import { ReactNode } from 'react';
-import { Platform, Pressable, PressableProps, StyleSheet, Text, View, ViewStyle } from 'react-native';
+import { GestureResponderEvent, Platform, Pressable, PressableProps, StyleSheet, Text, View, ViewStyle } from 'react-native';
+import { useFeedback } from '@/audio/FeedbackProvider';
+import type { SoundKey } from '@/audio/sounds';
 import { colors, radius, spacing } from '@/theme';
 
 type Variant = 'primary' | 'secondary' | 'ghost' | 'success' | 'danger' | 'dangerOutline';
@@ -44,15 +46,25 @@ type AppButtonProps = Omit<PressableProps, 'style'> & {
   iconOnly?: boolean;
   fullWidth?: boolean;
   style?: ViewStyle;
+  /** Geluid bij het drukken; `null` laat de knop geluidloos. */
+  sound?: SoundKey | null;
+  /** Kleine lichte pill naast het label (bijv. "Coming soon"). */
+  badge?: string;
 };
 
-export function AppButton({ label, variant = 'primary', size = 'md', icon, iconOnly = false, fullWidth = true, disabled, style, ...rest }: AppButtonProps) {
+export function AppButton({ label, variant = 'primary', size = 'md', icon, iconOnly = false, fullWidth = true, disabled, style, sound = 'accept', badge, onPress, ...rest }: AppButtonProps) {
+  const { play } = useFeedback();
   const dims = sizes[size];
+  const handlePress = (event: GestureResponderEvent) => {
+    if (sound) play(sound);
+    onPress?.(event);
+  };
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityState={{ disabled: !!disabled }}
       disabled={disabled}
+      onPress={handlePress}
       style={(state) => [
         styles.base,
         {
@@ -77,6 +89,11 @@ export function AppButton({ label, variant = 'primary', size = 'md', icon, iconO
           {label}
         </Text>
       )}
+      {badge ? (
+        <View style={styles.badge}>
+          <Text style={styles.badgeText}>{badge}</Text>
+        </View>
+      ) : null}
     </Pressable>
   );
 }
@@ -98,4 +115,14 @@ const styles = StyleSheet.create({
   icon: { marginRight: 2 },
   iconOnly: { marginRight: 0 },
   label: { fontWeight: '800', letterSpacing: 0.2, textAlign: 'center' },
+  badge: {
+    backgroundColor: 'rgba(255, 255, 255, 0.09)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.16)',
+    borderRadius: radius.pill,
+    paddingHorizontal: spacing.sm + 2,
+    paddingVertical: 2,
+    marginLeft: spacing.xs,
+  },
+  badgeText: { color: colors.muted, fontSize: 11, fontWeight: '800', letterSpacing: 0.4 },
 });

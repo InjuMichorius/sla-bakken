@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Platform, Pressable, StyleSheet, View } from 'react-native';
+import { router } from 'expo-router';
 import { LogOut } from 'lucide-react-native';
+import { useFeedback } from '@/audio/FeedbackProvider';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { useGameContext } from '@/game/GameProvider';
 import { haptics } from '@/lib/haptics';
@@ -9,18 +11,23 @@ import { colors } from '@/theme';
 /** Top-left exit for every screen after setup; asks before throwing the game away. */
 export function QuitGameButton() {
   const { reset } = useGameContext();
+  const { play } = useFeedback();
   const [open, setOpen] = useState(false);
 
   const confirm = () => {
     haptics.warning();
     setOpen(false);
     reset();
+    router.replace('/');
   };
 
   return (
     <>
       <Pressable
-        onPress={() => setOpen(true)}
+        onPress={() => {
+          play('decline');
+          setOpen(true);
+        }}
         accessibilityRole="button"
         accessibilityLabel="Spel verlaten"
         accessibilityHint="Stopt het huidige spel en gaat terug naar het begin"
@@ -33,7 +40,7 @@ export function QuitGameButton() {
       <ConfirmDialog
         visible={open}
         title="Spel verlaten?"
-        message="De teams, woorden en scores van dit spel verdwijnen. Je begint opnieuw bij de instellingen."
+        message="De teams, woorden en scores van dit spel verdwijnen. Je bent daarna terug bij het hoofdmenu."
         confirmLabel="Spel verlaten"
         destructive
         onConfirm={confirm}

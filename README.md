@@ -90,9 +90,11 @@ npx expo-doctor              # diagnose van dependency- en configproblemen
 
 Een groep speelt met **één gedeelde telefoon**. Het spel bestaat uit een **setupfase**, een **woord-invoerfase** en daarna **drie rondes**. Binnen elke ronde wisselen teams elke beurt van speler, net als bij het echte hoedenspel.
 
+Het hoofdmenu (`src/app/index.tsx`) biedt drie ingangen: **Spel starten** (naar de setup-wizard), **Instellingen** (geluiden en trillingen) en **Speluitleg**. Daaronder staat een **Talen**-knop die voor nu alleen een "Binnenkort beschikbaar"-melding toont.
+
 ### 1. Setup — wie speelt mee?
 
-Een wizard van drie stappen:
+Een wizard van drie stappen (`src/app/setup.tsx`):
 
 1. **Team 1** — naam aanpassen, spelers toevoegen/verwijderen/hernoemen (DiceBear-avatar per speler).
 2. **Team 2** — idem.
@@ -107,7 +109,7 @@ Een wizard van drie stappen:
 Naamlimieten: teamnaam max. 24 tekens, spelersnaam max. 10 tekens.
 
 Minimum om te kunnen starten: **2 teams × 2 spelers = 4 mensen** (`isSetupValid` in `src/game/reducer.ts:85`).
-De wizard is bewust vastgeschroefd op 2 teams (`TOTAL_STEPS = 3` in `src/app/index.tsx:22`); de reducer ondersteunt meer teams (`ADD_TEAM` / `REMOVE_TEAM`) en wint met `MIN_TEAMS = 2`, maar de UI biedt die acties niet aan.
+De wizard is bewust vastgeschroefd op 2 teams (`TOTAL_STEPS = 3` in `src/app/setup.tsx:21`); de reducer ondersteunt meer teams (`ADD_TEAM` / `REMOVE_TEAM`) en wint met `MIN_TEAMS = 2`, maar de UI biedt die acties niet aan.
 
 ### 2. Woorden invoeren — de geheime woorden
 
@@ -175,7 +177,7 @@ const playerIndex = Math.floor(nextTurn / teamCount) % playerCount;
 
 ### 7. Eindstand
 
-Het samenvattingsscherm toont de winnaar(s), een **podium van de top 3** (🥇🥈🥉), de overige teams eronder, en vier stat-tiles: rondes gespeeld, woorden in de pot, totaal geraden en seconden per beurt. "Nieuw spel" reset naar de setup — je instellingen (woorden per speler, tijd per beurt) blijven behouden.
+Het samenvattingsscherm toont de winnaar(s), een **podium van de top 3** (🥇🥈🥉), de overige teams eronder, en drie stat-tiles: snelst geraden woord (woord + tijd), gemiddelde tijd per woord en de langste reeks goed geraden woorden. "Nieuw spel" (actie `NEW_GAME`) begint een nieuwe partij met dezelfde teams: je komt op team 1 van de wizard terecht, de instellingen (woorden per speler, tijd per beurt) blijven staan en de woorden worden opnieuw ingevuld.
 
 ---
 
@@ -185,7 +187,7 @@ Het samenvattingsscherm toont de winnaar(s), een **podium van de top 3** (🥇�
 
 - 3 vaste rondes met elk een eigen mechaniek en een eigen regelscherm
 - Strikte team-alternatie, met rotatie van alle spelers ook bij ongelijke teamgroottes
-- Configureerbare pot: 1–10 woorden per speler, timer 30/45/60/90/120 s
+- Configureerbare pot: 1–10 woorden per speler, timer 15/30/45/60/90 s
 - Passen ("Pas") zonder straf, met reshuffle van de pot
 - Volledige pot-reset per ronde — elke ronde een nieuwe start
 - Gelijkspel-detectie met meerdere winnaars
@@ -195,7 +197,7 @@ Het samenvattingsscherm toont de winnaar(s), een **podium van de top 3** (🥇�
 **Spelers & input**
 
 - Teams en spelers aanmaken, hernoemen en verwijderen (met bevestigingsdialoog)
-- DiceBear-avatar's (stijl `toon-head`, seed uit team- + spelersnaam), met fallback naar initialen op de teamkleur als de afbeelding niet laadt
+- DiceBear-avatar's (stijl `critters`, seed uit spelersnaam, het lijf in de teamkleur via `bodyColor`), met fallback naar initialen op de teamkleur als de afbeelding niet laadt
 - Woorden intypen óf random rollen uit een bank van 327 Nederlandse woorden
 - Doorgeven-de-telefoon- schermen zodat niemand andermans woorden ziet
 
@@ -244,26 +246,36 @@ Elke speler levert woorden voor het eigen team; **het team dat het woord heeft i
 ```
 src/
 ├── app/                    # Expo Router — elk bestand is een scherm
-│   ├── _layout.tsx         # root layout, GameProvider, phase → route mapping
+│   ├── _layout.tsx         # root layout, FeedbackProvider, GameProvider, phase → route mapping
 │   ├── +html.tsx           # custom HTML root voor web
-│   ├── index.tsx           # route /         → setup-wizard
-│   ├── words.tsx           # route /words    → woorden invoeren (+ handoff)
-│   ├── round.tsx           # route /round    → introductie per ronde
-│   ├── play.tsx            # route /play     → handoff, spelen én ronde-overzicht
-│   └── summary.tsx         # route /summary  → eindstand
-├── components/             # AppButton, Avatar, Badge, ConfirmDialog,
-│                           # QuitGameButton, RoundIcon, Screen, Standings
+│   ├── index.tsx           # route /              → hoofdmenu
+│   ├── setup.tsx           # route /setup         → setup-wizard (teams + instellingen)
+│   ├── settings.tsx        # route /settings      → geluiden, trillingen, standaarden
+│   ├── how-to-play.tsx     # route /how-to-play   → speluitleg
+│   ├── words.tsx           # route /words         → woorden invoeren (+ handoff)
+│   ├── round.tsx           # route /round         → introductie per ronde
+│   ├── play.tsx            # route /play          → handoff, spelen én ronde-overzicht
+│   └── summary.tsx         # route /summary       → eindstand
+├── audio/                  # geluidslag
+│   ├── sounds.ts           # registry: sleutel, label, hint en `require()` per geluid
+│   └── FeedbackProvider.tsx# players, volume/schakelaars, opslag in AsyncStorage
+├── components/             # AppButton, Avatar, BackButton, Badge, ConfirmDialog,
+│                           # GameSettingsCard, QuitGameButton, RoundIcon, Screen, Standings
 ├── game/                   # pure, framework-vrije spel-logica
 │   ├── constants.ts        # tunable waarden + de definitie van de 3 rondes
 │   ├── types.ts            # GameState, Phase, initialGameState
-│   ├── reducer.ts          # gameReducer: 20 actions, rotatie, pot, scores
+│   ├── reducer.ts          # gameReducer: 23 actions, rotatie, pot, scores
 │   ├── useGame.ts          # useReducer + memo's + context value
 │   ├── GameProvider.tsx    # context provider
 │   ├── wordBank.ts         # 327 Nederlandse woorden
 │   ├── randomWord.ts       # pickRandomWord(used)
 │   └── colors.ts           # teamColor(index), 8 kleuren
-├── lib/haptics.ts          # haptische feedback, fail-safe
+├── lib/haptics.ts          # haptische feedback, fail-safe, aan/uit via de instellingen
 └── theme.ts                # kleuren, spacing, radius, gedeelde styles
+
+assets/sounds/              # placeholder-WAV's; actief: accept, decline, correct,
+                            # turnStart, tick, timeUp, victory (+ oude ongebruikte
+                            # bestanden; verwijder ze gerust)
 
 scripts/
 ├── game.test.ts            # testsuite voor reducer/woordenbank/standings
@@ -277,25 +289,25 @@ scripts/
 
 ### De reducer is de enige bron van waarheid
 
-Alle spelstatus zit in één `useReducer` (`src/game/useGame.ts:49`), zonder persistence-middleware en zonder dependency. Er is geen AsyncStorage, MMKV of localStorage in het project — **een spel overleeft het afsluiten van de app of herladen van de webbundel dus niet**. Alleen `RESET` (een zachte reset binnen dezelfde sessie) behoudt `turnSeconds` en `wordsPerPlayer`.
+Alle spelstatus zit in één `useReducer` (`src/game/useGame.ts`), zonder persistence-middleware en zonder dependency op de reducer. Van het spel zelf wordt niets weggeschreven: geen MMKV, geen localStorage. Wél staan de **pot-instellingen** (woorden per speler, tijd per beurt) in AsyncStorage (`@sla-bakken/game-settings` in `useGame.ts`) en de geluids- en trillingsvoorkeuren (`src/audio/FeedbackProvider.tsx`), zodat een volgend spel zijn beginwaarden onthoudt. **Een spel in uitvoering overleeft het afsluiten van de app of herladen van de webbundel dus niet.** `NEW_GAME` (nieuw spel vanaf de eindstand) houdt de teams en de instellingen (`turnSeconds`, `wordsPerPlayer`) maar wist de woorden; `RESET` (stoppen via de quit-knop) wist alles behalve `turnSeconds` en `wordsPerPlayer`.
 
 Dat de app geen persistentie heeft, is geen ongeval maar een ontwerpkeuze: het spel bestaat uit geheime woorden die je niet op schijf wilt laten staan, en de hele flow is "telefoon doorgeven en spelen". De quit-dialoog zegt dit expliciet: *"De teams, woorden en scores van dit spel verdwijnen."*
 
 ### Navigatie wordt afgeleid van de fase
 
-In plaats van dat schermen zelf `router.push()`en, bepaalt de reducer de fase en wordt de route daarop afgeleid (`src/app/_layout.tsx:14`):
+Voor er een spel loopt beweeg je vrij tussen `/` (hoofdmenu), `/setup`, `/settings` en `/how-to-play` — die schermen `router.push()`en naar elkaar. Zodra de fase `wordEntry` of verder is, bepaalt de reducer de fase en wordt de route daarop afgeleid (`src/app/_layout.tsx`):
 
 ```ts
 const ROUTE_FOR_PHASE: Record<Phase, string> = {
-  setup: '/',          wordEntry: '/words',     roundIntro: '/round',
-  handoff: '/play',    playing: '/play',        roundReview: '/play',
+  setup: '/setup',      wordEntry: '/words',     roundIntro: '/round',
+  handoff: '/play',     playing: '/play',        roundReview: '/play',
   summary: '/summary',
 };
 ```
 
-Een `PhaseRouter` in de layout doet `router.replace(target)` zodra de fase verandert. De URL kan daardoor nooit uit sync raken met de spelstatus, en de back-stack bouwt zich niet op. Let op: `handoff`, `playing` en `roundReview` delen alle drie `/play` — die fase wordt binnen dat scherm opgesplitst.
+Een `PhaseRouter` in de layout doet `router.replace(target)` zodra de fase verandert. De URL kan daardoor nooit uit sync raken met de spelstatus, en de back-stack bouwt zich niet op. Zolang de fase `setup` is, grijpt hij alleen in als je buiten de menu-routes (`MENU_ROUTES`) zit. Let op: `handoff`, `playing` en `roundReview` delen alle drie `/play` — die fase wordt binnen dat scherm opgesplitst.
 
-### De 20 actions
+### De 21 actions
 
 ```
 SET_TURN_SECONDS  SET_WORDS_PER_PLAYER  ENSURE_DEFAULT_TEAMS
@@ -305,7 +317,7 @@ START_WORD_ENTRY   SET_PLAYER_WORDS       START_GAME
 START_ROUND        START_TURN
 CORRECT_GUESS      PASS_GUESS             TICK
 END_TURN           END_ROUND              NEXT_ROUND
-RESET
+NEW_GAME           RESET
 ```
 
 Enkele guards die het gedrag bepalen:
@@ -345,9 +357,10 @@ const remaining = Math.max(
 | Wil je… | Raak dan aan |
 | --- | --- |
 | Een 4e ronde toevoegen | `ROUNDS` in `src/game/constants.ts` **én** de hardcoded `3` in `END_ROUND` (`reducer.ts:283`) |
-| Meer teams in de UI | De wizard in `src/app/index.tsx` (`TOTAL_STEPS`, `currentTeam`) — reducer en `ADD_TEAM` ondersteunen het al |
+| Meer teams in de UI | De wizard in `src/app/setup.tsx` (`TOTAL_STEPS`, `currentTeam`) — reducer en `ADD_TEAM` ondersteunen het al |
 | Eigen woordencategorieën | `WORD_BANK` is een platte `string[]`; voeg structuur toe of splits het bestand per thema |
-| Geluidseffecten | `expo-audio` is al geïnstalleerd en in `app.json` geregistreerd, maar nergens geïmporteerd |
+| Eigen geluidseffecten | Vervang de bestanden in `assets/sounds/` (of de `require`s in `src/audio/sounds.ts`); de plug-in staat al in `app.json` |
+| Een geluidseffect toevoegen | Voeg een sleutel toe in `src/audio/sounds.ts` en roep `play('jouwSleutel')` aan (of geef `sound="..."` aan een `AppButton`) |
 | Timerwaarden aanpassen | `TURN_SECONDS_OPTIONS` (UI) + de clamp in `reducer.ts:93` |
 | Besturing toevoegen | `types.ts` (vraag de beurt met hints) → `reducer.ts` (nieuwe actions) → `useGame.ts` (exposeer in de context) |
 

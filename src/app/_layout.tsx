@@ -3,6 +3,7 @@ import { StyleSheet, View } from 'react-native';
 import { Stack, router, usePathname } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { FeedbackProvider } from '@/audio/FeedbackProvider';
 import { GameProvider, useGameContext } from '@/game/GameProvider';
 import { Phase } from '@/game/types';
 import { colors } from '@/theme';
@@ -12,7 +13,7 @@ import { colors } from '@/theme';
  * current phase, so the URL can never drift out of sync with the game state.
  */
 const ROUTE_FOR_PHASE: Record<Phase, string> = {
-  setup: '/',
+  setup: '/setup',
   wordEntry: '/words',
   roundIntro: '/round',
   handoff: '/play',
@@ -21,14 +22,19 @@ const ROUTE_FOR_PHASE: Record<Phase, string> = {
   summary: '/summary',
 };
 
+/** Zolang er geen spel loopt mag de gebruiker vrij tussen menu, setup, instellingen en uitleg. */
+const MENU_ROUTES = new Set(['/', '/setup', '/settings', '/how-to-play']);
+
 function PhaseRouter() {
   const { state } = useGameContext();
   const pathname = usePathname();
   const target = ROUTE_FOR_PHASE[state.phase];
 
   useEffect(() => {
-    if (target !== pathname) router.replace(target as never);
-  }, [target, pathname]);
+    if (target === pathname) return;
+    if (state.phase === 'setup' && MENU_ROUTES.has(pathname)) return;
+    router.replace(target as never);
+  }, [state.phase, target, pathname]);
 
   return null;
 }
@@ -36,20 +42,22 @@ function PhaseRouter() {
 export default function RootLayout() {
   return (
     <SafeAreaProvider>
-      <GameProvider>
-        <StatusBar style="light" />
-        <PhaseRouter />
-        <View style={styles.root}>
-          <Stack
-            screenOptions={{
-              headerShown: false,
-              contentStyle: { backgroundColor: colors.bg },
-              animation: 'fade',
-              gestureEnabled: false,
-            }}
-          />
-        </View>
-      </GameProvider>
+      <FeedbackProvider>
+        <GameProvider>
+          <StatusBar style="light" />
+          <PhaseRouter />
+          <View style={styles.root}>
+            <Stack
+              screenOptions={{
+                headerShown: false,
+                contentStyle: { backgroundColor: colors.bg },
+                animation: 'fade',
+                gestureEnabled: false,
+              }}
+            />
+          </View>
+        </GameProvider>
+      </FeedbackProvider>
     </SafeAreaProvider>
   );
 }

@@ -49,15 +49,18 @@ export default function WordEntryScreen() {
         scroll={false}
         contentStyle={styles.handoffContent}
         footer={
-          <AppButton
-            label="Ik heb de telefoon"
-            size="lg"
-            onPress={() => {
-              haptics.light();
-              setStage('entry');
-            }}
-            icon={<CircleArrowRight size={20} color="#241A00" />}
-          />
+          <>
+            <AppButton
+              label="Ik heb de telefoon"
+              size="lg"
+              onPress={() => {
+                haptics.light();
+                setStage('entry');
+              }}
+              icon={<CircleArrowRight size={20} color="#241A00" />}
+            />
+            <Text style={styles.footerHint}>{entry.player.name} moet op deze knop klikken</Text>
+          </>
         }
       >
         <View style={styles.handoffBody}>
@@ -257,6 +260,7 @@ function RosterDots({ roster, index, currentFill }: { roster: RosterEntry[]; ind
   return (
     <View
       style={styles.dots}
+      pointerEvents="none"
       accessible
       accessibilityRole="progressbar"
       accessibilityLabel={`Speler ${index + 1} van ${roster.length}`}
@@ -282,7 +286,20 @@ const styles = StyleSheet.create({
   handoffName: { color: colors.text, fontSize: 36, fontWeight: '900', letterSpacing: -1, textAlign: 'center' },
   /** Badge stretches to the start by default, which breaks the centred handoff column. */
   teamBadge: { alignSelf: 'center' },
-  dots: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm },
+  /**
+   * Absolutely positions the dots in the centre of the top bar, so they stay
+   * centred even though the quit button (left) is narrower than the scoreboard
+   * (right). pointerEvents is off — the dots are decoration only.
+   */
+  dots: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
+  },
   dot: { width: 12, height: 12, borderRadius: 6, borderWidth: 1, borderColor: colors.border, overflow: 'hidden' },
   dotCurrent: { borderWidth: 2, borderColor: colors.accent },
   dotFull: { backgroundColor: colors.accent },

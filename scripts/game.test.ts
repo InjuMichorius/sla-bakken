@@ -102,7 +102,7 @@ check('ENSURE_DEFAULT_TEAMS vult twee teams met standaardnamen', () => {
   assert.deepEqual(s.teams.map((t) => t.name), ['Team 1', 'Team 2']);
   assert.deepEqual(s.teams.map((t) => t.players.map((p) => p.name)), [
     ['Speler 1', 'Speler 2'],
-    ['Speler 1', 'Speler 2'],
+    ['Speler 3', 'Speler 4'],
   ]);
   assert.equal(isSetupValid(s), true, 'de wizard start direct in een geldige opstelling');
   assert.deepEqual(Object.values(s.scores), [0, 0]);
@@ -365,6 +365,20 @@ check('RESET wist alles behalve de instellingen', () => {
   s = gameReducer(s, { type: 'RESET' });
   assert.equal(s.wordsPerPlayer, 8, 'woorden per speler blijft staan voor het volgende spel');
 });
+check('NEW_GAME houdt teams, wist de woorden', () => {
+  const seeded = withWords(seededSetup());
+  let s = gameReducer(seeded, { type: 'START_GAME' });
+  s = gameReducer(s, { type: 'START_ROUND', round: 1 });
+  s = guessWholePot(s);
+  s = gameReducer(s, { type: 'NEW_GAME' });
+  assert.equal(s.phase, 'setup');
+  assert.deepEqual(s.teams, seeded.teams, 'alle teams, spelers, namen en kleuren blijven staan');
+  assert.equal(s.wordEntries.length, 0, 'woorden worden opnieuw gekozen');
+  assert.equal(s.totalWords, 0);
+  assert.equal(Object.keys(s.scores).length, 0);
+  assert.equal(s.winners.length, 0);
+  assert.equal(s.roundResults.length, 0);
+});
 
 console.log('\nrandomizer');
 check('woordenbank bevat alleen bruikbare woorden', () => {
@@ -411,8 +425,8 @@ check('teamScoresOf gebruikt teamkleuren en scores', () => {
   assert.equal(rows[0].score, 7);
   assert.equal(rows[1].score, 2);
   assert.equal(rows[2].score, 0, 'ontbrekende score telt als 0');
-  assert.equal(rows[0].color, '#FF6B6B');
-  assert.equal(rows[1].color, '#4ECDC4');
+  assert.equal(rows[0].color, '#60A5FA');
+  assert.equal(rows[1].color, '#FB923C');
 });
 
 console.log(failures === 0 ? '\nAlles slaagt\n' : `\n${failures} test(s) gefaald\n`);
