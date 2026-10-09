@@ -9,12 +9,14 @@ import { QuitGameButton } from '@/components/QuitGameButton';
 import { TeamScoreboard } from '@/components/TeamScoreboard';
 import { ROUNDS } from '@/game/constants';
 import { useGameContext } from '@/game/GameProvider';
+import { useI18n } from '@/i18n/LanguageProvider';
 import { haptics } from '@/lib/haptics';
 import { colors, radius, spacing } from '@/theme';
 
 export default function SummaryScreen() {
   const { state, standings, newGame } = useGameContext();
   const { play } = useFeedback();
+  const { t } = useI18n();
   const winners = standings.filter((s) => s.isWinner);
   const isTie = winners.length > 1;
 
@@ -29,12 +31,12 @@ export default function SummaryScreen() {
   const stats = [
     {
       key: 'fastest',
-      label: fastest != null ? `Snelst geraden (${fastest.seconds.toFixed(1)}s)` : 'Snelst geraden',
+      label: fastest != null ? t('summary.fastestWith', { s: fastest.seconds.toFixed(1) }) : t('summary.fastest'),
       value: fastest?.word ?? '–',
       wide: true,
     },
-    { key: 'avg', label: 'Gemiddeld per woord', value: avgSeconds != null ? `${avgSeconds.toFixed(1)}s` : '–', wide: false },
-    { key: 'streak', label: 'Langste reeks', value: hasGuesses ? String(state.maxGuessStreak) : '–', wide: false },
+    { key: 'avg', label: t('summary.avg'), value: avgSeconds != null ? `${avgSeconds.toFixed(1)}s` : '–', wide: false },
+    { key: 'streak', label: t('summary.streak'), value: hasGuesses ? String(state.maxGuessStreak) : '–', wide: false },
   ] as const;
 
   /** Een keer bij het openen van de eindstand, niet opnieuw bij elke settings-wijziging. */
@@ -59,17 +61,19 @@ export default function SummaryScreen() {
         </>
       }
       contentStyle={styles.content}
-      footer={<AppButton label="Nieuw spel" size="xl" onPress={playAgain} icon={<RotateCcw size={20} color="#241A00" />} />}
+      footer={<AppButton label={t('summary.newGame')} size="xl" onPress={playAgain} icon={<RotateCcw size={20} color="#241A00" />} />}
     >
       <View style={styles.hero}>
         <View style={styles.iconWrap}>
           {isTie ? <PartyPopper size={32} color={colors.accent} /> : <Trophy size={32} color={colors.accent} />}
         </View>
-        <Text style={styles.eyebrow}>Eindstand na 3 rondes</Text>
+        <Text style={styles.eyebrow}>{t('summary.eyebrow')}</Text>
         <Text style={styles.winner} numberOfLines={2}>
-          {isTie ? winners.map((w) => w.name).join(' & ') : `${winners[0]?.name ?? 'Iedereen'}`}
+          {isTie ? winners.map((w) => w.name).join(' & ') : `${winners[0]?.name ?? t('summary.everyone')}`}
         </Text>
-        <Text style={styles.winnerLabel}>{isTie ? 'Gewonnen met gelijkspel' : 'wint met ' + (winners[0]?.score ?? 0) + ' punten'}</Text>
+        <Text style={styles.winnerLabel}>
+          {isTie ? t('summary.tie') : t('summary.wins', { n: winners[0]?.score ?? 0 })}
+        </Text>
       </View>
 
       <View style={styles.podium}>
@@ -124,8 +128,8 @@ export default function SummaryScreen() {
             <View style={styles.roundIndex}>
               <Text style={styles.roundIndexText}>{r.number}</Text>
             </View>
-            <Text style={styles.roundName}>{r.title}</Text>
-            <Text style={styles.roundRule}>{r.tagline}</Text>
+            <Text style={styles.roundName}>{t(r.title)}</Text>
+            <Text style={styles.roundRule}>{t(r.tagline)}</Text>
           </View>
         ))}
       </View>

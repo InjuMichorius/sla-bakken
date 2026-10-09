@@ -2,12 +2,15 @@ import { Platform, Pressable, StyleSheet } from 'react-native';
 import { router } from 'expo-router';
 import { CircleArrowLeft } from 'lucide-react-native';
 import { useFeedback } from '@/audio/FeedbackProvider';
+import { useI18n } from '@/i18n/LanguageProvider';
 import { haptics } from '@/lib/haptics';
 import { colors } from '@/theme';
 
 /** Terugknop voor menu-achtige schermen; valt terug op het hoofdmenu bij een lege geschiedenis. */
-export function BackButton({ to = '/', label = 'Terug' }: { to?: string; label?: string }) {
+export function BackButton({ to = '/', label }: { to?: string; label?: string }) {
   const { play } = useFeedback();
+  const { t } = useI18n();
+  const a11yLabel = label ?? t('common.back');
 
   const goBack = () => {
     haptics.light();
@@ -20,7 +23,7 @@ export function BackButton({ to = '/', label = 'Terug' }: { to?: string; label?:
     <Pressable
       onPress={goBack}
       accessibilityRole="button"
-      accessibilityLabel={label}
+      accessibilityLabel={a11yLabel}
       style={({ pressed }) => [styles.button, pressed && styles.pressed]}
     >
       <CircleArrowLeft size={24} color={colors.text} />

@@ -9,10 +9,11 @@ import { QuitGameButton } from '@/components/QuitGameButton';
 import { TeamScoreboard } from '@/components/TeamScoreboard';
 import { useGameContext } from '@/game/GameProvider';
 import type { Player, Team } from '@/game/types';
+import { useI18n } from '@/i18n/LanguageProvider';
+import { haptics } from '@/lib/haptics';
+import { colors, radius, spacing, noOutline } from '@/theme';
 import { pickRandomWord } from '@/game/randomWord';
 import type { RosterEntry } from '@/game/useGame';
-import { haptics } from '@/lib/haptics';
-import { colors, noOutline, radius, spacing } from '@/theme';
 
 const emptyWords = (count: number): string[] => Array.from({ length: count }, () => '');
 
@@ -25,11 +26,13 @@ export default function WordEntryScreen() {
 
   const entry = roster[index];
 
+  const { t } = useI18n();
+
   if (!entry) {
     return (
       <Screen topBar={<TeamScoreboard />} scroll={false} contentStyle={styles.centered}>
-        <Text style={styles.muted}>Iedereen heeft zijn woorden ingevoerd.</Text>
-        <AppButton label="Naar de regels" size="lg" onPress={startGame} />
+        <Text style={styles.muted}>{t('words.done')}</Text>
+        <AppButton label={t('words.toRules')} size="lg" onPress={startGame} />
       </Screen>
     );
   }
@@ -51,7 +54,7 @@ export default function WordEntryScreen() {
         footer={
           <>
             <AppButton
-              label="Ik heb de telefoon"
+              label={t('words.iHavePhone')}
               size="lg"
               onPress={() => {
                 haptics.light();
@@ -59,12 +62,12 @@ export default function WordEntryScreen() {
               }}
               icon={<CircleArrowRight size={20} color="#241A00" />}
             />
-            <Text style={styles.footerHint}>{entry.player.name} moet op deze knop klikken</Text>
+            <Text style={styles.footerHint}>{t('words.handoffHint', { name: entry.player.name })}</Text>
           </>
         }
       >
         <View style={styles.handoffBody}>
-          <Text style={styles.handoffTitle}>Geef de telefoon aan</Text>
+          <Text style={styles.handoffTitle}>{t('words.givePhone')}</Text>
           <Avatar name={entry.player.name} color={color} size={104} />
           <Text style={styles.handoffName}>{entry.player.name}</Text>
           <Badge color={color} style={styles.teamBadge}>
@@ -110,6 +113,7 @@ type PlayerWordFormProps = {
 
 function PlayerWordForm({ team, player, color, position, isLast, roster, index, onSave }: PlayerWordFormProps) {
   const { state, setPlayerWords } = useGameContext();
+  const { t, language } = useI18n();
   const inputs = useRef<(TextInput | null)[]>([]);
   const perPlayer = state.wordsPerPlayer;
   const [words, setWords] = useState<string[]>(() => {
@@ -130,7 +134,7 @@ function PlayerWordForm({ team, player, color, position, isLast, roster, index, 
       ...words.filter((w, i) => i !== index && w.trim().length > 0),
       ...state.wordEntries.filter((e) => e.playerId !== player.id).map((e) => e.word),
     ];
-    setWords((prev) => prev.map((w, i) => (i === index ? pickRandomWord(used) : w)));
+    setWords((prev) => prev.map((w, i) => (i === index ? pickRandomWord(used, language) : w)));
     haptics.light();
   };
 
@@ -160,15 +164,15 @@ function PlayerWordForm({ team, player, color, position, isLast, roster, index, 
       footer={
         <>
           <AppButton
-            label={isLast ? 'Opslaan & naar de regels' : 'Opslaan & volgende speler'}
+            label={isLast ? t('words.saveRules') : t('words.saveNext')}
             size="lg"
             onPress={save}
             disabled={filled === 0}
           />
           <Text style={styles.footerHint}>
             {missing === 0
-              ? 'Alles ingevuld, je kunt doorgaan.'
-              : `Nog ${missing} woord${missing === 1 ? '' : 'en'} te gaan (minimaal 1 woord nodig).`}
+              ? t('words.footerComplete')
+              : t('words.footerMissing', { n: missing })}
           </Text>
         </>
       }
@@ -176,7 +180,7 @@ function PlayerWordForm({ team, player, color, position, isLast, roster, index, 
       <View style={styles.headRow}>
         <Avatar name={player.name} color={color} size={46} />
         <View style={styles.headText}>
-          <Text style={styles.headLabel}>Aan de beurt</Text>
+          <Text style={styles.headLabel}>{t('words.turnOf')}</Text>
           <Text style={styles.headName} numberOfLines={1}>
             {player.name}
           </Text>
@@ -186,9 +190,7 @@ function PlayerWordForm({ team, player, color, position, isLast, roster, index, 
         </Badge>
       </View>
 
-      <Text style={styles.instruction}>
-        Bedenk {perPlayer} willekeurige woorden. Je team gaat ze straks proberen te raden.
-      </Text>
+      <Text style={styles.instruction}>{t('words.instructions', { n: perPlayer })}</Text>
 
       <View style={styles.fields}>
         {words.map((value, i) => (
@@ -209,7 +211,7 @@ function PlayerWordForm({ team, player, color, position, isLast, roster, index, 
               onBlur={() => setFocused((current) => (current === i ? null : current))}
               selectTextOnFocus
               selectionColor={colors.accent}
-              placeholder={`Geheim woord ${i + 1}`}
+              placeholder={t('words.placeholder', { n: i + 1 })}
               placeholderTextColor={colors.muted}
               autoCapitalize="none"
               autoCorrect={false}
@@ -219,8 +221,8 @@ function PlayerWordForm({ team, player, color, position, isLast, roster, index, 
             {focused === i ? (
               <AppButton
                 label=""
-                accessibilityLabel={`Woord ${i + 1} bevestigen`}
-                accessibilityHint="Slaat dit woord op en gaat naar het volgende veld"
+                accessibilityLabel={t('words.confirmWord', { n: i + 1 })}
+                accessibilityHint={t('words.confirmHint')}
                 iconOnly
                 icon={<Check size={20} color="#241A00" strokeWidth={3} />}
                 size="md"
@@ -231,13 +233,18 @@ function PlayerWordForm({ team, player, color, position, isLast, roster, index, 
             ) : (
               <AppButton
                 label=""
-                accessibilityLabel={value.trim() ? `Opnieuw rollen voor woord ${i + 1}` : `Random woord voor veld ${i + 1}`}
-                accessibilityHint="Vult dit veld met een willekeurig woord uit de woordenbank"
+                accessibilityLabel={
+                  value.trim()
+                    ? t('words.rollAgain', { n: i + 1 })
+                    : t('words.rollRandom', { n: i + 1 })
+                }
+                accessibilityHint={t('words.rollHint')}
                 iconOnly
                 icon={<RefreshCcw size={20} color={colors.text} />}
                 variant="secondary"
                 size="md"
                 fullWidth={false}
+                sound="swap"
                 onPress={() => roll(i)}
                 style={styles.fieldAction}
               />
@@ -257,13 +264,14 @@ function PlayerWordForm({ team, player, color, position, isLast, roster, index, 
  * to spot in the row.
  */
 function RosterDots({ roster, index, currentFill }: { roster: RosterEntry[]; index: number; currentFill: number }) {
+  const { t } = useI18n();
   return (
     <View
       style={styles.dots}
       pointerEvents="none"
       accessible
       accessibilityRole="progressbar"
-      accessibilityLabel={`Speler ${index + 1} van ${roster.length}`}
+      accessibilityLabel={t('words.playerXofY', { x: index + 1, y: roster.length })}
     >
       {roster.map((r, i) => {
         const fill = i < index ? 1 : i > index ? 0 : currentFill;

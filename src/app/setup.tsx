@@ -16,12 +16,14 @@ import {
 import { useGameContext } from '@/game/GameProvider';
 import { isNameTaken } from '@/game/names';
 import type { Team } from '@/game/types';
+import { useI18n } from '@/i18n/LanguageProvider';
 import { haptics } from '@/lib/haptics';
 import { colors, noOutline, radius, spacing } from '@/theme';
 
 const TOTAL_STEPS = 3;
 
 export default function SetupScreen() {
+  const { t } = useI18n();
   const {
     state,
     teams,
@@ -78,7 +80,7 @@ export default function SetupScreen() {
       footer={
         <View style={styles.footerRow}>
           <AppButton
-            label="Terug"
+            label={t('common.back')}
             variant="ghost"
             size="lg"
             onPress={step === 0 ? goMenu : goBack}
@@ -88,9 +90,9 @@ export default function SetupScreen() {
           />
           <View style={styles.footerGrow}>
             {isLastStep ? (
-              <AppButton label="Start het spel" size="lg" onPress={start} disabled={!canProceed} icon={<CircleArrowRight size={18} color="#241A00" />} />
+              <AppButton label={t('setup.startGame')} size="lg" onPress={start} disabled={!canProceed} icon={<CircleArrowRight size={18} color="#241A00" />} />
             ) : (
-              <AppButton label="Volgende" size="lg" onPress={goNext} icon={<CircleArrowRight size={18} color="#241A00" />} />
+              <AppButton label={t('setup.next')} size="lg" onPress={goNext} icon={<CircleArrowRight size={18} color="#241A00" />} />
             )}
           </View>
         </View>
@@ -116,7 +118,7 @@ export default function SetupScreen() {
       {isLastStep ? (
         <>
           <View style={styles.headingRow}>
-            <Text style={styles.heading}>Instellingen</Text>
+            <Text style={styles.heading}>{t('setup.heading')}</Text>
           </View>
           <GameSettingsCard wordsPerPlayer={state.wordsPerPlayer} turnSeconds={state.turnSeconds} onWords={setWordsPerPlayer} onSeconds={setTurnSeconds} />
         </>
@@ -130,7 +132,7 @@ export default function SetupScreen() {
           onPickColor={(color) => setTeamColor(currentTeam.id, color)}
           onRenamePlayer={(playerId, name) => renamePlayer(currentTeam.id, playerId, name)}
           onRemovePlayer={(playerId) => removePlayer(currentTeam.id, playerId)}
-          onAddPlayer={() => addPlayer(currentTeam.id, `Speler ${currentTeam.players.length + 1}`)}
+          onAddPlayer={() => addPlayer(currentTeam.id, t('setup.playerDefault', { n: currentTeam.players.length + 1 }))}
         />
       ) : null}
     </Screen>
@@ -156,6 +158,7 @@ const TeamCard = forwardRef<{ commit: () => void }, TeamCardProps>(function Team
   const [editingPlayerId, setEditingPlayerId] = useState<string | null>(null);
   const [playerDraft, setPlayerDraft] = useState('');
   const { play } = useFeedback();
+  const { t } = useI18n();
   const color = team.color;
   const otherTeamNames = otherTeams.map((t) => t.name);
 
@@ -229,7 +232,7 @@ const TeamCard = forwardRef<{ commit: () => void }, TeamCardProps>(function Team
         <Pressable
           onPress={beginEditTeam}
           accessibilityRole="button"
-          accessibilityLabel={`Teamnaam ${team.name} aanpassen`}
+          accessibilityLabel={t('setup.editTeamName', { name: team.name })}
           style={({ pressed }) => [styles.teamNameRow, pressed && styles.pressed]}
         >
           <Text style={styles.heading} numberOfLines={1}>
@@ -256,7 +259,11 @@ const TeamCard = forwardRef<{ commit: () => void }, TeamCardProps>(function Team
               disabled={locked}
               accessibilityRole="button"
               accessibilityState={{ selected: active, disabled: locked }}
-              accessibilityLabel={locked ? `Teamkleur ${option.name}, al gekozen door ${takenBy.name}` : `Teamkleur ${option.name}`}
+              accessibilityLabel={
+                locked
+                  ? t('setup.teamColorTaken', { name: option.name, taken: takenBy.name })
+                  : t('setup.teamColorFree', { name: option.name })
+              }
               style={({ pressed }) => [styles.swatchTouch, pressed && styles.pressed]}
             >
               <View
@@ -302,7 +309,7 @@ const TeamCard = forwardRef<{ commit: () => void }, TeamCardProps>(function Team
                   <Pressable
                     onPress={() => beginEditPlayer(player.id)}
                     accessibilityRole="button"
-                    accessibilityLabel={`Naam van ${player.name} aanpassen`}
+                    accessibilityLabel={t('setup.editPlayerName', { name: player.name })}
                     style={({ pressed }) => [styles.playerNameWrap, pressed && styles.pressed]}
                   >
                     <Text style={styles.playerName} numberOfLines={1}>
@@ -318,7 +325,7 @@ const TeamCard = forwardRef<{ commit: () => void }, TeamCardProps>(function Team
                         onRemovePlayer(player.id);
                       }}
                       accessibilityRole="button"
-                      accessibilityLabel={`${player.name} verwijderen`}
+                      accessibilityLabel={t('setup.removePlayer', { name: player.name })}
                       style={({ pressed }) => [styles.removeButton, pressed && styles.pressed]}
                     >
                       <Trash size={16} color={colors.accent} />
@@ -340,11 +347,11 @@ const TeamCard = forwardRef<{ commit: () => void }, TeamCardProps>(function Team
             setEditingPlayerId(newPlayerId);
           }}
           accessibilityRole="button"
-          accessibilityLabel={`Speler toevoegen aan ${team.name}`}
+          accessibilityLabel={t('setup.addPlayerTo', { team: team.name })}
           style={({ pressed }) => [styles.addPlayer, pressed && styles.pressed]}
         >
           <UserPlus size={18} color="rgba(255, 255, 255, 0.7)" />
-          <Text style={styles.addPlayerText}>Speler toevoegen</Text>
+          <Text style={styles.addPlayerText}>{t('setup.addPlayer')}</Text>
         </Pressable>
       </View>
     </View>
@@ -370,6 +377,7 @@ function NameInput({
 }) {
   const ref = useRef<TextInput>(null);
   const { play } = useFeedback();
+  const { t } = useI18n();
 
   useEffect(() => {
     ref.current?.focus();
@@ -403,13 +411,13 @@ function NameInput({
           selectTextOnFocus
           style={[styles.editInput, noOutline, framed && styles.editInputFramed]}
         />
-        {isTaken ? <Text style={styles.editTaken}>bezet</Text> : null}
+        {isTaken ? <Text style={styles.editTaken}>{t('common.taken')}</Text> : null}
         <Pressable
           onPress={submit}
           disabled={!canSubmit}
           accessibilityRole="button"
           accessibilityState={{ disabled: !canSubmit }}
-          accessibilityLabel="Opslaan"
+          accessibilityLabel={t('common.save')}
           style={({ pressed }) => [styles.editOk, !canSubmit && styles.editOkDisabled, canSubmit && pressed && styles.pressed]}
         >
           <Check size={18} color={canSubmit ? '#241A00' : colors.muted} strokeWidth={3} />

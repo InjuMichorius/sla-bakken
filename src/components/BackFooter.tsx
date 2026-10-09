@@ -2,12 +2,14 @@ import { router } from 'expo-router';
 import { CircleArrowLeft } from 'lucide-react-native';
 import { useFeedback } from '@/audio/FeedbackProvider';
 import { AppButton } from '@/components/AppButton';
+import { useI18n } from '@/i18n/LanguageProvider';
 import { haptics } from '@/lib/haptics';
 import { colors } from '@/theme';
 
 /** Terugknop onderaan een scherm; valt terug op het doelpad bij een lege geschiedenis. */
 export function BackFooter({ to = '/' }: { to?: string }) {
   const { play } = useFeedback();
+  const { t } = useI18n();
 
   const goBack = () => {
     haptics.light();
@@ -16,5 +18,5 @@ export function BackFooter({ to = '/' }: { to?: string }) {
     else router.replace(to as never);
   };
 
-  return <AppButton label="Terug" variant="ghost" size="lg" icon={<CircleArrowLeft size={18} color={colors.muted} />} onPress={goBack} sound={null} />;
+  return <AppButton label={t('common.back')} variant="ghost" size="lg" icon={<CircleArrowLeft size={18} color={colors.muted} />} onPress={goBack} sound={null} />;
 }

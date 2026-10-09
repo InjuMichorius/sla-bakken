@@ -1,5 +1,6 @@
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useFeedback } from '@/audio/FeedbackProvider';
+import { useI18n } from '@/i18n/LanguageProvider';
 import { colors, radius, spacing } from '@/theme';
 
 type ConfirmDialogProps = {
@@ -21,17 +22,19 @@ export function ConfirmDialog({
   title,
   message,
   confirmLabel,
-  cancelLabel = 'Annuleren',
+  cancelLabel,
   destructive = false,
   onConfirm,
   onCancel,
 }: ConfirmDialogProps) {
   const { play } = useFeedback();
+  const { t } = useI18n();
+  const cancelText = cancelLabel ?? t('common.cancel');
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
       <View style={styles.backdrop}>
-        <Pressable style={StyleSheet.absoluteFill} onPress={onCancel} accessibilityLabel={cancelLabel} />
+        <Pressable style={StyleSheet.absoluteFill} onPress={onCancel} accessibilityLabel={cancelText} />
         <View style={styles.card}>
           <Text style={styles.title}>{title}</Text>
           <Text style={styles.message}>{message}</Text>
@@ -44,7 +47,7 @@ export function ConfirmDialog({
               accessibilityRole="button"
               style={({ pressed }) => [styles.button, styles.cancel, pressed && styles.pressed]}
             >
-              <Text style={styles.cancelLabel}>{cancelLabel}</Text>
+              <Text style={styles.cancelLabel}>{cancelText}</Text>
             </Pressable>
             <Pressable
               onPress={() => {

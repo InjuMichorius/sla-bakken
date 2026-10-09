@@ -4,11 +4,13 @@ import { router } from 'expo-router';
 import { CirclePlay, CircleQuestionMark, Languages, Settings } from 'lucide-react-native';
 import { AppButton } from '@/components/AppButton';
 import { Screen } from '@/components/Screen';
+import { useI18n } from '@/i18n/LanguageProvider';
 import { colors, spacing } from '@/theme';
 
-const TAGLINE_PARTS = ['3 rondes', '2 teams', '1 telefoon'];
-
 export default function MainMenuScreen() {
+  const { t } = useI18n();
+  const tagline = [t('menu.taglineRounds'), t('menu.taglineTeams'), t('menu.taglinePhone')];
+
   return (
     <Screen scroll={false} contentStyle={styles.content}>
       <View style={styles.hero}>
@@ -17,7 +19,7 @@ export default function MainMenuScreen() {
         </View>
         <Text style={styles.title}>Sla Bakken</Text>
         <View style={styles.tagline}>
-          {TAGLINE_PARTS.map((part, index) => (
+          {tagline.map((part, index) => (
             <Fragment key={part}>
               {index > 0 ? <View style={styles.taglineDot} /> : null}
               <Text style={styles.taglineText}>{part}</Text>
@@ -27,27 +29,26 @@ export default function MainMenuScreen() {
       </View>
 
       <View style={styles.menu}>
-        <AppButton label="Spel starten" size="xl" onPress={() => router.push('/setup')} icon={<CirclePlay size={22} color="#241A00" />} />
+        <AppButton label={t('menu.start')} size="xl" onPress={() => router.push('/setup')} icon={<CirclePlay size={22} color="#241A00" />} />
         <AppButton
-          label="Instellingen"
+          label={t('menu.settings')}
           size="lg"
           variant="secondary"
           onPress={() => router.push('/settings')}
           icon={<Settings size={20} color={colors.text} />}
         />
         <AppButton
-          label="Speluitleg"
+          label={t('menu.rules')}
           size="lg"
           variant="secondary"
           onPress={() => router.push('/how-to-play')}
           icon={<CircleQuestionMark size={20} color={colors.text} />}
         />
         <AppButton
-          label="Talen"
+          label={t('menu.languages')}
           size="lg"
           variant="secondary"
-          disabled
-          badge="Coming soon"
+          onPress={() => router.push('/languages')}
           icon={<Languages size={20} color={colors.text} />}
         />
       </View>

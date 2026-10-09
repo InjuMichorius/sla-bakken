@@ -5,6 +5,7 @@ import { LogOut } from 'lucide-react-native';
 import { useFeedback } from '@/audio/FeedbackProvider';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { useGameContext } from '@/game/GameProvider';
+import { useI18n } from '@/i18n/LanguageProvider';
 import { haptics } from '@/lib/haptics';
 import { colors } from '@/theme';
 
@@ -12,6 +13,7 @@ import { colors } from '@/theme';
 export function QuitGameButton() {
   const { reset } = useGameContext();
   const { play } = useFeedback();
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
 
   const confirm = () => {
@@ -29,8 +31,8 @@ export function QuitGameButton() {
           setOpen(true);
         }}
         accessibilityRole="button"
-        accessibilityLabel="Spel verlaten"
-        accessibilityHint="Stopt het huidige spel en gaat terug naar het begin"
+        accessibilityLabel={t('quit.a11y')}
+        accessibilityHint={t('quit.a11yHint')}
         style={({ pressed }) => [styles.button, pressed && styles.pressed]}
       >
         <View style={styles.dot}>
@@ -39,9 +41,9 @@ export function QuitGameButton() {
       </Pressable>
       <ConfirmDialog
         visible={open}
-        title="Spel verlaten?"
-        message="De teams, woorden en scores van dit spel verdwijnen. Je bent daarna terug bij het hoofdmenu."
-        confirmLabel="Spel verlaten"
+        title={t('quit.title')}
+        message={t('quit.message')}
+        confirmLabel={t('quit.confirm')}
         destructive
         onConfirm={confirm}
         onCancel={() => setOpen(false)}

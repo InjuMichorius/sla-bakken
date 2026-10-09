@@ -2,35 +2,37 @@ import { Platform, Pressable, StyleSheet, Switch, Text, View } from 'react-nativ
 import { Play, Volume2, VolumeX } from 'lucide-react-native';
 import { useFeedback } from '@/audio/FeedbackProvider';
 import { SOUNDS } from '@/audio/sounds';
-import { BackButton } from '@/components/BackButton';
+
 import { BackFooter } from '@/components/BackFooter';
 import { Screen } from '@/components/Screen';
+import { useI18n } from '@/i18n/LanguageProvider';
 import { haptics } from '@/lib/haptics';
 import { colors, radius, spacing } from '@/theme';
 
 const VOLUME_STEPS = [25, 50, 75, 100];
 
 export default function SettingsScreen() {
+  const { t } = useI18n();
   const { settings, setSoundEnabled, setVolume, toggleMuted, setHaptics, preview } = useFeedback();
 
   return (
     <Screen
       topBar={
         <>
-          <BackButton />
-          <Text style={styles.headerTitle}>Instellingen</Text>
+          <View style={styles.topBarSide} />
+          <Text style={styles.headerTitle}>{t('settings.title')}</Text>
           <View style={styles.topBarSide} />
         </>
       }
       footer={<BackFooter />}
       contentStyle={styles.content}
     >
-      <Text style={styles.section}>Geluiden</Text>
+      <Text style={styles.section}>{t('settings.soundsSection')}</Text>
       <View style={styles.card}>
         <View style={styles.row}>
           <View style={styles.rowText}>
-            <Text style={styles.rowLabel}>Geluiden aan</Text>
-            <Text style={styles.rowHint}>Schakelaar voor alle geluiden in de app</Text>
+            <Text style={styles.rowLabel}>{t('settings.soundsOn')}</Text>
+            <Text style={styles.rowHint}>{t('settings.soundsOnHint')}</Text>
           </View>
           <Switch
             value={settings.soundEnabled}
@@ -40,14 +42,14 @@ export default function SettingsScreen() {
             }}
             trackColor={{ false: colors.border, true: colors.accent }}
             ios_backgroundColor={colors.surfaceAlt}
-            accessibilityLabel="Geluiden aan"
+            accessibilityLabel={t('settings.soundsOn')}
           />
         </View>
 
         <View style={[styles.row, !settings.soundEnabled && styles.rowDimmed]}>
           <View style={styles.rowText}>
-            <Text style={styles.rowLabel}>Volume</Text>
-            <Text style={styles.rowHint}>Hardheid van alle geluiden</Text>
+            <Text style={styles.rowLabel}>{t('settings.volume')}</Text>
+            <Text style={styles.rowHint}>{t('settings.volumeHint')}</Text>
           </View>
           <View style={styles.chips}>
             {VOLUME_STEPS.map((step) => {
@@ -75,16 +77,17 @@ export default function SettingsScreen() {
 
         {SOUNDS.map((sound, index) => {
           const muted = !!settings.muted[sound.key];
+          const label = t(sound.label);
           return (
             <View key={sound.key} style={[styles.soundRow, index > 0 && styles.soundRowBorder]}>
               <View style={styles.rowText}>
-                <Text style={styles.rowLabel}>{sound.label}</Text>
-                <Text style={styles.rowHint}>{sound.hint}</Text>
+                <Text style={styles.rowLabel}>{label}</Text>
+                <Text style={styles.rowHint}>{t(sound.hint)}</Text>
               </View>
               <Pressable
                 onPress={() => preview(sound.key)}
                 accessibilityRole="button"
-                accessibilityLabel={`${sound.label} afspelen`}
+                accessibilityLabel={t('settings.playLabel', { label })}
                 style={({ pressed }) => [styles.iconButton, styles.previewButton, pressed && styles.pressed]}
               >
                 <Play size={16} color="#241A00" fill="#241A00" />
@@ -96,7 +99,7 @@ export default function SettingsScreen() {
                 }}
                 accessibilityRole="button"
                 accessibilityState={{ selected: !muted }}
-                accessibilityLabel={muted ? `${sound.label} aanzetten` : `${sound.label} uitzetten`}
+                accessibilityLabel={t(muted ? 'settings.soundEnable' : 'settings.soundDisable', { label })}
                 style={({ pressed }) => [
                   styles.iconButton,
                   styles.muteButton,
@@ -111,12 +114,12 @@ export default function SettingsScreen() {
         })}
       </View>
 
-      <Text style={styles.section}>Trillingen</Text>
+      <Text style={styles.section}>{t('settings.hapticsSection')}</Text>
       <View style={styles.card}>
         <View style={styles.row}>
           <View style={styles.rowText}>
-            <Text style={styles.rowLabel}>Trillingen aan</Text>
-            <Text style={styles.rowHint}>Voelbare feedback bij knoppen en gebeurtenissen</Text>
+            <Text style={styles.rowLabel}>{t('settings.hapticsOn')}</Text>
+            <Text style={styles.rowHint}>{t('settings.hapticsOnHint')}</Text>
           </View>
           <Switch
             value={settings.hapticsEnabled}
@@ -125,7 +128,7 @@ export default function SettingsScreen() {
             }}
             trackColor={{ false: colors.border, true: colors.accent }}
             ios_backgroundColor={colors.surfaceAlt}
-            accessibilityLabel="Trillingen aan"
+            accessibilityLabel={t('settings.hapticsOn')}
           />
         </View>
       </View>

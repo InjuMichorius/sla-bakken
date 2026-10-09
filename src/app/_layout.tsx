@@ -5,6 +5,7 @@ import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { FeedbackProvider } from '@/audio/FeedbackProvider';
 import { GameProvider, useGameContext } from '@/game/GameProvider';
+import { LanguageProvider } from '@/i18n/LanguageProvider';
 import { Phase } from '@/game/types';
 import { colors } from '@/theme';
 
@@ -22,8 +23,8 @@ const ROUTE_FOR_PHASE: Record<Phase, string> = {
   summary: '/summary',
 };
 
-/** Zolang er geen spel loopt mag de gebruiker vrij tussen menu, setup, instellingen en uitleg. */
-const MENU_ROUTES = new Set(['/', '/setup', '/settings', '/how-to-play']);
+/** Zolang er geen spel loopt mag de gebruiker vrij tussen menu, setup, instellingen, talen en uitleg. */
+const MENU_ROUTES = new Set(['/', '/setup', '/settings', '/languages', '/how-to-play']);
 
 function PhaseRouter() {
   const { state } = useGameContext();
@@ -43,20 +44,22 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <FeedbackProvider>
-        <GameProvider>
-          <StatusBar style="light" />
-          <PhaseRouter />
-          <View style={styles.root}>
-            <Stack
-              screenOptions={{
-                headerShown: false,
-                contentStyle: { backgroundColor: colors.bg },
-                animation: 'fade',
-                gestureEnabled: false,
-              }}
-            />
-          </View>
-        </GameProvider>
+        <LanguageProvider>
+          <GameProvider>
+            <StatusBar style="light" />
+            <PhaseRouter />
+            <View style={styles.root}>
+              <Stack
+                screenOptions={{
+                  headerShown: false,
+                  contentStyle: { backgroundColor: colors.bg },
+                  animation: 'fade',
+                  gestureEnabled: false,
+                }}
+              />
+            </View>
+          </GameProvider>
+        </LanguageProvider>
       </FeedbackProvider>
     </SafeAreaProvider>
   );

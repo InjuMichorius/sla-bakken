@@ -8,11 +8,13 @@ import { Standings } from '@/components/Standings';
 import { TeamScoreboard } from '@/components/TeamScoreboard';
 import { ROUNDS } from '@/game/constants';
 import { useGameContext } from '@/game/GameProvider';
+import { useI18n } from '@/i18n/LanguageProvider';
 import { haptics } from '@/lib/haptics';
 import { colors, radius, spacing } from '@/theme';
 
 export default function RoundIntroScreen() {
   const { state, standings, totalWords, startRound } = useGameContext();
+  const { t } = useI18n();
   const meta = ROUNDS.find((r) => r.number === state.currentRound) ?? ROUNDS[0];
   const previousRound = state.currentRound - 1;
   const previousDone = previousRound > 0 && state.roundResults.some((r) => r.round === previousRound && r.completed);
@@ -31,16 +33,16 @@ export default function RoundIntroScreen() {
         </>
       }
       contentStyle={styles.content}
-      footer={<AppButton label={`Start ronde ${meta.number}`} size="xl" onPress={begin} />}
+      footer={<AppButton label={t('round.start', { n: meta.number })} size="xl" onPress={begin} />}
     >
       <View style={styles.top}>
         <View style={styles.hero}>
           <View style={styles.heroIcon}>
             <RoundIcon name={meta.icon} size={34} />
           </View>
-          <Text style={styles.title}>{meta.title}</Text>
+          <Text style={styles.title}>{t(meta.title)}</Text>
           <Badge tone="muted" style={styles.potBadge}>
-            {totalWords} woorden in de pot
+            {t('round.wordsInPot', { n: totalWords })}
           </Badge>
         </View>
 
@@ -50,14 +52,14 @@ export default function RoundIntroScreen() {
               <View style={styles.ruleIndex}>
                 <Text style={styles.ruleIndexText}>{i + 1}</Text>
               </View>
-              <Text style={styles.ruleText}>{rule}</Text>
+              <Text style={styles.ruleText}>{t(rule)}</Text>
             </View>
           ))}
         </View>
 
         {previousDone ? (
           <View style={styles.review}>
-            <Text style={styles.reviewTitle}>Ronde {previousRound} afgelopen — tussenstand</Text>
+            <Text style={styles.reviewTitle}>{t('round.previousTitle', { n: previousRound })}</Text>
             <Standings standings={standings} compact />
           </View>
         ) : null}

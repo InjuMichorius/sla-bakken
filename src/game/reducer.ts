@@ -369,6 +369,23 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
     }
 
     case 'NEW_GAME': {
+      // Teams (en dus namen/kleuren) blijven staan; meteen opnieuw woorden
+      // invullen, beginnend bij het eerste team.
+      return {
+        ...initialGameState,
+        teams: state.teams,
+        turnSeconds: state.turnSeconds,
+        timerRemaining: state.turnSeconds,
+        wordsPerPlayer: state.wordsPerPlayer,
+        phase: 'wordEntry',
+        currentTeamIndex: firstTeamWithPlayers(state),
+        currentPlayerIndex: 0,
+      };
+    }
+
+    case 'RESET': {
+      // Spel verlaten: terug naar het hoofdmenu, maar de teams en spelernamen
+      // blijven bewaard voor een volgend potje.
       return {
         ...initialGameState,
         teams: state.teams,
@@ -376,10 +393,6 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         timerRemaining: state.turnSeconds,
         wordsPerPlayer: state.wordsPerPlayer,
       };
-    }
-
-    case 'RESET': {
-      return { ...initialGameState, turnSeconds: state.turnSeconds, timerRemaining: state.turnSeconds, wordsPerPlayer: state.wordsPerPlayer };
     }
 
     default:

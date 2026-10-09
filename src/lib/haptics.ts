@@ -18,6 +18,7 @@ function safe(run: () => Promise<void>) {
 export const haptics = {
   light: () => safe(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)),
   medium: () => safe(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)),
+  heavy: () => safe(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy)),
   success: () => safe(() => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)),
   warning: () => safe(() => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning)),
   selection: () => safe(() => Haptics.selectionAsync()),
@@ -28,6 +29,15 @@ export const haptics = {
         if (!enabled) return;
         await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
         await new Promise<void>((resolve) => setTimeout(resolve, 160));
+      }
+    }),
+  /** Heftigste tril bij tijd op — zware impact met korte herhalingen. */
+  timeUp: () =>
+    safe(async () => {
+      for (let i = 0; i < 4; i += 1) {
+        if (!enabled) return;
+        await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy).catch(() => {});
+        await new Promise<void>((resolve) => setTimeout(resolve, 100));
       }
     }),
 };

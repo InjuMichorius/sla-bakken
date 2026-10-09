@@ -6,6 +6,7 @@ import {
   ROUNDS,
   TURN_SECONDS_OPTIONS,
 } from '@/game/constants';
+import { useI18n } from '@/i18n/LanguageProvider';
 import { haptics } from '@/lib/haptics';
 import { colors, radius, spacing } from '@/theme';
 
@@ -21,6 +22,7 @@ export function GameSettingsCard({
   onWords: (count: number) => void;
   onSeconds: (seconds: number) => void;
 }) {
+  const { t } = useI18n();
   const bumpWords = (delta: number) => {
     haptics.light();
     onWords(wordsPerPlayer + delta);
@@ -30,14 +32,14 @@ export function GameSettingsCard({
     <View style={styles.card}>
       <View style={styles.settingRow}>
         <View style={styles.settingText}>
-          <Text style={styles.settingLabel}>Woorden per speler</Text>
+          <Text style={styles.settingLabel}>{t('gamecard.wordsPerPlayer')}</Text>
         </View>
         <View style={styles.stepper}>
           <Pressable
             onPress={() => bumpWords(-1)}
             disabled={wordsPerPlayer <= MIN_WORDS_PER_PLAYER}
             accessibilityRole="button"
-            accessibilityLabel="Eén woord minder"
+            accessibilityLabel={t('gamecard.oneLess')}
             style={({ pressed }) => [styles.stepperButton, pressed && styles.pressed]}
           >
             <Minus size={20} color={wordsPerPlayer <= MIN_WORDS_PER_PLAYER ? colors.border : colors.text} />
@@ -47,7 +49,7 @@ export function GameSettingsCard({
             onPress={() => bumpWords(1)}
             disabled={wordsPerPlayer >= MAX_WORDS_PER_PLAYER}
             accessibilityRole="button"
-            accessibilityLabel="Eén woord meer"
+            accessibilityLabel={t('gamecard.oneMore')}
             style={({ pressed }) => [styles.stepperButton, pressed && styles.pressed]}
           >
             <Plus size={20} color={wordsPerPlayer >= MAX_WORDS_PER_PLAYER ? colors.border : colors.text} />
@@ -58,7 +60,7 @@ export function GameSettingsCard({
       <View style={styles.divider} />
 
       <View style={styles.settingBlock}>
-        <Text style={styles.settingLabel}>Tijd per beurt</Text>
+        <Text style={styles.settingLabel}>{t('gamecard.turnSeconds')}</Text>
         <View style={styles.secondsRow}>
           {TURN_SECONDS_OPTIONS.map((seconds) => {
             const active = seconds === turnSeconds;
@@ -83,13 +85,13 @@ export function GameSettingsCard({
       <View style={styles.divider} />
 
       <View style={styles.settingBlock}>
-        <Text style={styles.settingLabel}>De drie rondes</Text>
+        <Text style={styles.settingLabel}>{t('gamecard.theRounds')}</Text>
         <View style={styles.rounds}>
           {ROUNDS.map((round) => (
             <View key={round.number} style={styles.roundRow}>
               <Text style={styles.roundNumber}>{round.number}</Text>
-              <Text style={styles.roundTitle}>{round.title}</Text>
-              <Text style={styles.roundVerb}>{round.verb}</Text>
+              <Text style={styles.roundTitle}>{t(round.title)}</Text>
+              <Text style={styles.roundVerb}>{t(round.verb)}</Text>
             </View>
           ))}
         </View>

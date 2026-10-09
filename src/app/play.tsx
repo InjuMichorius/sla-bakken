@@ -13,8 +13,17 @@ import { TeamScoreboard } from '@/components/TeamScoreboard';
 import { teamColor } from '@/game/colors';
 import { ROUNDS } from '@/game/constants';
 import { useGameContext } from '@/game/GameProvider';
+import { useI18n } from '@/i18n/LanguageProvider';
+import type { TranslationKey } from '@/i18n/translations';
 import { haptics } from '@/lib/haptics';
 import { colors, radius, spacing } from '@/theme';
+
+/**
+ * Aftellen start pas in de laatste paar seconden, en het maximale volume ligt
+ * bewust onder 1 zodat het getik de andere geluiden niet overstemt.
+ */
+const TICK_WINDOW_SECONDS = 5;
+const TICK_MAX_VOLUME = 0.5;
 
 function formatTime(seconds: number) {
   const m = Math.floor(Math.max(0, seconds) / 60);
@@ -28,13 +37,14 @@ function formatTime(seconds: number) {
  * rather than wrapping to a second line. The exit button and scoreboard stay in
  * the normal flow on either side.
  */
-function RoundTopBar({ round, title }: { round: number; title: string }) {
+function RoundTopBar({ round, title }: { round: number; title: TranslationKey }) {
+  const { t } = useI18n();
   return (
     <>
       <QuitGameButton />
       <View style={styles.topCenter} pointerEvents="none">
         <Badge tone="accent" style={styles.roundPill}>
-          Ronde {round} · {title}
+          {t('play.round')} {round} · {t(title)}
         </Badge>
       </View>
       <TeamScoreboard />
@@ -45,13 +55,13 @@ function RoundTopBar({ round, title }: { round: number; title: string }) {
 export default function PlayScreen() {
   const { state, currentTeam, currentPlayer, standings, totalWords, startTurn, correctGuess, passGuess, tick, endTurn, endRound, nextRound } =
     useGameContext();
-  const { play } = useFeedback();
+  const { play, playLoop, stopLoop } = useFeedback();
+  const { t } = useI18n();
 
   const meta = ROUNDS.find((r) => r.number === state.currentRound) ?? ROUNDS[0];
   const color = currentTeam?.color ?? teamColor(0);
 
-  /** Tik- en tijd-op-geluiden lokaal uit de deadline, zodat ze precies op de seconde vallen. */
-  const lastTickSecond = useRef<number | null>(null);
+  /** Tijd-op-geluid lokaal uit de deadline, zodat het precies op nul valt. */
   const timeUpPlayed = useRef(false);
 
   const remaining = state.timerRemaining;
@@ -63,7 +73,6 @@ export default function PlayScreen() {
 
   useEffect(() => {
     if (state.phase !== 'playing') {
-      lastTickSecond.current = null;
       timeUpPlayed.current = false;
       return;
     }
@@ -77,18 +86,49 @@ export default function PlayScreen() {
         if (!timeUpPlayed.current) {
           timeUpPlayed.current = true;
           play('timeUp');
-          haptics.sustained();
-        }
-      } else if (left !== lastTickSecond.current) {
-        lastTickSecond.current = left;
-        if (left <= 10 && left % 2 === 0) {
-          play('tick');
+          haptics.timeUp();
         }
       }
       tick(Date.now());
     }, 200);
     return () => clearInterval(id);
   }, [state.phase, state.timerStartedAt, state.turnSeconds, tick, play]);
+
+  /**
+   * Eén doorlopende tik in de laatste paar seconden: het volume begint
+   * fluisterzacht en groeit naar een plafond, zonder per seconde te herstarten
+   * (geen losse tikjes).
+   */
+  useEffect(() => {
+    if (state.phase !== 'playing') {
+      stopLoop('ticking');
+      return;
+    }
+    const startedAt = state.timerStartedAt;
+    const turnSeconds = state.turnSeconds;
+    if (startedAt == null) return;
+
+    let looping = false;
+    const update = () => {
+      const left = turnSeconds - (Date.now() - startedAt) / 1000;
+      if (left > 0 && left <= TICK_WINDOW_SECONDS) {
+        // Kwadratisch en met een plafond: begint fluisterzacht en groeit pas
+        // tegen het einde, zonder de andere geluiden te overstemmen.
+        const progress = (TICK_WINDOW_SECONDS - left) / TICK_WINDOW_SECONDS;
+        playLoop('ticking', TICK_MAX_VOLUME * progress * progress);
+        looping = true;
+      } else if (looping) {
+        stopLoop('ticking');
+        looping = false;
+      }
+    };
+    update();
+    const id = setInterval(update, 100);
+    return () => {
+      clearInterval(id);
+      stopLoop('ticking');
+    };
+  }, [state.phase, state.timerStartedAt, state.turnSeconds, playLoop, stopLoop]);
 
   useEffect(() => {
     if (!urgent || state.phase !== 'playing') {
@@ -122,25 +162,25 @@ export default function PlayScreen() {
         }
         scroll={false}
         contentStyle={styles.reviewContent}
-        footer={<AppButton label={isLastRound ? 'Eindstand bekijken' : `Naar ronde ${state.currentRound + 1}`} size="xl" onPress={finish} />}
+        footer={<AppButton label={isLastRound ? t('play.viewResults') : t('play.toRound', { n: state.currentRound + 1 })} size="xl" onPress={finish} />}
       >
         <View style={styles.reviewHeader}>
           <View style={styles.reviewIcon}>
             <Flag size={30} color={colors.success} />
           </View>
-          <Text style={styles.reviewTitle}>Ronde {state.currentRound} afgelopen</Text>
+          <Text style={styles.reviewTitle}>{t('play.roundFinished', { n: state.currentRound })}</Text>
           <Text style={styles.reviewBody}>
-            {isLastRound ? 'Alle drie de rondes zijn gespeeld. Dit is de eindstand.' : `Alle ${totalWords} woorden zijn geraden. De pot wordt opnieuw gevuld voor ronde ${state.currentRound + 1}.`}
+            {isLastRound ? t('play.finishedLast') : t('play.finishedNext', { n: totalWords, n2: state.currentRound + 1 })}
           </Text>
         </View>
         <View style={styles.reviewBlock}>
-          <Standings standings={standings} title={`Tussenstand na ronde ${state.currentRound}`} />
+          <Standings standings={standings} title={t('play.standingsAfter', { n: state.currentRound })} />
         </View>
         {!isLastRound ? (
           <View style={styles.nextRoundHint}>
             <RoundIcon name={ROUNDS[state.currentRound].icon} size={18} />
             <Text style={styles.nextRoundText}>
-              Volgende ronde: <Text style={styles.strong}>{ROUNDS[state.currentRound].title}</Text>
+              {t('play.nextRound')} <Text style={styles.strong}>{t(ROUNDS[state.currentRound].title)}</Text>
             </Text>
           </View>
         ) : null}
@@ -156,7 +196,7 @@ topBar={<RoundTopBar round={state.currentRound} title={meta.title} />}
         contentStyle={styles.handoffContent}
         footer={
           <AppButton
-            label="Start beurt"
+            label={t('play.startTurn')}
             size="xl"
             onPress={startTurn}
             sound="turnStart"
@@ -165,22 +205,22 @@ topBar={<RoundTopBar round={state.currentRound} title={meta.title} />}
         }
       >
         <View style={styles.handoffBody}>
-          <Text style={styles.handoffTitle}>Geef de telefoon aan</Text>
-          <Avatar name={currentPlayer?.name ?? 'Onbekend'} color={color} size={104} />
-          <Text style={styles.handoffName}>{currentPlayer?.name ?? 'Onbekend'}</Text>
+          <Text style={styles.handoffTitle}>{t('words.givePhone')}</Text>
+          <Avatar name={currentPlayer?.name ?? t('common.unknown')} color={color} size={104} />
+          <Text style={styles.handoffName}>{currentPlayer?.name ?? t('common.unknown')}</Text>
           <Badge color={color} style={styles.teamBadge}>
             {currentTeam?.name}
           </Badge>
           <View style={styles.handoffRule}>
             <RoundIcon name={meta.icon} size={15} color={colors.muted} />
             <Text style={styles.handoffRuleText}>
-              {meta.verb.toLowerCase()} / {meta.tagline}
+              {t(meta.verb).toLowerCase()} / {t(meta.tagline)}
             </Text>
           </View>
         </View>
 
         <View style={styles.handoffStandings}>
-          <Standings standings={standings} compact title="Tussenstand" centerTitle />
+          <Standings standings={standings} compact title={t('play.standingsAfter', { n: state.currentRound })} centerTitle />
         </View>
       </Screen>
     );
@@ -210,7 +250,7 @@ topBar={<RoundTopBar round={state.currentRound} title={meta.title} />}
         </View>
         <View style={styles.turnPoints}>
           <Text style={styles.turnPointsValue}>{state.totalWords}</Text>
-          <Text style={styles.turnPointsLabel}>geraden</Text>
+          <Text style={styles.turnPointsLabel}>{t('play.guessed')}</Text>
         </View>
       </View>
 
@@ -220,22 +260,22 @@ topBar={<RoundTopBar round={state.currentRound} title={meta.title} />}
             <Animated.Text style={[styles.timerText, urgent && styles.timerTextUrgent, urgent && { transform: [{ scale: pulse }] }]}>
               {formatTime(remaining)}
             </Animated.Text>
-            <Text style={styles.timerUnit}>seconden</Text>
+            <Text style={styles.timerUnit}>{t('play.seconds')}</Text>
           </View>
         </View>
       </View>
 
       <View style={styles.wordBox}>
-        <Text style={styles.wordLabel}>TE RADEN WOORD</Text>
+        <Text style={styles.wordLabel}>{t('play.wordLabel')}</Text>
         <Text style={styles.word} numberOfLines={3} adjustsFontSizeToFit>
           {state.currentWord ?? '—'}
         </Text>
-        <Text style={styles.wordRule}>{meta.verb}</Text>
+        <Text style={styles.wordRule}>{t(meta.verb)}</Text>
       </View>
 
       <View style={styles.actions}>
         <AppButton
-          label="Goed"
+          label={t('play.good')}
           size="xl"
           variant="success"
           onPress={onCorrect}
@@ -245,7 +285,7 @@ topBar={<RoundTopBar round={state.currentRound} title={meta.title} />}
         />
         <View style={styles.actionRow}>
           <AppButton
-            label="Pas"
+            label={t('play.pass')}
             size="lg"
             variant="secondary"
             onPress={onPass}
@@ -254,7 +294,7 @@ topBar={<RoundTopBar round={state.currentRound} title={meta.title} />}
             style={styles.actionPass}
           />
           <AppButton
-            label="Beurt stoppen"
+            label={t('play.endTurn')}
             size="lg"
             variant="dangerOutline"
             onPress={endTurn}

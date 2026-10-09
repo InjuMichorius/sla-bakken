@@ -44,6 +44,14 @@ type FeedbackContextValue = {
    * (bijv. 0.4 voor een zachte tik boven de 10 seconden).
    */
   play: (key: SoundKey, volumeRatio?: number) => void;
+  /**
+   * Start (of hervat) een loopend geluid. Bij elke aanroep wordt het volume
+   * bijgesteld op `settings.volume * volumeRatio`, zodat je het lineair kunt
+   * laten oplopen. Gebruik `stopLoop` om het weer te stoppen.
+   */
+  playLoop: (key: SoundKey, volumeRatio?: number) => void;
+  /** Stopt een met `playLoop` gestart geluid. */
+  stopLoop: (key: SoundKey) => void;
   /** Speelt een geluid af ongeacht de schakelaars — bedoeld als testknopje. */
   preview: (key: SoundKey) => void;
   setSoundEnabled: (enabled: boolean) => void;
@@ -84,6 +92,9 @@ export function FeedbackProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<FeedbackSettings>(DEFAULTS);
   const pools = useRef<Partial<Record<SoundKey, AudioPlayer[]>>>({});
   const cursors = useRef<Partial<Record<SoundKey, number>>>({});
+  /** Aparte, langdurige spelers voor `playLoop`, los van de eenmalige pool. */
+  const loopPlayers = useRef<Partial<Record<SoundKey, AudioPlayer>>>({});
+  const loopActive = useRef<Partial<Record<SoundKey, boolean>>>({});
 
   useEffect(() => {
     AsyncStorage.getItem(STORAGE_KEY)
@@ -103,6 +114,18 @@ export function FeedbackProvider({ children }: { children: ReactNode }) {
         if (player) players.push(player);
       }
       if (players.length > 0) pools.current[sound.key] = players;
+
+      // Aparte loopende speler, ook al klaar met geladen buffer, zodat het
+      // aftellen meteen hoorbaar is zodra de laatste tien seconden ingaan.
+      const loopPlayer = makePlayer(sound.source, 0);
+      if (loopPlayer) {
+        try {
+          loopPlayer.loop = true;
+        } catch {
+          // loop niet ondersteund: dan speelt het geluid gewoon één keer
+        }
+        loopPlayers.current[sound.key] = loopPlayer;
+      }
     }
     return () => {
       for (const sound of SOUNDS) {
@@ -113,9 +136,19 @@ export function FeedbackProvider({ children }: { children: ReactNode }) {
             // speler is al weg
           }
         }
+        const loopPlayer = loopPlayers.current[sound.key];
+        if (loopPlayer) {
+          try {
+            loopPlayer.remove();
+          } catch {
+            // speler is al weg
+          }
+        }
       }
       pools.current = {};
       cursors.current = {};
+      loopPlayers.current = {};
+      loopActive.current = {};
     };
   }, []);
 
@@ -169,17 +202,82 @@ export function FeedbackProvider({ children }: { children: ReactNode }) {
     [settings, acquire]
   );
 
+  const getLoopPlayer = useCallback((key: SoundKey): AudioPlayer | null => {
+    const existing = loopPlayers.current[key];
+    if (existing) return existing;
+    const meta = SOUNDS.find((sound) => sound.key === key);
+    if (!meta) return null;
+    const player = makePlayer(meta.source, 0);
+    if (!player) return null;
+    try {
+      player.loop = true;
+    } catch {
+      // loop niet ondersteund: dan speelt het geluid gewoon één keer
+    }
+    loopPlayers.current[key] = player;
+    return player;
+  }, []);
+
+  /**
+   * Houdt één loopende speler aan de gang en stelt zijn volume bij. De speler
+   * wordt alleen écht gestart bij de eerste aanroep; daarna volstaat volume
+   * zetten, zodat het geluid niet telkens opnieuw begint (geen losse tikjes).
+   */
+  const playLoop = useCallback(
+    (key: SoundKey, volumeRatio = 1) => {
+      const player = getLoopPlayer(key);
+      if (!player) return;
+      const audible = settings.soundEnabled && !settings.muted[key];
+      try {
+        player.volume = Math.max(0, Math.min(1, settings.volume * volumeRatio)) * (audible ? 1 : 0);
+      } catch {
+        return;
+      }
+      if (!audible) return;
+      if (!loopActive.current[key]) {
+        loopActive.current[key] = true;
+        player
+          .seekTo(0)
+          .then(() => {
+            try {
+              player.play();
+            } catch {
+              loopActive.current[key] = false;
+            }
+          })
+          .catch(() => {
+            loopActive.current[key] = false;
+          });
+      }
+    },
+    [settings, getLoopPlayer]
+  );
+
+  const stopLoop = useCallback((key: SoundKey) => {
+    const player = loopPlayers.current[key];
+    loopActive.current[key] = false;
+    if (!player) return;
+    try {
+      player.pause();
+      player.seekTo(0).catch(() => {});
+    } catch {
+      // stille failure: geluid is nice-to-have
+    }
+  }, []);
+
   const value = useMemo<FeedbackContextValue>(
     () => ({
       settings,
       play: (key, volumeRatio) => trigger(key, false, volumeRatio),
+      playLoop,
+      stopLoop,
       preview: (key) => trigger(key, true),
       setSoundEnabled: (soundEnabled) => persist({ ...settings, soundEnabled }),
       setVolume: (volume) => persist({ ...settings, volume: Math.max(0, Math.min(1, volume)) }),
       toggleMuted: (key) => persist({ ...settings, muted: { ...settings.muted, [key]: !settings.muted[key] } }),
       setHaptics: (hapticsEnabled) => persist({ ...settings, hapticsEnabled }),
     }),
-    [settings, persist, trigger]
+    [settings, persist, trigger, playLoop, stopLoop]
   );
 
   return <FeedbackContext.Provider value={value}>{children}</FeedbackContext.Provider>;

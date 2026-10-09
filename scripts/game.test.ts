@@ -2,6 +2,9 @@ import assert from 'node:assert/strict';
 import { allWords, gameReducer, isSetupValid, nextPoint, rankStandings, teamScoresOf } from '../src/game/reducer.ts';
 import { pickRandomWord } from '../src/game/randomWord.ts';
 import { WORD_BANK } from '../src/game/wordBank.ts';
+import { EN_WORD_BANK } from '../src/game/wordBank.en.ts';
+import { DE_WORD_BANK } from '../src/game/wordBank.de.ts';
+import { FR_WORD_BANK } from '../src/game/wordBank.fr.ts';
 import type { GameState } from '../src/game/types.ts';
 import { initialGameState } from '../src/game/types.ts';
 
@@ -352,26 +355,30 @@ check('NEXT_ROND blijft binnen de drie rondes', () => {
   s = gameReducer(s, { type: 'NEXT_ROUND' });
   assert.equal(s.currentRound, 3);
 });
-check('RESET wist alles behalve de instellingen', () => {
-  let s = gameReducer(withWords(seededSetup()), { type: 'START_GAME' });
+check('RESET gaat naar setup maar onthoudt teams en spelernamen', () => {
+  const seeded = withWords(seededSetup());
+  let s = gameReducer(seeded, { type: 'START_GAME' });
   s = gameReducer(s, { type: 'SET_TURN_SECONDS', seconds: 90 });
   s = gameReducer(s, { type: 'START_ROUND', round: 1 });
   s = gameReducer(s, { type: 'RESET' });
-  assert.equal(s.phase, 'setup');
-  assert.equal(s.teams.length, 0);
+  assert.equal(s.phase, 'setup', 'spel verlaten gaat terug naar het hoofdmenu');
+  assert.deepEqual(s.teams, seeded.teams, 'teams, spelers en namen blijven bewaard');
+  assert.equal(s.wordEntries.length, 0);
   assert.equal(s.scores && Object.keys(s.scores).length, 0);
   assert.equal(s.turnSeconds, 90);
   s = gameReducer(s, { type: 'SET_WORDS_PER_PLAYER', count: 8 });
   s = gameReducer(s, { type: 'RESET' });
   assert.equal(s.wordsPerPlayer, 8, 'woorden per speler blijft staan voor het volgende spel');
 });
-check('NEW_GAME houdt teams, wist de woorden', () => {
+check('NEW_GAME houdt teams en begint meteen bij team 1', () => {
   const seeded = withWords(seededSetup());
   let s = gameReducer(seeded, { type: 'START_GAME' });
   s = gameReducer(s, { type: 'START_ROUND', round: 1 });
   s = guessWholePot(s);
   s = gameReducer(s, { type: 'NEW_GAME' });
-  assert.equal(s.phase, 'setup');
+  assert.equal(s.phase, 'wordEntry', 'opnieuw spelen gaat direct woorden invullen');
+  assert.equal(s.currentTeamIndex, 0, 'begint bij het eerste team');
+  assert.equal(s.currentPlayerIndex, 0);
   assert.deepEqual(s.teams, seeded.teams, 'alle teams, spelers, namen en kleuren blijven staan');
   assert.equal(s.wordEntries.length, 0, 'woorden worden opnieuw gekozen');
   assert.equal(s.totalWords, 0);
@@ -405,6 +412,22 @@ check('opnieuw rollen levert een ander woord op', () => {
   const results = new Set(Array.from({ length: 40 }, () => pickRandomWord(used)));
   assert.ok(results.size > 1, 'herhaald rollen levert verschillende woorden op');
   for (const word of results) assert.ok(!used.includes(word));
+});
+check('elke taal heeft een eigen, schone woordenbank', () => {
+  const banks = { en: EN_WORD_BANK, de: DE_WORD_BANK, fr: FR_WORD_BANK };
+  for (const [lang, bank] of Object.entries(banks)) {
+    assert.ok(bank.length > 250, `${lang} heeft te weinig woorden (${bank.length})`);
+    assert.equal(new Set(bank).size, bank.length, `${lang} bevat dubbele woorden`);
+    for (const word of bank) {
+      assert.equal(word, word.trim().toLowerCase(), `"${word}" in ${lang} moet schoon en zonder hoofdletters zijn`);
+    }
+  }
+});
+check('rollen gebruikt de woordenbank van de gekozen taal', () => {
+  for (const [lang, bank] of Object.entries({ nl: WORD_BANK, en: EN_WORD_BANK, de: DE_WORD_BANK, fr: FR_WORD_BANK })) {
+    const word = pickRandomWord([], lang as 'nl' | 'en' | 'de' | 'fr');
+    assert.ok(bank.includes(word), `"${word}" staat niet in de ${lang}-bank`);
+  }
 });
 
 console.log('\nstandings');

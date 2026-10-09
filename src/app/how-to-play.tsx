@@ -1,43 +1,44 @@
 import { StyleSheet, Text, View } from 'react-native';
-import { BackButton } from '@/components/BackButton';
 import { BackFooter } from '@/components/BackFooter';
 import { RoundIcon } from '@/components/RoundIcon';
 import { Screen } from '@/components/Screen';
 import { ROUNDS } from '@/game/constants';
 import { colors, radius, spacing } from '@/theme';
-
-const STEPS: { title: string; body: string }[] = [
-  {
-    title: 'Teams instellen',
-    body: 'Maak twee teams, geef ze een naam en een kleur en voeg minimaal twee spelers per team toe.',
-  },
-  {
-    title: 'Woorden invoeren',
-    body: 'Iedere speler vult in het geheim woorden in voor zijn of haar eigen team. De telefoon gaat daarbij rond, zodat niemand andermans woorden ziet.',
-  },
-  {
-    title: 'Drie rondes spelen',
-    body: 'Elke ronde gebruikt alle woorden opnieuw. Per beurt draait het om één woord en een timer.',
-  },
-  {
-    title: 'Winnaar bepalen',
-    body: 'Na de derde ronde wint het team met de meeste punten. Bij gelijkspel winnen alle teams met de hoogste score.',
-  },
-];
-
-const TURN_ACTIONS = [
-  { label: 'Goed', tone: 'success', body: 'Het woord is geraden: +1 punt. Het volgende woord verschijnt meteen.' },
-  { label: 'Pas', tone: 'muted', body: 'Niet geraden? Het woord gaat terug in de pot en de timer loopt door.' },
-  { label: 'Beurt stoppen', tone: 'danger', body: 'De beurt eindigt vroeg; het open woord gaat terug in de pot.' },
-] as const;
+import { useI18n } from '@/i18n/LanguageProvider';
 
 export default function HowToPlayScreen() {
+  const { t } = useI18n();
+
+  const STEPS: { title: string; body: string }[] = [
+    {
+      title: t('howto.step1.title'),
+      body: t('howto.step1.body'),
+    },
+    {
+      title: t('howto.step2.title'),
+      body: t('howto.step2.body'),
+    },
+    {
+      title: t('howto.step3.title'),
+      body: t('howto.step3.body'),
+    },
+    {
+      title: t('howto.step4.title'),
+      body: t('howto.step4.body'),
+    },
+  ];
+
+  const TURN_ACTIONS = [
+    { label: t('play.good'), tone: 'success' as const, body: t('howto.goedBody') },
+    { label: t('play.pass'), tone: 'muted' as const, body: t('howto.pasBody') },
+    { label: t('play.endTurn'), tone: 'danger' as const, body: t('howto.stopBody') },
+  ] as const;
   return (
     <Screen
       topBar={
         <>
-          <BackButton />
-          <Text style={styles.headerTitle}>Speluitleg</Text>
+          <View style={styles.topBarSide} />
+          <Text style={styles.headerTitle}>{t('menu.rules')}</Text>
           <View style={styles.topBarSide} />
         </>
       }
@@ -45,14 +46,11 @@ export default function HowToPlayScreen() {
       contentStyle={styles.content}
     >
       <View style={styles.card}>
-        <Text style={styles.cardTitle}>Het idee</Text>
-        <Text style={styles.body}>
-          Jullie spelen met één gedeelde telefoon. Twee teams nemen om de beurt een beurt, waarin de speler aan de beurt zo veel mogelijk woorden
-          probeert te raden binnen de tijd. Na drie rondes met een eigen opdracht telt alleen het totaal aantal geraden woorden.
-        </Text>
+        <Text style={styles.cardTitle}>{t('howto.hey')}</Text>
+        <Text style={styles.body}>{t('howto.idea')}</Text>
       </View>
 
-      <Text style={styles.section}>Zo speel je</Text>
+      <Text style={styles.section}>{t('howto.sectionSteps')}</Text>
       <View style={styles.card}>
         {STEPS.map((step, index) => (
           <View key={step.title} style={[styles.stepRow, index === STEPS.length - 1 && styles.stepRowLast]}>
@@ -67,7 +65,7 @@ export default function HowToPlayScreen() {
         ))}
       </View>
 
-      <Text style={styles.section}>De drie rondes</Text>
+      <Text style={styles.section}>{t('howto.sectionRounds')}</Text>
       <View style={styles.card}>
         {ROUNDS.map((round, index) => (
           <View key={round.number} style={[styles.roundBlock, index > 0 && styles.roundBlockSpaced]}>
@@ -88,12 +86,9 @@ export default function HowToPlayScreen() {
         ))}
       </View>
 
-      <Text style={styles.section}>Een beurt</Text>
+      <Text style={styles.section}>{t('howto.sectionTurn')}</Text>
       <View style={styles.card}>
-        <Text style={styles.body}>
-          Eerst zie je “Geef de telefoon aan”. Pas als de speler op <Text style={styles.strong}>Start beurt</Text> drukt, gaat de timer lopen. Het
-          woord staat groot in beeld; in de laatste tien seconden tikt de timer en bij nul stopt de beurt vanzelf.
-        </Text>
+        <Text style={styles.body}>{t('howto.turnIntro')}</Text>
         <View style={styles.divider} />
         {TURN_ACTIONS.map((action) => (
           <View key={action.label} style={styles.actionRow}>
@@ -119,12 +114,9 @@ export default function HowToPlayScreen() {
         ))}
       </View>
 
-      <Text style={styles.section}>Punten</Text>
+      <Text style={styles.section}>{t('howto.sectionPoints')}</Text>
       <View style={styles.card}>
-        <Text style={styles.body}>
-          Elk goed geraden woord levert het team <Text style={styles.strong}>exact één punt</Text> op. Er zijn geen bonussen voor snelheid en “Pas”
-          kost geen punt. De scores lopen door over de rondes heen: na elke ronde zie je de tussenstand, na ronde 3 de eindstand.
-        </Text>
+        <Text style={styles.body}>{t('howto.points')}</Text>
       </View>
     </Screen>
   );
