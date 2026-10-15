@@ -18,6 +18,7 @@ import { isNameTaken } from '@/game/names';
 import type { Team } from '@/game/types';
 import { useI18n } from '@/i18n/LanguageProvider';
 import { haptics } from '@/lib/haptics';
+import { logAnalyticsEvent } from '@/lib/analytics';
 import { colors, noOutline, radius, spacing } from '@/theme';
 
 const TOTAL_STEPS = 3;
@@ -42,6 +43,13 @@ export default function SetupScreen() {
   const lastStep = TOTAL_STEPS - 1;
   const currentTeam = teams[step];
   const teamCardRef = useRef<{ commit: () => void }>(null);
+  const setupTracked = useRef(false);
+
+  useEffect(() => {
+    if (setupTracked.current) return;
+    setupTracked.current = true;
+    logAnalyticsEvent('game_setup_started');
+  }, []);
 
   useEffect(() => {
     if (teams.length === 0) ensureDefaultTeams();

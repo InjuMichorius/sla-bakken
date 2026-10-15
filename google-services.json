@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "42808687406",
+    "project_id": "slabakken-cb6d6",
+    "storage_bucket": "slabakken-cb6d6.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:42808687406:android:2a1511a41756b74fe218bf",
+        "android_client_info": {
+          "package_name": "com.inju.slabakken"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCvJxKS81HZiYPoKFK5tSN_R7ldCWzvw2s"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

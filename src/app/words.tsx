@@ -14,6 +14,7 @@ import { haptics } from '@/lib/haptics';
 import { colors, radius, spacing, noOutline } from '@/theme';
 import { pickRandomWord } from '@/game/randomWord';
 import type { RosterEntry } from '@/game/useGame';
+import { logAnalyticsEvent } from '@/lib/analytics';
 
 const emptyWords = (count: number): string[] => Array.from({ length: count }, () => '');
 
@@ -136,6 +137,7 @@ function PlayerWordForm({ team, player, color, position, isLast, roster, index, 
     ];
     setWords((prev) => prev.map((w, i) => (i === index ? pickRandomWord(used, language) : w)));
     haptics.light();
+    logAnalyticsEvent('word_rolled_random');
   };
 
   /** The check commits this word: on to the next field, or close the keyboard on the last one. */

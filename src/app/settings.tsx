@@ -7,9 +7,17 @@ import { BackFooter } from '@/components/BackFooter';
 import { Screen } from '@/components/Screen';
 import { useI18n } from '@/i18n/LanguageProvider';
 import { haptics } from '@/lib/haptics';
+import {
+  isAnalyticsEnabled,
+  logAnalyticsEvent,
+  sendAnalyticsTestCrash,
+  sendAnalyticsTestEvent,
+  sendAnalyticsTestNonFatal,
+} from '@/lib/analytics';
 import { colors, radius, spacing } from '@/theme';
 
 const VOLUME_STEPS = [25, 50, 75, 100];
+const isDev = process.env.NODE_ENV !== 'production';
 
 export default function SettingsScreen() {
   const { t } = useI18n();
@@ -39,6 +47,7 @@ export default function SettingsScreen() {
             onValueChange={(value) => {
               haptics.light();
               setSoundEnabled(value);
+              logAnalyticsEvent('settings_changed', { setting: 'sound_enabled', enabled: value });
             }}
             trackColor={{ false: colors.border, true: colors.accent }}
             ios_backgroundColor={colors.surfaceAlt}
@@ -61,6 +70,7 @@ export default function SettingsScreen() {
                   onPress={() => {
                     haptics.light();
                     setVolume(step / 100);
+                    logAnalyticsEvent('settings_changed', { setting: 'volume', volume: step / 100 });
                   }}
                   accessibilityRole="button"
                   accessibilityState={{ selected: active, disabled: !settings.soundEnabled }}
@@ -96,6 +106,7 @@ export default function SettingsScreen() {
                 onPress={() => {
                   haptics.light();
                   toggleMuted(sound.key);
+                  logAnalyticsEvent('settings_changed', { setting: 'sound_muted', sound: sound.key, muted: !muted });
                 }}
                 accessibilityRole="button"
                 accessibilityState={{ selected: !muted }}
@@ -125,6 +136,7 @@ export default function SettingsScreen() {
             value={settings.hapticsEnabled}
             onValueChange={(value) => {
               setHaptics(value);
+              logAnalyticsEvent('settings_changed', { setting: 'haptics_enabled', enabled: value });
             }}
             trackColor={{ false: colors.border, true: colors.accent }}
             ios_backgroundColor={colors.surfaceAlt}
@@ -132,6 +144,48 @@ export default function SettingsScreen() {
           />
         </View>
       </View>
+
+      {isDev ? (
+        <>
+          <Text style={styles.section}>Debug — analytics</Text>
+          <View style={styles.card}>
+            <View style={styles.row}>
+              <View style={styles.rowText}>
+                <Text style={styles.rowLabel}>Analytics actief</Text>
+                <Text style={styles.rowHint}>
+                  {isAnalyticsEnabled()
+                    ? 'ja — native Firebase-modules geladen'
+                    : 'nee — Expo Go of een niet-herbouwde build'}
+                </Text>
+              </View>
+            </View>
+            <View style={styles.divider} />
+            <View style={styles.debugRow}>
+              <Pressable
+                onPress={sendAnalyticsTestEvent}
+                accessibilityRole="button"
+                style={({ pressed }) => [styles.debugButton, pressed && styles.pressed]}
+              >
+                <Text style={styles.debugButtonText}>Test-event</Text>
+              </Pressable>
+              <Pressable
+                onPress={sendAnalyticsTestNonFatal}
+                accessibilityRole="button"
+                style={({ pressed }) => [styles.debugButton, pressed && styles.pressed]}
+              >
+                <Text style={styles.debugButtonText}>Test non-fatal</Text>
+              </Pressable>
+              <Pressable
+                onPress={sendAnalyticsTestCrash}
+                accessibilityRole="button"
+                style={({ pressed }) => [styles.debugButton, styles.debugButtonDanger, pressed && styles.pressed]}
+              >
+                <Text style={styles.debugButtonDangerText}>Forceer crash</Text>
+              </Pressable>
+            </View>
+          </View>
+        </>
+      ) : null}
     </Screen>
   );
 }
@@ -201,4 +255,22 @@ const styles = StyleSheet.create({
   muteButton: { backgroundColor: colors.surfaceAlt, borderWidth: 1, borderColor: colors.border },
   muteButtonActive: { borderColor: 'rgba(248, 113, 113, 0.5)', backgroundColor: colors.dangerSoft },
   pressed: { opacity: 0.7 },
+  debugRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, paddingVertical: spacing.md },
+  debugButton: {
+    minHeight: 44,
+    paddingHorizontal: spacing.md,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surfaceAlt,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...Platform.select({
+      web: { cursor: 'pointer' as const },
+      default: {},
+    }),
+  },
+  debugButtonText: { color: colors.text, fontSize: 13, fontWeight: '800' },
+  debugButtonDanger: { borderColor: 'rgba(248, 113, 113, 0.5)', backgroundColor: colors.dangerSoft },
+  debugButtonDangerText: { color: colors.danger, fontSize: 13, fontWeight: '800' },
 });

@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { BackFooter } from '@/components/BackFooter';
 import { RoundIcon } from '@/components/RoundIcon';
@@ -5,9 +6,17 @@ import { Screen } from '@/components/Screen';
 import { ROUNDS } from '@/game/constants';
 import { colors, radius, spacing } from '@/theme';
 import { useI18n } from '@/i18n/LanguageProvider';
+import { logAnalyticsEvent } from '@/lib/analytics';
 
 export default function HowToPlayScreen() {
   const { t } = useI18n();
+  const tracked = useRef(false);
+
+  useEffect(() => {
+    if (tracked.current) return;
+    tracked.current = true;
+    logAnalyticsEvent('how_to_play_opened');
+  }, []);
 
   const STEPS: { title: string; body: string }[] = [
     {

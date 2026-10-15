@@ -7,6 +7,8 @@ import { FeedbackProvider } from '@/audio/FeedbackProvider';
 import { GameProvider, useGameContext } from '@/game/GameProvider';
 import { LanguageProvider } from '@/i18n/LanguageProvider';
 import { Phase } from '@/game/types';
+import { initAnalytics } from '@/lib/analytics';
+import { GameAnalyticsBridge } from '@/lib/gameAnalytics';
 import { colors } from '@/theme';
 
 /**
@@ -41,6 +43,10 @@ function PhaseRouter() {
 }
 
 export default function RootLayout() {
+  useEffect(() => {
+    initAnalytics();
+  }, []);
+
   return (
     <SafeAreaProvider>
       <FeedbackProvider>
@@ -48,6 +54,7 @@ export default function RootLayout() {
           <GameProvider>
             <StatusBar style="light" />
             <PhaseRouter />
+            <GameAnalyticsBridge />
             <View style={styles.root}>
               <Stack
                 screenOptions={{
