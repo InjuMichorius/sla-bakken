@@ -180,9 +180,12 @@ function PlayerWordForm({ team, player, color, position, isLast, roster, index, 
       }
     >
       <View style={styles.headRow}>
-        <Avatar name={player.name} color={color} size={46} />
+        <Avatar name={player.name} color={color} size={58} />
         <View style={styles.headText}>
-          <Text style={styles.headLabel}>{t('words.turnOf')}</Text>
+          <View style={styles.headLabelRow}>
+            <Text style={styles.headLabel}>{t('words.turnOf')}</Text>
+            <Badge color={color}>{team.name}</Badge>
+          </View>
           <Text style={styles.headName} numberOfLines={1}>
             {player.name}
           </Text>
@@ -317,8 +320,9 @@ const styles = StyleSheet.create({
   dotFill: { position: 'absolute', top: 0, bottom: 0, left: 0, backgroundColor: colors.accent },
   headRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   headText: { flex: 1 },
+  headLabelRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   headLabel: { color: colors.muted, fontSize: 11, fontWeight: '800', letterSpacing: 1.2, textTransform: 'uppercase' },
-  headName: { color: colors.text, fontSize: 26, fontWeight: '900', letterSpacing: -0.5 },
+  headName: { color: colors.text, fontSize: 26, fontWeight: '900', letterSpacing: -0.5, marginTop: spacing.sm },
   instruction: { color: colors.muted, fontSize: 14, lineHeight: 20 },
   fields: { gap: spacing.md },
   fieldRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },

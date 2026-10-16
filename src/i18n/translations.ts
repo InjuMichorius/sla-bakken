@@ -102,7 +102,7 @@ export const STRINGS = {
   'howto.step2.title': { nl: 'Woorden invoeren', en: 'Enter words', de: 'Wörter eingeben', fr: 'Entrer des mots' },
   'howto.step2.body': { nl: 'Iedere speler vult in het geheim woorden in voor zijn of haar eigen team. De telefoon gaat daarbij rond, zodat niemand andermans woorden ziet.', en: 'Every player secretly enters words for their own team. The phone is handed around so nobody sees anyone else\'s words.', de: 'Jeder Spieler gibt heimlich Wörter für sein eigenes Team ein. Das Telefon wird herumgereicht, damit niemand die Wörter anderer sieht.', fr: 'Chaque joueur entre secrètement des mots pour son propre équipe. Le téléphone est passé autour pour que personne ne voie les mots des autres.' },
   'howto.step3.title': { nl: 'Drie rondes spelen', en: 'Play three rounds', de: 'Drei Runden spielen', fr: 'Jouer trois manches' },
-  'howto.step3.body': { nl: 'Elke ronde gebruikt alle woorden opnieuw. Per beurt draait het om één woord en een timer.', en: 'Each round reuses all the words. Per turn it revolves around one word and a timer.', de: 'Jede Runde verwendet alle Wörter erneut. Pro Zug geht es um ein Wort und einen Timer.', fr: 'Chaque manche réutilise tous les mots. Par tour, il s\'agit d\'un mot et d\'un minuteur.' },
+  'howto.step3.body': { nl: 'Elke ronde gebruikt alle woorden opnieuw. Per beurt draait het om één woord en een timer.', en: 'Every round uses all the words again. Each turn focuses on one word and a timer.', de: 'Jede Runde verwendet alle Wörter erneut. Pro Zug geht es um ein Wort und einen Timer.', fr: 'Chaque manche réutilise tous les mots. Par tour, il s\'agit d\'un mot et d\'un minuteur.' },
   'howto.step4.title': { nl: 'Winnaar bepalen', en: 'Find the winner', de: 'Gewinner ermitteln', fr: 'Déterminer le gagnant' },
   'howto.step4.body': { nl: 'Na de derde ronde wint het team met de meeste punten. Bij gelijkspel winnen alle teams met de hoogste score.', en: 'After the third round the team with the most points wins. In a tie, all top-scoring teams win.', de: 'Nach der dritten Runde gewinnt das Team mit den meisten Punkten. Bei Gleichstand gewinnen alle Teams mit der höchsten Punktzahl.', fr: 'Après la troisième manche, l\'équipe avec le plus de points gagne. En cas d\'égalité, toutes les équipes avec le score le plus élevé gagnent.' },
   'howto.sectionRounds': { nl: 'De drie rondes', en: 'The three rounds', de: 'Die drei Runden', fr: 'Les trois manches' },
@@ -119,7 +119,7 @@ export const STRINGS = {
   'howto.sectionPoints': { nl: 'Punten', en: 'Points', de: 'Punkte', fr: 'Points' },
   'howto.points': {
     nl: 'Elk goed geraden woord levert het team exact één punt op. Er zijn geen bonussen voor snelheid en “Pas” kost geen punt. De scores lopen door over de rondes heen: na elke ronde zie je de tussenstand, na ronde 3 de eindstand.',
-    en: 'Every correctly guessed word earns the team exactly one point. There are no speed bonuses and “Pass” costs nothing. Scores carry over across rounds: after each round you see the standings, after round 3 the final results.',
+    en: 'Every correctly guessed word earns the team exactly one point. There are no speed bonuses and “Pass” costs nothing. Scores carry over across rounds: after each round you see the scores, after round 3 the final results.',
     de: 'Jedes richtig erratene Wort bringt dem Team genau einen Punkt. Es gibt keine Geschwindigkeitsboni und "Passen" kostet nichts. Die Punkte werden über die Runden hinweg übertragen: Nach jeder Runde siehst du den Zwischenstand, nach Runde 3 das Endergebnis.',
     fr: 'Chaque mot correctement deviné rapporte à l\'équipe exactement un point. Il n\'y a pas de bonus de vitesse et "Passer" ne coûte rien. Les scores sont cumulés sur les manches: après chaque manche, vous voyez le classement, après la manche 3, les résultats finaux.',
   },
@@ -160,7 +160,7 @@ export const STRINGS = {
   /* Ronde-intro */
   'round.start': { nl: 'Start ronde {n}', en: 'Start round {n}', de: 'Runde {n} starten', fr: 'Commencer la manche {n}' },
   'round.wordsInPot': { nl: '{n} woorden in de pot', en: '{n} words in the pot', de: '{n} Wörter im Topf', fr: '{n} mots dans le pot' },
-  'round.previousTitle': { nl: 'Ronde {n} afgelopen — tussenstand', en: 'Round {n} finished — standings', de: 'Runde {n} beendet — Zwischenstand', fr: 'Manche {n} terminée — classement' },
+  'round.previousTitle': { nl: 'Ronde {n} afgelopen — tussenstand', en: 'Round {n} finished — scores', de: 'Runde {n} beendet — Zwischenstand', fr: 'Manche {n} terminée — classement' },
 
   /* Spelen */
   'play.round': { nl: 'Ronde', en: 'Round', de: 'Runde', fr: 'Manche' },
@@ -176,7 +176,7 @@ export const STRINGS = {
   'play.roundFinished': { nl: 'Ronde {n} afgelopen', en: 'Round {n} finished', de: 'Runde {n} beendet', fr: 'Manche {n} terminée' },
   'play.finishedLast': { nl: 'Alle drie de rondes zijn gespeeld. Dit is de eindstand.', en: 'All three rounds have been played. This is the final results.', de: 'Alle drei Runden wurden gespielt. Das ist das Endergebnis.', fr: 'Les trois manches ont été jouées. Voici les résultats finaux.' },
   'play.finishedNext': { nl: 'Alle {n} woorden zijn geraden. De pot wordt opnieuw gevuld voor ronde {n2}.', en: 'All {n} words were guessed. The pot is refilled for round {n2}.', de: 'Alle {n} Wörter wurden erraten. Der Topf wird für Runde {n2} neu gefüllt.', fr: 'Tous les {n} mots ont été devinés. Le pot est reconstitué pour la manche {n2}.' },
-  'play.standingsAfter': { nl: 'Tussenstand na ronde {n}', en: 'Standings after round {n}', de: 'Zwischenstand nach Runde {n}', fr: 'Classement après la manche {n}' },
+  'play.standingsAfter': { nl: 'Tussenstand na ronde {n}', en: 'Scores after round {n}', de: 'Zwischenstand nach Runde {n}', fr: 'Classement après la manche {n}' },
   'play.nextRound': { nl: 'Volgende ronde:', en: 'Next round:', de: 'Nächste Runde:', fr: 'Prochaine manche:' },
 
   /* Eindstand */

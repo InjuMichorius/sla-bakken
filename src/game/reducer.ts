@@ -17,7 +17,7 @@ export type GameAction =
   | { type: 'REMOVE_PLAYER'; teamId: string; playerId: string }
   | { type: 'START_WORD_ENTRY' }
   | { type: 'SET_PLAYER_WORDS'; teamId: string; playerId: string; words: string[] }
-  | { type: 'START_GAME' }
+  | { type: 'START_GAME'; startTeamIndex?: number }
   | { type: 'START_ROUND'; round: number }
   | { type: 'START_TURN'; now?: number }
   | { type: 'CORRECT_GUESS'; now?: number }
@@ -79,6 +79,14 @@ function freshScores(teams: Team[]): Record<string, number> {
 export function firstTeamWithPlayers(state: GameState): number {
   const index = state.teams.findIndex((t) => t.players.length > 0);
   return index < 0 ? 0 : index;
+}
+
+/** Picks a random team that has players; round 1 opens with a random team. */
+export function randomTeamIndex(state: GameState): number {
+  const eligible = state.teams.map((team, index) => ({ team, index })).filter(({ team }) => team.players.length > 0);
+  const pool = eligible.length > 0 ? eligible : state.teams.map((team, index) => ({ team, index }));
+  if (pool.length === 0) return 0;
+  return pool[Math.floor(Math.random() * pool.length)].index;
 }
 
 /**
@@ -238,12 +246,27 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
     case 'START_GAME': {
       const words = allWords(state);
       if (words.length === 0) return state;
-      return { ...state, phase: 'roundIntro', currentRound: 1, pot: [], currentWord: null };
+      // Ronde 1 begint bij een willekeurig team; daarna neemt het team dat
+      // als laatste aan zet was de volgende ronde over (zie START_ROUND).
+      const startTeamIndex = action.startTeamIndex ?? randomTeamIndex(state);
+      return {
+        ...state,
+        phase: 'roundIntro',
+        currentRound: 1,
+        pot: [],
+        currentWord: null,
+        currentTeamIndex: startTeamIndex,
+        currentPlayerIndex: 0,
+      };
     }
 
     case 'START_ROUND': {
       const pot = shuffle(allWords(state));
-      const startTeamIndex = firstTeamWithPlayers(state);
+      // De beurt schuift alleen op bij tijdop of handmatig stoppen. Maakt een
+      // team de pot leeg, dan begint datzelfde team de volgende ronde.
+      const startTeamIndex = state.teams[state.currentTeamIndex]?.players.length
+        ? state.currentTeamIndex
+        : firstTeamWithPlayers(state);
       return {
         ...state,
         phase: 'handoff',

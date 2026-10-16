@@ -81,14 +81,14 @@ export default function HowToPlayScreen() {
             <View style={styles.roundHead}>
               <RoundIcon name={round.icon} size={18} />
               <Text style={styles.roundTitle}>
-                {round.number}. {round.title}
+                {round.number}. {t(round.title)}
               </Text>
-              <Text style={styles.roundTag}>{round.tagline}</Text>
+              <Text style={styles.roundTag}>{t(round.tagline)}</Text>
             </View>
             {round.rules.map((rule) => (
               <View key={rule} style={styles.bulletRow}>
                 <View style={styles.bullet} />
-                <Text style={styles.body}>{rule}</Text>
+                <Text style={styles.body}>{t(rule)}</Text>
               </View>
             ))}
           </View>

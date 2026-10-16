@@ -157,10 +157,10 @@ check('tussenopslaan kan later worden overschreven', () => {
 });
 check('START_GAME zonder woorden doet niets', () => {
   const s = gameReducer(seededSetup(), { type: 'START_WORD_ENTRY' });
-  assert.equal(gameReducer(s, { type: 'START_GAME' }).phase, 'wordEntry');
+  assert.equal(gameReducer(s, { type: 'START_GAME', startTeamIndex: 0 }).phase, 'wordEntry');
 });
 check('pot bevat elk woord precies eenmaal', () => {
-  const s = gameReducer(withWords(seededSetup()), { type: 'START_GAME' });
+  const s = gameReducer(withWords(seededSetup()), { type: 'START_GAME', startTeamIndex: 0 });
   const r = gameReducer(s, { type: 'START_ROUND', round: 1 });
   assert.equal(s.phase, 'roundIntro');
   assert.equal(s.currentRound, 1);
@@ -171,7 +171,7 @@ check('pot bevat elk woord precies eenmaal', () => {
 
 console.log('\nbeurten en rotatie');
 check('beurten wisselen altijd van team', () => {
-  let s = gameReducer(withWords(seededSetup()), { type: 'START_GAME' });
+  let s = gameReducer(withWords(seededSetup()), { type: 'START_GAME', startTeamIndex: 0 });
   s = gameReducer(s, { type: 'START_ROUND', round: 1 });
   const order: string[] = [];
   for (let i = 0; i < 12; i++) {
@@ -200,7 +200,7 @@ check('twee teams: A1 B1 A2 B2 ...', () => {
       s = gameReducer(s, { type: 'SET_PLAYER_WORDS', teamId: team.id, playerId: player.id, words: [`${team.name}-${player.name}`] });
     })
   );
-  s = gameReducer(s, { type: 'START_GAME' });
+  s = gameReducer(s, { type: 'START_GAME', startTeamIndex: 0 });
   s = gameReducer(s, { type: 'START_ROUND', round: 1 });
   const order: string[] = [];
   for (let i = 0; i < 6; i++) {
@@ -213,7 +213,7 @@ check('twee teams: A1 B1 A2 B2 ...', () => {
 });
 check('ongelijke teamgroottes blijven wisselen', () => {
   let s = withWords(seededSetup());
-  s = gameReducer(s, { type: 'START_GAME' });
+  s = gameReducer(s, { type: 'START_GAME', startTeamIndex: 0 });
   s = gameReducer(s, { type: 'START_ROUND', round: 1 });
   const teams = new Set<number>();
   for (let i = 0; i < 9; i++) {
@@ -230,7 +230,7 @@ check('nextPoint houdt rekening met lege teams', () => {
 
 console.log('\nscoren');
 check('goed gokken telt voor het juiste team', () => {
-  let s = gameReducer(withWords(seededSetup()), { type: 'START_GAME' });
+  let s = gameReducer(withWords(seededSetup()), { type: 'START_GAME', startTeamIndex: 0 });
   s = gameReducer(s, { type: 'START_ROUND', round: 1 });
   s = gameReducer(s, { type: 'START_TURN' });
   const teamId = s.teams[s.currentTeamIndex].id;
@@ -243,7 +243,7 @@ check('goed gokken telt voor het juiste team', () => {
   assert.equal(s.currentWord, s.pot[s.pot.length - 1]);
 });
 check('pas geeft geen punt en houdt het woord in de pot', () => {
-  let s = gameReducer(withWords(seededSetup()), { type: 'START_GAME' });
+  let s = gameReducer(withWords(seededSetup()), { type: 'START_GAME', startTeamIndex: 0 });
   s = gameReducer(s, { type: 'START_ROUND', round: 1 });
   s = gameReducer(s, { type: 'START_TURN' });
   const teamId = s.teams[s.currentTeamIndex].id;
@@ -255,7 +255,7 @@ check('pas geeft geen punt en houdt het woord in de pot', () => {
   assert.equal(s.pot.includes(s.currentWord!), true);
 });
 check('tijdverloop rekent af en wisselt van beurt', () => {
-  let s = gameReducer(withWords(seededSetup()), { type: 'START_GAME' });
+  let s = gameReducer(withWords(seededSetup()), { type: 'START_GAME', startTeamIndex: 0 });
   s = gameReducer(s, { type: 'SET_TURN_SECONDS', seconds: 30 });
   s = gameReducer(s, { type: 'START_ROUND', round: 1 });
   s = gameReducer(s, { type: 'START_TURN' });
@@ -269,11 +269,11 @@ check('tijdverloop rekent af en wisselt van beurt', () => {
   assert.notEqual(`${s.currentTeamIndex}/${s.currentPlayerIndex}`, before);
 });
 check('TICK doet niets als de klok niet loopt', () => {
-  const s = gameReducer(withWords(seededSetup()), { type: 'START_GAME' });
+  const s = gameReducer(withWords(seededSetup()), { type: 'START_GAME', startTeamIndex: 0 });
   assert.equal(gameReducer(s, { type: 'TICK', now: Date.now() }).timerRemaining, s.timerRemaining);
 });
 check('pot leeg sluit de ronde af', () => {
-  let s = gameReducer(withWords(seededSetup()), { type: 'START_GAME' });
+  let s = gameReducer(withWords(seededSetup()), { type: 'START_GAME', startTeamIndex: 0 });
   s = gameReducer(s, { type: 'START_ROUND', round: 1 });
   const total = s.pot.length;
   s = guessWholePot(s);
@@ -285,7 +285,7 @@ check('pot leeg sluit de ronde af', () => {
 
 console.log('\nrondes');
 check('ronde 1 -> review -> intro ronde 2 met pot refill', () => {
-  let s = gameReducer(withWords(seededSetup()), { type: 'START_GAME' });
+  let s = gameReducer(withWords(seededSetup()), { type: 'START_GAME', startTeamIndex: 0 });
   s = gameReducer(s, { type: 'START_ROUND', round: 1 });
   const total = s.pot.length;
   s = guessWholePot(s);
@@ -302,7 +302,7 @@ check('ronde 1 -> review -> intro ronde 2 met pot refill', () => {
   assert.equal(s.turnsThisRound, 0);
 });
 check('score en totaal blijven cumuleren over rondes', () => {
-  let s = gameReducer(withWords(seededSetup()), { type: 'START_GAME' });
+  let s = gameReducer(withWords(seededSetup()), { type: 'START_GAME', startTeamIndex: 0 });
   s = gameReducer(s, { type: 'START_ROUND', round: 1 });
   const perRound = s.pot.length;
   s = guessWholePot(s);
@@ -315,28 +315,58 @@ check('score en totaal blijven cumuleren over rondes', () => {
   assert.equal(Object.values(s.scores).reduce((a, b) => a + b, 0), perRound + 1);
 });
 check('ronde 3 eindigt op de samenvatting met winnaars', () => {
-  let s = gameReducer(withWords(seededSetup()), { type: 'START_GAME' });
+  let s = gameReducer(withWords(seededSetup()), { type: 'START_GAME', startTeamIndex: 0 });
   s = gameReducer(s, { type: 'START_ROUND', round: 1 });
   s = guessWholePot(s);
+  // Het team dat de pot leegmaakt begint ook de volgende ronde, dus hetzelfde
+  // team blijft aan zet en loopt uit op de rest.
   for (const round of [2, 3] as const) {
     s = toRound(s, round);
-    s = gameReducer(s, { type: 'END_TURN' });
     s = guessWholePot(s);
   }
   s = gameReducer(s, { type: 'END_ROUND' });
   assert.equal(s.phase, 'summary');
   const best = Math.max(...s.teams.map((t) => s.scores[t.id] ?? 0));
   assert.deepEqual(s.winners, s.teams.filter((t) => s.scores[t.id] === best).map((t) => t.id));
-  assert.equal(s.winners.length, 1, 'het team dat het langst speelde wint');
-  assert.equal(s.winners[0], s.teams[1].id);
+  assert.equal(s.winners.length, 1, 'het team dat elke pot leegmaakte wint');
+  assert.equal(s.winners[0], s.teams[0].id);
   assert.deepEqual(s.roundResults, [
     { round: 1, completed: true },
     { round: 2, completed: true },
     { round: 3, completed: true },
   ]);
 });
+check('de startploeg van ronde 1 is willekeurig maar altijd geldig', () => {
+  const seen = new Set<number>();
+  for (let i = 0; i < 200; i++) {
+    const s = gameReducer(withWords(seededSetup()), { type: 'START_GAME' });
+    assert.ok(s.currentTeamIndex >= 0 && s.currentTeamIndex < 3, 'startploeg bestaat');
+    seen.add(s.currentTeamIndex);
+  }
+  assert.ok(seen.size > 1, 'de startploeg varieert over de potjes');
+});
+check('een team dat de pot leegmaakt begint ook de volgende ronde', () => {
+  let s = gameReducer(withWords(seededSetup()), { type: 'START_GAME', startTeamIndex: 1 });
+  s = gameReducer(s, { type: 'START_ROUND', round: 1 });
+  assert.equal(s.currentTeamIndex, 1, 'ronde 1 begint bij de gekozen ploeg');
+  s = guessWholePot(s);
+  assert.equal(s.currentTeamIndex, 1, 'de pot leegmaken wisselt niet van ploeg');
+  s = toRound(s, 2);
+  assert.equal(s.currentTeamIndex, 1, 'dezelfde ploeg begint ronde 2');
+});
+check('een gestopte beurt geeft de andere ploeg de volgende ronde', () => {
+  let s = gameReducer(withWords(seededSetup()), { type: 'START_GAME', startTeamIndex: 0 });
+  s = gameReducer(s, { type: 'START_ROUND', round: 1 });
+  s = gameReducer(s, { type: 'START_TURN' });
+  s = gameReducer(s, { type: 'END_TURN' });
+  assert.equal(s.currentTeamIndex, 1, 'de beurt schuift op naar het volgende team');
+  s = gameReducer(s, { type: 'END_ROUND' });
+  s = gameReducer(s, { type: 'NEXT_ROUND' });
+  s = gameReducer(s, { type: 'START_ROUND', round: 2 });
+  assert.equal(s.currentTeamIndex, 1, 'ronde 2 begint bij het team dat als laatste aan zet was');
+});
 check('gelijkspel geeft meerdere winnaars', () => {
-  const base = gameReducer(withWords(seededSetup()), { type: 'START_GAME' });
+  const base = gameReducer(withWords(seededSetup()), { type: 'START_GAME', startTeamIndex: 0 });
   const tieState: GameState = {
     ...base,
     phase: 'roundReview',
@@ -348,7 +378,7 @@ check('gelijkspel geeft meerdere winnaars', () => {
   assert.equal(s.winners.length, base.teams.length, 'alle teams winnen bij gelijkspel');
 });
 check('NEXT_ROND blijft binnen de drie rondes', () => {
-  let s = gameReducer(withWords(seededSetup()), { type: 'START_GAME' });
+  let s = gameReducer(withWords(seededSetup()), { type: 'START_GAME', startTeamIndex: 0 });
   s = gameReducer(s, { type: 'NEXT_ROUND' });
   s = gameReducer(s, { type: 'NEXT_ROUND' });
   s = gameReducer(s, { type: 'NEXT_ROUND' });
@@ -357,7 +387,7 @@ check('NEXT_ROND blijft binnen de drie rondes', () => {
 });
 check('RESET gaat naar setup maar onthoudt teams en spelernamen', () => {
   const seeded = withWords(seededSetup());
-  let s = gameReducer(seeded, { type: 'START_GAME' });
+  let s = gameReducer(seeded, { type: 'START_GAME', startTeamIndex: 0 });
   s = gameReducer(s, { type: 'SET_TURN_SECONDS', seconds: 90 });
   s = gameReducer(s, { type: 'START_ROUND', round: 1 });
   s = gameReducer(s, { type: 'RESET' });
@@ -372,7 +402,7 @@ check('RESET gaat naar setup maar onthoudt teams en spelernamen', () => {
 });
 check('NEW_GAME houdt teams en begint meteen bij team 1', () => {
   const seeded = withWords(seededSetup());
-  let s = gameReducer(seeded, { type: 'START_GAME' });
+  let s = gameReducer(seeded, { type: 'START_GAME', startTeamIndex: 0 });
   s = gameReducer(s, { type: 'START_ROUND', round: 1 });
   s = guessWholePot(s);
   s = gameReducer(s, { type: 'NEW_GAME' });

@@ -28,7 +28,7 @@ export type SoundMeta = {
 export const SOUNDS: SoundMeta[] = [
   { key: 'accept', label: 'sound.accept.label', hint: 'sound.accept.hint', source: require('../../assets/sounds/accept.wav') },
   { key: 'decline', label: 'sound.decline.label', hint: 'sound.decline.hint', source: require('../../assets/sounds/decline.wav') },
-  { key: 'swap', label: 'sound.swap.label', hint: 'sound.swap.hint', source: require('../../assets/sounds/swap.wav') },
+  { key: 'swap', label: 'sound.swap.label', hint: 'sound.swap.hint', source: require('../../assets/sounds/swing.mp3') },
   { key: 'correct', label: 'sound.correct.label', hint: 'sound.correct.hint', source: require('../../assets/sounds/correct.wav') },
   { key: 'turnStart', label: 'sound.turnStart.label', hint: 'sound.turnStart.hint', source: require('../../assets/sounds/turnStart.wav') },
   { key: 'ticking', label: 'sound.ticking.label', hint: 'sound.ticking.hint', source: require('../../assets/sounds/ticking.wav') },
