@@ -3,6 +3,8 @@ import { DEFAULT_TURN_SECONDS, DEFAULT_WORDS_PER_PLAYER } from './constants';
 export type Player = {
   id: string;
   name: string;
+  /** Supabase-account dat deze spelersplek bezet; alleen voor de ingelogde Speler 1. */
+  userId?: string;
 };
 
 export type Team = {
@@ -39,6 +41,8 @@ export type GuessTiming = {
 };
 
 export type GameState = {
+  /** Unieke id per potje, zodat een resultaat maar één keer wordt opgeslagen. */
+  gameId: string | null;
   teams: Team[];
   wordEntries: WordEntry[];
   phase: Phase;
@@ -74,6 +78,7 @@ export type GameState = {
 };
 
 export const initialGameState: GameState = {
+  gameId: null,
   teams: [],
   wordEntries: [],
   phase: 'setup',

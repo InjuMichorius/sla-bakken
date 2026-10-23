@@ -55,7 +55,7 @@ export function EmailAuthForm() {
       return;
     }
     if (mode === 'signUp' && !trimmedName) {
-      setLocalError(t('auth.nameRequired'));
+      setLocalError(t('auth.usernameRequired'));
       return;
     }
 
@@ -95,10 +95,10 @@ export function EmailAuthForm() {
       <View style={styles.form}>
         {mode === 'signUp' ? (
           <Field
-            label={t('auth.name')}
+            label={t('auth.username')}
             value={name}
             onChangeText={setName}
-            placeholder={t('auth.namePlaceholder')}
+            placeholder={t('auth.usernamePlaceholder')}
             autoCapitalize="words"
             autoComplete="name"
             textContentType="name"

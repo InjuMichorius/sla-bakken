@@ -21,3 +21,17 @@ export function nextFreePlayerName(taken: string[]): string {
   while (isNameTaken(`Speler ${n}`, taken)) n += 1;
   return `Speler ${n}`;
 }
+/** Keep a requested name when possible, otherwise append a numeric suffix. */
+export function nextAvailablePlayerName(name: string, taken: string[]): string {
+  const base = normalizePlayerName(name);
+  if (!base) return nextFreePlayerName(taken);
+  if (!isNameTaken(base, taken)) return base;
+
+  let suffix = 2;
+  while (true) {
+    const tail = ` ${suffix}`;
+    const candidate = normalizePlayerName(base.slice(0, MAX_PLAYER_NAME_LENGTH - tail.length)) + tail;
+    if (!isNameTaken(candidate, taken)) return candidate;
+    suffix += 1;
+  }
+}

@@ -1,6 +1,6 @@
 import { nextFreeTeamColor, teamColor, isTeamColor } from './colors';
 import { MAX_WORDS_PER_PLAYER, MIN_PLAYERS_PER_TEAM, MIN_TEAMS, MIN_WORDS_PER_PLAYER, ROUNDS } from './constants';
-import { isNameTaken, nextFreePlayerName, normalizePlayerName, normalizeTeamName } from './names';
+import { isNameTaken, nextAvailablePlayerName, nextFreePlayerName, normalizePlayerName, normalizeTeamName } from './names';
 import type { GameState, Point, Team } from './types';
 import { initialGameState } from './types';
 
@@ -8,11 +8,12 @@ export type GameAction =
   | { type: 'SET_TURN_SECONDS'; seconds: number }
   | { type: 'SET_WORDS_PER_PLAYER'; count: number }
   | { type: 'ENSURE_DEFAULT_TEAMS' }
+  | { type: 'ASSIGN_ACCOUNT_PLAYER'; userId: string; name: string }
   | { type: 'ADD_TEAM'; name: string }
   | { type: 'REMOVE_TEAM'; teamId: string }
   | { type: 'RENAME_TEAM'; teamId: string; name: string }
   | { type: 'SET_TEAM_COLOR'; teamId: string; color: string }
-  | { type: 'ADD_PLAYER'; teamId: string; name: string; playerId?: string }
+  | { type: 'ADD_PLAYER'; teamId: string; name: string; playerId?: string; userId?: string }
   | { type: 'RENAME_PLAYER'; teamId: string; playerId: string; name: string }
   | { type: 'REMOVE_PLAYER'; teamId: string; playerId: string }
   | { type: 'START_WORD_ENTRY' }
@@ -75,6 +76,22 @@ function freshScores(teams: Team[]): Record<string, number> {
   return Object.fromEntries(teams.map((t) => [t.id, 0]));
 }
 
+function defaultTeams(): Team[] {
+  return [1, 2].map((teamNumber) => ({
+    id: uid(),
+    name: `Team ${teamNumber}`,
+    color: teamColor(teamNumber - 1),
+    players: Array.from({ length: MIN_PLAYERS_PER_TEAM }, (_, i) => ({
+      id: uid(),
+      name: `Speler ${(teamNumber - 1) * MIN_PLAYERS_PER_TEAM + i + 1}`,
+    })),
+  }));
+}
+
+function newGameId(): string {
+  return `${Date.now().toString(36)}-${uid()}`;
+}
+
 /** The team that opens the next round. */
 export function firstTeamWithPlayers(state: GameState): number {
   const index = state.teams.findIndex((t) => t.players.length > 0);
@@ -120,16 +137,40 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
 
     case 'ENSURE_DEFAULT_TEAMS': {
       if (state.teams.length > 0) return state;
-      const teams: Team[] = [1, 2].map((teamNumber) => ({
-        id: uid(),
-        name: `Team ${teamNumber}`,
-        color: teamColor(teamNumber - 1),
-        players: Array.from({ length: MIN_PLAYERS_PER_TEAM }, (_, i) => ({
-          id: uid(),
-          name: `Speler ${(teamNumber - 1) * MIN_PLAYERS_PER_TEAM + i + 1}`,
-        })),
-      }));
+      const teams = defaultTeams();
       return { ...state, teams, scores: freshScores(teams) };
+    }
+
+    case 'ASSIGN_ACCOUNT_PLAYER': {
+      const name = normalizePlayerName(action.name);
+      if (!name) return state;
+
+      const first = state.teams[0]?.players[0];
+      const duplicate = state.teams.some((team, teamIndex) =>
+        team.players.some(
+          (player, playerIndex) => player.userId === action.userId && !(teamIndex === 0 && playerIndex === 0),
+        ),
+      );
+      if (first?.userId === action.userId && first.name === name && !duplicate) return state;
+
+      const baseTeams = state.teams.length > 0 ? state.teams : defaultTeams();
+      const teams = baseTeams.map((team, teamIndex) => {
+        const cleaned = team.players.map((player) =>
+          player.userId === action.userId ? { ...player, userId: undefined } : player,
+        );
+        if (teamIndex !== 0) return { ...team, players: cleaned };
+
+        const players = cleaned[0]
+          ? [{ ...cleaned[0], name, userId: action.userId }, ...cleaned.slice(1)]
+          : [{ id: uid(), name, userId: action.userId }];
+        return { ...team, players };
+      });
+
+      return {
+        ...state,
+        teams,
+        scores: state.teams.length > 0 ? state.scores : freshScores(teams),
+      };
     }
 
     case 'ADD_TEAM': {
@@ -169,14 +210,28 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
     }
 
     case 'ADD_PLAYER': {
+      if (action.userId && state.teams.some((team) => team.players.some((player) => player.userId === action.userId))) {
+        return state;
+      }
+
       return {
         ...state,
         teams: state.teams.map((t) => {
           if (t.id !== action.teamId) return t;
           const taken = t.players.map((p) => p.name);
           const requested = normalizePlayerName(action.name);
-          const name = !requested || isNameTaken(requested, taken) ? nextFreePlayerName(taken) : requested;
-          return { ...t, players: [...t.players, { id: action.playerId ?? uid(), name }] };
+          const name = !requested
+            ? nextFreePlayerName(taken)
+            : isNameTaken(requested, taken)
+              ? (action.userId ? nextAvailablePlayerName(requested, taken) : nextFreePlayerName(taken))
+              : requested;
+          return {
+            ...t,
+            players: [
+              ...t.players,
+              { id: action.playerId ?? uid(), name, ...(action.userId ? { userId: action.userId } : {}) },
+            ],
+          };
         }),
       };
     }
@@ -205,6 +260,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       if (!isSetupValid(state)) return state;
       return {
         ...state,
+        gameId: newGameId(),
         phase: 'wordEntry',
         currentRound: 0,
         currentTeamIndex: firstTeamWithPlayers(state),
@@ -251,6 +307,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       const startTeamIndex = action.startTeamIndex ?? randomTeamIndex(state);
       return {
         ...state,
+        gameId: state.gameId ?? newGameId(),
         phase: 'roundIntro',
         currentRound: 1,
         pot: [],
@@ -396,6 +453,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       // invullen, beginnend bij het eerste team.
       return {
         ...initialGameState,
+        gameId: newGameId(),
         teams: state.teams,
         turnSeconds: state.turnSeconds,
         timerRemaining: state.turnSeconds,

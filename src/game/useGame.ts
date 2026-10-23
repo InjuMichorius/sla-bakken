@@ -64,11 +64,13 @@ export type GameContextValue = {
   setTurnSeconds: (seconds: number) => void;
   setWordsPerPlayer: (count: number) => void;
   ensureDefaultTeams: () => void;
+  assignAccountPlayer: (userId: string, name: string) => void;
   addTeam: (name: string) => void;
   removeTeam: (teamId: string) => void;
   renameTeam: (teamId: string, name: string) => void;
   setTeamColor: (teamId: string, color: string) => void;
   addPlayer: (teamId: string, name: string) => string;
+  addAccountPlayer: (teamId: string, userId: string, name: string) => string;
   renamePlayer: (teamId: string, playerId: string, name: string) => void;
   removePlayer: (teamId: string, playerId: string) => void;
   startWordEntry: () => void;
@@ -133,6 +135,10 @@ export function useGame(): GameContextValue {
   const totalWords = allWords(state).length;
 
   const send = useCallback((action: GameAction) => dispatch(action), []);
+  const assignAccountPlayer = useCallback(
+    (userId: string, name: string) => send({ type: 'ASSIGN_ACCOUNT_PLAYER', userId, name }),
+    [send]
+  );
 
   return {
     state,
@@ -148,6 +154,7 @@ export function useGame(): GameContextValue {
     setTurnSeconds: (seconds) => send({ type: 'SET_TURN_SECONDS', seconds }),
     setWordsPerPlayer: (count) => send({ type: 'SET_WORDS_PER_PLAYER', count }),
     ensureDefaultTeams: () => send({ type: 'ENSURE_DEFAULT_TEAMS' }),
+    assignAccountPlayer,
     addTeam: (name) => send({ type: 'ADD_TEAM', name }),
     removeTeam: (teamId) => send({ type: 'REMOVE_TEAM', teamId }),
     renameTeam: (teamId, name) => send({ type: 'RENAME_TEAM', teamId, name }),
@@ -155,6 +162,11 @@ export function useGame(): GameContextValue {
     addPlayer: (teamId, name) => {
       const playerId = uid();
       send({ type: 'ADD_PLAYER', teamId, name, playerId });
+      return playerId;
+    },
+    addAccountPlayer: (teamId, userId, name) => {
+      const playerId = uid();
+      send({ type: 'ADD_PLAYER', teamId, name, playerId, userId });
       return playerId;
     },
     renamePlayer: (teamId, playerId, name) => send({ type: 'RENAME_PLAYER', teamId, playerId, name }),

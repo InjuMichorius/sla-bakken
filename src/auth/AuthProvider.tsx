@@ -1,12 +1,17 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import type { Session, User } from '@supabase/supabase-js';
 import {
+  addFriend as addFriendFromSupabase,
   deleteAccount as deleteAccountFromSupabase,
   getProfile,
+  listFriends as listFriendsFromSupabase,
+  recordGameResult as recordGameResultFromSupabase,
   signInWithApple,
   signInWithEmail as signInWithEmailFromSupabase,
   signOut as signOutFromSupabase,
   signUpWithEmail as signUpWithEmailFromSupabase,
+  type Friend,
+  type GameStats,
   type Profile,
 } from '@/lib/auth';
 import { getSupabase, isSupabaseConfigured } from '@/lib/supabase';
@@ -15,6 +20,7 @@ type AuthContextValue = {
   session: Session | null;
   user: User | null;
   profile: Profile | null;
+  friends: Friend[];
   isLoading: boolean;
   isConfigured: boolean;
   error: string | null;
@@ -28,6 +34,8 @@ type AuthContextValue = {
   signOut: () => Promise<void>;
   deleteAccount: () => Promise<boolean>;
   refreshProfile: () => Promise<void>;
+  recordGameResult: (gameId: string, points: number) => Promise<GameStats | null>;
+  addFriend: (userId: string) => Promise<Friend | null>;
   clearError: () => void;
 };
 
@@ -44,6 +52,7 @@ function emailErrorMessage(error: unknown): string {
   if (/invalid login credentials/i.test(message)) return 'E-mailadres of wachtwoord is onjuist.';
   if (/email not confirmed/i.test(message)) return 'Bevestig eerst je e-mailadres.';
   if (/already registered/i.test(message)) return 'Dit e-mailadres is al geregistreerd.';
+  if (/name_taken|naam is al in gebruik/i.test(message)) return 'Deze naam is al in gebruik.';
   if (/password should be at least|password.*characters/i.test(message)) {
     return 'Wachtwoord moet minimaal 6 tekens hebben.';
   }
@@ -52,10 +61,19 @@ function emailErrorMessage(error: unknown): string {
   return errorMessage(error);
 }
 
+function friendErrorMessage(error: unknown): string {
+  const message = error instanceof Error ? error.message : '';
+  if (/invalid_friend/i.test(message)) return 'Je kunt jezelf niet als vriend toevoegen.';
+  if (/friend_not_found/i.test(message)) return 'Dit account bestaat niet meer.';
+  if (/not_authenticated/i.test(message)) return 'Log eerst in om vrienden toe te voegen.';
+  return errorMessage(error);
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const isConfigured = isSupabaseConfigured();
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [friends, setFriends] = useState<Friend[]>([]);
   const [isLoading, setIsLoading] = useState(isConfigured);
   const [error, setError] = useState<string | null>(null);
 
@@ -67,6 +85,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setProfile(await getProfile(userId));
       } catch (profileError) {
         setError(errorMessage(profileError));
+      }
+
+      try {
+        setFriends(await listFriendsFromSupabase());
+      } catch (friendsError) {
+        setError(friendErrorMessage(friendsError));
       }
     },
     [isConfigured],
@@ -105,6 +129,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         void loadProfile(nextSession.user.id);
       } else {
         setProfile(null);
+        setFriends([]);
       }
     });
 
@@ -174,6 +199,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       setSession(null);
       setProfile(null);
+      setFriends([]);
     }
   }, []);
 
@@ -184,6 +210,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await deleteAccountFromSupabase();
       setSession(null);
       setProfile(null);
+      setFriends([]);
       return true;
     } catch (deleteError) {
       setError(errorMessage(deleteError));
@@ -197,11 +224,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [loadProfile, session]);
 
+  const recordGameResult = useCallback(async (gameId: string, points: number): Promise<GameStats | null> => {
+    try {
+      const stats = await recordGameResultFromSupabase(gameId, points);
+      if (stats) {
+        setProfile((current) => (current ? { ...current, ...stats } : current));
+      }
+      return stats;
+    } catch (recordError) {
+      setError(errorMessage(recordError));
+      return null;
+    }
+  }, []);
+
+  const addFriend = useCallback(async (userId: string): Promise<Friend | null> => {
+    setError(null);
+
+    try {
+      const friend = await addFriendFromSupabase(userId);
+      setFriends((current) => {
+        const existing = current.find((entry) => entry.friend_id === friend.friend_id);
+        if (existing) return current.map((entry) => (entry.friend_id === friend.friend_id ? friend : entry));
+        return [friend, ...current];
+      });
+      return friend;
+    } catch (friendError) {
+      setError(friendErrorMessage(friendError));
+      return null;
+    }
+  }, []);
+
   const value = useMemo<AuthContextValue>(
     () => ({
       session,
       user: session?.user ?? null,
       profile,
+      friends,
       isLoading,
       isConfigured,
       error,
@@ -211,14 +269,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signOut,
       deleteAccount,
       refreshProfile,
+      recordGameResult,
+      addFriend,
       clearError: () => setError(null),
     }),
     [
+      addFriend,
       deleteAccount,
       error,
+      friends,
       isConfigured,
       isLoading,
       profile,
+      recordGameResult,
       refreshProfile,
       session,
       signIn,

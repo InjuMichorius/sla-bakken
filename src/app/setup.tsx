@@ -1,12 +1,13 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { router } from 'expo-router';
-import { CircleArrowLeft, CircleArrowRight, Check, Lock, SquarePen, Trash, UserPlus } from 'lucide-react-native';
+import { CircleArrowLeft, CircleArrowRight, Check, Lock, ScanLine, SquarePen, Trash, UserPlus } from 'lucide-react-native';
 import { useFeedback } from '@/audio/FeedbackProvider';
 import { AccountButton } from '@/components/AccountButton';
 import { AppButton } from '@/components/AppButton';
 import { Avatar } from '@/components/Avatar';
 import { GameSettingsCard } from '@/components/GameSettingsCard';
+import { QrScannerDialog } from '@/components/QrScannerDialog';
 import { Screen } from '@/components/Screen';
 import { TEAM_COLORS } from '@/game/colors';
 import {
@@ -18,6 +19,7 @@ import { useGameContext } from '@/game/GameProvider';
 import { isNameTaken } from '@/game/names';
 import type { Team } from '@/game/types';
 import { useI18n } from '@/i18n/LanguageProvider';
+import { getPlayerIdentity } from '@/lib/auth';
 import { haptics } from '@/lib/haptics';
 import { logAnalyticsEvent } from '@/lib/analytics';
 import { colors, noOutline, radius, spacing } from '@/theme';
@@ -34,6 +36,7 @@ export default function SetupScreen() {
     renameTeam,
     setTeamColor,
     addPlayer,
+    addAccountPlayer,
     renamePlayer,
     removePlayer,
     setTurnSeconds,
@@ -145,6 +148,7 @@ export default function SetupScreen() {
           onRenamePlayer={(playerId, name) => renamePlayer(currentTeam.id, playerId, name)}
           onRemovePlayer={(playerId) => removePlayer(currentTeam.id, playerId)}
           onAddPlayer={() => addPlayer(currentTeam.id, t('setup.playerDefault', { n: currentTeam.players.length + 1 }))}
+          onAddAccountPlayer={(userId, name) => addAccountPlayer(currentTeam.id, userId, name)}
         />
       ) : null}
     </Screen>
@@ -159,16 +163,20 @@ type TeamCardProps = {
   onRenamePlayer: (playerId: string, name: string) => void;
   onRemovePlayer: (playerId: string) => void;
   onAddPlayer: () => string;
+  onAddAccountPlayer: (userId: string, name: string) => void;
 };
 
 const TeamCard = forwardRef<{ commit: () => void }, TeamCardProps>(function TeamCard(
-  { team, otherTeams, onRename, onPickColor, onRenamePlayer, onRemovePlayer, onAddPlayer },
+  { team, otherTeams, onRename, onPickColor, onRenamePlayer, onRemovePlayer, onAddPlayer, onAddAccountPlayer },
   ref
 ) {
   const [editingTeam, setEditingTeam] = useState(false);
   const [teamDraft, setTeamDraft] = useState('');
   const [editingPlayerId, setEditingPlayerId] = useState<string | null>(null);
   const [playerDraft, setPlayerDraft] = useState('');
+  const [scannerVisible, setScannerVisible] = useState(false);
+  const [scanMessage, setScanMessage] = useState<string | null>(null);
+  const [scanFailed, setScanFailed] = useState(false);
   const { play } = useFeedback();
   const { t } = useI18n();
   const color = team.color;
@@ -349,23 +357,85 @@ const TeamCard = forwardRef<{ commit: () => void }, TeamCardProps>(function Team
           </View>
         ))}
 
-        <Pressable
-          onPress={() => {
-            haptics.light();
-            play('accept');
-            commitPlayerDraft();
-            const newPlayerId = onAddPlayer();
-            setPlayerDraft('');
-            setEditingPlayerId(newPlayerId);
-          }}
-          accessibilityRole="button"
-          accessibilityLabel={t('setup.addPlayerTo', { team: team.name })}
-          style={({ pressed }) => [styles.addPlayer, pressed && styles.pressed]}
-        >
-          <UserPlus size={18} color="rgba(255, 255, 255, 0.7)" />
-          <Text style={styles.addPlayerText}>{t('setup.addPlayer')}</Text>
-        </Pressable>
+        <View style={styles.playerActions}>
+          <Pressable
+            onPress={() => {
+              haptics.light();
+              play('accept');
+              commitPlayerDraft();
+              const newPlayerId = onAddPlayer();
+              setPlayerDraft('');
+              setEditingPlayerId(newPlayerId);
+            }}
+            accessibilityRole="button"
+            accessibilityLabel={t('setup.addPlayerTo', { team: team.name })}
+            style={({ pressed }) => [styles.addPlayer, pressed && styles.pressed]}
+          >
+            <UserPlus size={18} color="rgba(255, 255, 255, 0.7)" />
+            <Text style={styles.addPlayerText}>{t('setup.addPlayer')}</Text>
+          </Pressable>
+
+          <Pressable
+            onPress={() => {
+              haptics.light();
+              play('accept');
+              commitPlayerDraft();
+              setScanMessage(null);
+              setScanFailed(false);
+              setScannerVisible(true);
+            }}
+            accessibilityRole="button"
+            accessibilityLabel={t('setup.scanQrTo', { team: team.name })}
+            style={({ pressed }) => [styles.scanPlayer, pressed && styles.pressed]}
+          >
+            <ScanLine size={18} color={colors.accent} />
+            <Text style={styles.scanPlayerText}>{t('setup.scanQr')}</Text>
+          </Pressable>
+        </View>
+
+        {scanMessage ? (
+          <Text accessibilityLiveRegion="polite" style={[styles.scanMessage, scanFailed && styles.scanMessageError]}>
+            {scanMessage}
+          </Text>
+        ) : null}
       </View>
+
+      <QrScannerDialog
+        visible={scannerVisible}
+        onClose={() => setScannerVisible(false)}
+        onScanned={(userId) => {
+          setScannerVisible(false);
+          setScanMessage(null);
+          setScanFailed(false);
+
+          const alreadyAdded = [team, ...otherTeams].some((entry) =>
+            entry.players.some((player) => player.userId === userId)
+          );
+          if (alreadyAdded) {
+            setScanFailed(true);
+            setScanMessage(t('setup.playerAlreadyAdded'));
+            return;
+          }
+
+          void getPlayerIdentity(userId)
+            .then((identity) => {
+              if (!identity) {
+                setScanFailed(true);
+                setScanMessage(t('setup.scanUnknown'));
+                return;
+              }
+
+              onAddAccountPlayer(userId, identity.name);
+              haptics.success();
+              play('accept');
+              setScanMessage(t('setup.playerAdded', { name: identity.name }));
+            })
+            .catch(() => {
+              setScanFailed(true);
+              setScanMessage(t('setup.scanFailed'));
+            });
+        }}
+      />
     </View>
   );
 });
@@ -526,7 +596,9 @@ const styles = StyleSheet.create({
     borderColor: colors.accent,
   },
   playerName: { color: colors.text, fontSize: 17, fontWeight: '700' },
+  playerActions: { flexDirection: 'row', gap: spacing.sm },
   addPlayer: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -538,6 +610,21 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255, 255, 255, 0.28)',
   },
   addPlayerText: { color: 'rgba(255, 255, 255, 0.72)', fontSize: 15, fontWeight: '400' },
+  scanPlayer: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
+    minHeight: 50,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 197, 61, 0.55)',
+    backgroundColor: colors.accentSoft,
+  },
+  scanPlayerText: { color: colors.accent, fontSize: 15, fontWeight: '700' },
+  scanMessage: { color: colors.success, fontSize: 13, fontWeight: '700', lineHeight: 18, textAlign: 'center' },
+  scanMessageError: { color: colors.danger },
 
   editBlock: { flex: 1, gap: spacing.xs },
   editRow: { flex: 1, height: 48, flexDirection: 'row', alignItems: 'center', gap: spacing.sm },

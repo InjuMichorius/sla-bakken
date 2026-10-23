@@ -8,7 +8,24 @@ export type Profile = {
   id: string;
   name: string;
   points: number;
+  games_played: number;
   first_login: string;
+};
+
+export type GameStats = {
+  points: number;
+  games_played: number;
+};
+
+export type PlayerIdentity = {
+  id: string;
+  name: string;
+};
+
+export type Friend = {
+  friend_id: string;
+  name: string;
+  added_at: string;
 };
 
 export type AppleSignInResult = {
@@ -122,16 +139,50 @@ export async function signInWithEmail(email: string, password: string): Promise<
   return data.user?.id ?? null;
 }
 
+export async function isNameAvailable(name: string): Promise<boolean> {
+  const { data, error } = await getSupabase().rpc('is_name_available', { p_name: name.trim() });
+  if (error) throw error;
+  return data === true;
+}
+
+export async function getPlayerIdentity(userId: string): Promise<PlayerIdentity | null> {
+  const { data, error } = await getSupabase().rpc('get_player_identity', { p_user_id: userId });
+  if (error) throw error;
+
+  const row = (Array.isArray(data) ? data[0] : data) as PlayerIdentity | null | undefined;
+  return row ?? null;
+}
+
+export async function addFriend(userId: string): Promise<Friend> {
+  const { data, error } = await getSupabase().rpc('add_friend', { p_friend_id: userId });
+  if (error) throw error;
+
+  const row = (Array.isArray(data) ? data[0] : data) as Friend | null | undefined;
+  if (!row) throw new Error('friend_not_found');
+  return row;
+}
+
+export async function listFriends(): Promise<Friend[]> {
+  const { data, error } = await getSupabase().rpc('list_friends');
+  if (error) throw error;
+  return (data ?? []) as Friend[];
+}
+
 export async function signUpWithEmail(
   email: string,
   password: string,
   name: string,
 ): Promise<EmailSignUpResult> {
+  const trimmedName = name.trim();
+  if (!(await isNameAvailable(trimmedName))) {
+    throw new Error('name_taken');
+  }
+
   const { data, error } = await getSupabase().auth.signUp({
     email: email.trim(),
     password,
     options: {
-      data: { full_name: name.trim() },
+      data: { full_name: trimmedName },
     },
   });
 
@@ -145,12 +196,24 @@ export async function signUpWithEmail(
 export async function getProfile(userId: string): Promise<Profile | null> {
   const { data, error } = await getSupabase()
     .from('users')
-    .select('id, name, points, first_login')
+    .select('id, name, points, games_played, first_login')
     .eq('id', userId)
     .maybeSingle();
 
   if (error) throw error;
   return (data as Profile | null) ?? null;
+}
+
+export async function recordGameResult(gameId: string, points: number): Promise<GameStats | null> {
+  const { data, error } = await getSupabase().rpc('record_game_result', {
+    p_game_id: gameId,
+    p_points: points,
+  });
+
+  if (error) throw error;
+
+  const row = (Array.isArray(data) ? data[0] : data) as GameStats | null | undefined;
+  return row ?? null;
 }
 
 async function functionErrorMessage(error: unknown): Promise<string> {

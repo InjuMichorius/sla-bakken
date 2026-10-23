@@ -80,7 +80,15 @@
           }
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Sla Bakken gebruikt de camera om account-QR-codes en spelers te scannen.",
+          "recordAudioAndroid": false,
+          "barcodeScannerEnabled": true
+        }
+      ]
     ],
     "extra": {
       "router": {},

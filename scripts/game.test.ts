@@ -115,6 +115,37 @@ check('ENSURE_DEFAULT_TEAMS raakt bestaande teams niet', () => {
   const twice = gameReducer(once, { type: 'ENSURE_DEFAULT_TEAMS' });
   assert.equal(twice, once, 'tweede aanroep doet niets');
 });
+check('ASSIGN_ACCOUNT_PLAYER koppelt account aan Speler 1', () => {
+  let s = gameReducer(initialGameState, { type: 'ENSURE_DEFAULT_TEAMS' });
+  const secondPlayerName = s.teams[0].players[1].name;
+  s = gameReducer(s, { type: 'ASSIGN_ACCOUNT_PLAYER', userId: 'user-1', name: 'Sanne' });
+  assert.equal(s.teams[0].players[0].name, 'Sanne');
+  assert.equal(s.teams[0].players[0].userId, 'user-1');
+  assert.equal(s.teams[0].players[1].name, secondPlayerName, 'andere spelers blijven staan');
+  assert.equal(s.teams[1].players.some((p) => p.userId), false, 'alleen Speler 1 is gekoppeld');
+  assert.equal(s.teams[0].players.length, 2);
+});
+check('ASSIGN_ACCOUNT_PLAYER is idempotent', () => {
+  const once = gameReducer(gameReducer(initialGameState, { type: 'ENSURE_DEFAULT_TEAMS' }), {
+    type: 'ASSIGN_ACCOUNT_PLAYER',
+    userId: 'user-1',
+    name: 'Sanne',
+  });
+  const twice = gameReducer(once, { type: 'ASSIGN_ACCOUNT_PLAYER', userId: 'user-1', name: 'Sanne' });
+  assert.equal(twice, once);
+});
+check('ADD_PLAYER koppelt een account en weigert dubbele accounts', () => {
+  let s = gameReducer(initialGameState, { type: 'ENSURE_DEFAULT_TEAMS' });
+  const firstTeam = s.teams[0].id;
+  const secondTeam = s.teams[1].id;
+  s = gameReducer(s, { type: 'ADD_PLAYER', teamId: firstTeam, name: 'Sanne', userId: 'user-2' });
+  assert.equal(s.teams[0].players.at(-1)?.userId, 'user-2');
+  s = gameReducer(s, { type: 'ADD_PLAYER', teamId: firstTeam, name: 'Sanne', userId: 'user-3' });
+  assert.equal(s.teams[0].players.at(-1)?.name, 'Sanne 2');
+  const count = s.teams.flatMap((team) => team.players).length;
+  s = gameReducer(s, { type: 'ADD_PLAYER', teamId: secondTeam, name: 'Sanne', userId: 'user-2' });
+  assert.equal(s.teams.flatMap((team) => team.players).length, count, 'zelfde account kan maar een speler zijn');
+});
 check('team- en spelernamen zijn aan te passen', () => {
   let s = gameReducer(initialGameState, { type: 'ENSURE_DEFAULT_TEAMS' });
   const teamId = s.teams[0].id;
@@ -158,6 +189,15 @@ check('tussenopslaan kan later worden overschreven', () => {
 check('START_GAME zonder woorden doet niets', () => {
   const s = gameReducer(seededSetup(), { type: 'START_WORD_ENTRY' });
   assert.equal(gameReducer(s, { type: 'START_GAME', startTeamIndex: 0 }).phase, 'wordEntry');
+});
+check('gameId blijft gelijk tijdens een potje', () => {
+  let s = withWords(seededSetup());
+  assert.ok(s.gameId);
+  const gameId = s.gameId;
+  s = gameReducer(s, { type: 'START_GAME', startTeamIndex: 0 });
+  assert.equal(s.gameId, gameId);
+  s = gameReducer(s, { type: 'RESET' });
+  assert.equal(s.gameId, null);
 });
 check('pot bevat elk woord precies eenmaal', () => {
   const s = gameReducer(withWords(seededSetup()), { type: 'START_GAME', startTeamIndex: 0 });

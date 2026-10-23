@@ -1,12 +1,16 @@
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
-import { LogOut, Star } from 'lucide-react-native';
+import { useState } from 'react';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { router } from 'expo-router';
+import { LogOut, QrCode, ScanLine, Star } from 'lucide-react-native';
 import { useAuth } from '@/auth/AuthProvider';
-import { AppButton } from '@/components/AppButton';
+import { AccountQrDialog } from '@/components/AccountQrDialog';
 import { AppleSignInButton } from '@/components/AppleSignInButton';
 import { AuthDivider } from '@/components/AuthDivider';
 import { Avatar } from '@/components/Avatar';
 import { BackFooter } from '@/components/BackFooter';
+import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { EmailAuthForm } from '@/components/EmailAuthForm';
+import { QrScannerDialog } from '@/components/QrScannerDialog';
 import { Screen } from '@/components/Screen';
 import { useI18n } from '@/i18n/LanguageProvider';
 import { colors, radius, spacing } from '@/theme';
@@ -20,19 +24,53 @@ function formatDate(value: string | null | undefined, locale: string): string | 
 
 export default function ProfileScreen() {
   const { t, language } = useI18n();
-  const { isConfigured, isLoading, session, profile, error, signOut } = useAuth();
+  const { isConfigured, isLoading, session, profile, friends, error, signOut, addFriend } = useAuth();
+  const [signOutVisible, setSignOutVisible] = useState(false);
+  const [qrVisible, setQrVisible] = useState(false);
+  const [scannerVisible, setScannerVisible] = useState(false);
+  const [scanMessage, setScanMessage] = useState<string | null>(null);
+  const [scanFailed, setScanFailed] = useState(false);
 
   const name = profile?.name?.trim() || t('common.unknown');
   const points = profile?.points ?? 0;
+  const gamesPlayed = profile?.games_played ?? 0;
   const firstLogin = formatDate(profile?.first_login, language);
 
   return (
     <Screen
       topBar={
         <>
-          <View style={styles.topBarSide} />
+          <View style={styles.topBarSide}>
+            {session ? (
+              <Pressable
+                onPress={() => setSignOutVisible(true)}
+                accessibilityRole="button"
+                accessibilityLabel={t('settings.signOut')}
+                hitSlop={8}
+                style={({ pressed }) => [styles.signOutButton, pressed && styles.pressed]}
+              >
+                <LogOut size={18} color="#2A0707" />
+              </Pressable>
+            ) : null}
+          </View>
           <Text style={styles.headerTitle}>{t('profile.title')}</Text>
-          <View style={styles.topBarSide} />
+          <View style={[styles.topBarSide, styles.topBarSideRight]}>
+            {session ? (
+              <Pressable
+                onPress={() => {
+                  setScanMessage(null);
+                  setScanFailed(false);
+                  setScannerVisible(true);
+                }}
+                accessibilityRole="button"
+                accessibilityLabel={t('profile.scanQr')}
+                hitSlop={8}
+                style={({ pressed }) => [styles.scanButton, pressed && styles.pressed]}
+              >
+                <ScanLine size={18} color={colors.text} />
+              </Pressable>
+            ) : null}
+          </View>
         </>
       }
       footer={<BackFooter />}
@@ -56,7 +94,22 @@ export default function ProfileScreen() {
               <Star size={15} color={colors.accent} fill={colors.accent} />
               <Text style={styles.pointsText}>{t('settings.accountPoints', { n: points })}</Text>
             </View>
+            <Pressable
+              onPress={() => setQrVisible(true)}
+              accessibilityRole="button"
+              accessibilityLabel={t('profile.showQr')}
+              style={({ pressed }) => [styles.qrButton, pressed && styles.pressed]}
+            >
+              <QrCode size={16} color={colors.text} />
+              <Text style={styles.qrButtonText}>{t('profile.showQr')}</Text>
+            </Pressable>
           </View>
+
+          {scanMessage ? (
+            <Text accessibilityLiveRegion="polite" style={[styles.scanMessage, scanFailed && styles.scanMessageError]}>
+              {scanMessage}
+            </Text>
+          ) : null}
 
           <View style={styles.card}>
             <View style={styles.row}>
@@ -70,21 +123,36 @@ export default function ProfileScreen() {
             </View>
             <View style={styles.divider} />
             <View style={styles.row}>
+              <Text style={styles.rowLabel}>{t('profile.gamesPlayed')}</Text>
+              <Text style={styles.rowValue}>{gamesPlayed}</Text>
+            </View>
+            <View style={styles.divider} />
+            <View style={styles.row}>
               <Text style={styles.rowLabel}>{t('profile.firstLogin')}</Text>
               <Text style={styles.rowValue}>{firstLogin ?? t('common.unknown')}</Text>
             </View>
           </View>
 
-          {error ? <Text style={styles.error}>{error}</Text> : null}
+          <View style={styles.friendsCard}>
+            <View style={styles.friendsHeader}>
+              <Text style={styles.friendsTitle}>{t('profile.friends')}</Text>
+              <Text style={styles.friendsCount}>{friends.length}</Text>
+            </View>
+            {friends.length > 0 ? (
+              friends.map((friend) => (
+                <View key={friend.friend_id} style={styles.friendRow}>
+                  <Avatar name={friend.name} color={colors.success} size={36} />
+                  <Text style={styles.friendName} numberOfLines={1}>
+                    {friend.name}
+                  </Text>
+                </View>
+              ))
+            ) : (
+              <Text style={styles.friendsEmpty}>{t('profile.noFriends')}</Text>
+            )}
+          </View>
 
-          <AppButton
-            label={t('settings.signOut')}
-            variant="secondary"
-            icon={<LogOut size={18} color={colors.text} />}
-            onPress={() => {
-              void signOut();
-            }}
-          />
+          {error ? <Text style={styles.error}>{error}</Text> : null}
         </>
       ) : (
         <>
@@ -102,6 +170,61 @@ export default function ProfileScreen() {
           </View>
         </>
       )}
+
+      <ConfirmDialog
+        visible={signOutVisible}
+        title={t('profile.signOutTitle')}
+        message={t('profile.signOutMessage')}
+        confirmLabel={t('settings.signOut')}
+        destructive
+        onConfirm={() => {
+          setSignOutVisible(false);
+          setScanMessage(null);
+          setScanFailed(false);
+          void signOut().then(() => router.replace('/'));
+        }}
+        onCancel={() => setSignOutVisible(false)}
+      />
+
+      {session ? (
+        <>
+          <AccountQrDialog
+            visible={qrVisible}
+            userId={session.user.id}
+            name={name}
+            onClose={() => setQrVisible(false)}
+          />
+          <QrScannerDialog
+            visible={scannerVisible}
+            onClose={() => setScannerVisible(false)}
+            onScanned={(userId) => {
+              setScannerVisible(false);
+              setScanMessage(null);
+              setScanFailed(false);
+
+              if (userId === session.user.id) {
+                setScanFailed(true);
+                setScanMessage(t('profile.friendSelf'));
+                return;
+              }
+
+              if (friends.some((friend) => friend.friend_id === userId)) {
+                setScanMessage(t('profile.friendAlready'));
+                return;
+              }
+
+              void addFriend(userId).then((friend) => {
+                if (friend) {
+                  setScanMessage(t('profile.friendAdded', { name: friend.name }));
+                } else {
+                  setScanFailed(true);
+                  setScanMessage(t('profile.scanFailed'));
+                }
+              });
+            }}
+          />
+        </>
+      ) : null}
     </Screen>
   );
 }
@@ -116,7 +239,27 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     letterSpacing: -0.3,
   },
-  topBarSide: { width: 44 },
+  topBarSide: { width: 44, alignItems: 'flex-start' },
+  topBarSideRight: { alignItems: 'flex-end' },
+  signOutButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: colors.danger,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  scanButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  pressed: { opacity: 0.75 },
   loading: { alignItems: 'center', gap: spacing.md, paddingVertical: spacing.xxl },
   hero: {
     alignItems: 'center',
@@ -135,6 +278,40 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
   },
   pointsText: { color: colors.accent, fontSize: 13, fontWeight: '800' },
+  qrButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surfaceAlt,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+  },
+  qrButtonText: { color: colors.text, fontSize: 13, fontWeight: '800' },
+  scanMessage: {
+    color: colors.success,
+    fontSize: 13,
+    fontWeight: '800',
+    lineHeight: 18,
+    textAlign: 'center',
+  },
+  scanMessageError: { color: colors.danger },
+  friendsCard: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: spacing.lg,
+    gap: spacing.md,
+  },
+  friendsHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  friendsTitle: { color: colors.text, fontSize: 16, fontWeight: '900' },
+  friendsCount: { color: colors.muted, fontSize: 13, fontWeight: '800' },
+  friendRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  friendName: { color: colors.text, fontSize: 15, fontWeight: '700', flex: 1 },
+  friendsEmpty: { color: colors.muted, fontSize: 13, lineHeight: 19 },
   hint: { color: colors.muted, fontSize: 14, lineHeight: 20, textAlign: 'center' },
   card: {
     backgroundColor: colors.surface,

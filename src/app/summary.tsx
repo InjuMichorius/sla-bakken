@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { PartyPopper, RotateCcw, Trophy } from 'lucide-react-native';
+import { useAuth } from '@/auth/AuthProvider';
 import { useFeedback } from '@/audio/FeedbackProvider';
 import { AppButton } from '@/components/AppButton';
 import { Avatar } from '@/components/Avatar';
@@ -15,6 +16,7 @@ import { colors, radius, spacing } from '@/theme';
 
 export default function SummaryScreen() {
   const { state, standings, newGame } = useGameContext();
+  const { session, recordGameResult } = useAuth();
   const { play } = useFeedback();
   const { t } = useI18n();
   const winners = standings.filter((s) => s.isWinner);
@@ -46,6 +48,25 @@ export default function SummaryScreen() {
     celebrated.current = true;
     play('victory');
   }, [play]);
+
+  const recorded = useRef<string | null>(null);
+  useEffect(() => {
+    const userId = session?.user.id;
+    const gameId = state.gameId;
+    if (state.phase !== 'summary' || !userId || !gameId) return;
+
+    const key = `${gameId}:${userId}`;
+    if (recorded.current === key) return;
+
+    const team = state.teams.find((entry) => entry.players.some((player) => player.userId === userId));
+    if (!team) return;
+
+    const score = standings.find((row) => row.teamId === team.id)?.score ?? 0;
+    recorded.current = key;
+    void recordGameResult(gameId, score).then((stats) => {
+      if (!stats) recorded.current = null;
+    });
+  }, [recordGameResult, session?.user.id, standings, state.gameId, state.phase, state.teams]);
 
   const playAgain = () => {
     haptics.medium();
