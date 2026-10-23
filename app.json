@@ -11,6 +11,10 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.inju.slabakken",
       "googleServicesFile": "./GoogleService-Info.plist",
+      "usesAppleSignIn": true,
+      "config": {
+        "usesNonExemptEncryption": false
+      },
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
@@ -48,6 +52,7 @@
       "expo-router",
       "expo-audio",
       "expo-asset",
+      "expo-apple-authentication",
       [
         "@react-native-firebase/app",
         {
@@ -74,7 +79,8 @@
             "forceStaticLinking": []
           }
         }
-      ]
+      ],
+      "expo-secure-store"
     ],
     "extra": {
       "router": {},

@@ -2,6 +2,7 @@ import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Check } from 'lucide-react-native';
 import { useFeedback } from '@/audio/FeedbackProvider';
 
+import { AccountButton } from '@/components/AccountButton';
 import { BackFooter } from '@/components/BackFooter';
 import { Screen } from '@/components/Screen';
 import { useI18n } from '@/i18n/LanguageProvider';
@@ -32,7 +33,7 @@ export default function LanguagesScreen() {
         <>
           <View style={styles.topBarSide} />
           <Text style={styles.headerTitle}>{t('languages.title')}</Text>
-          <View style={styles.topBarSide} />
+          <AccountButton />
         </>
       }
       footer={<BackFooter />}

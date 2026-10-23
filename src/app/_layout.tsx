@@ -3,6 +3,7 @@ import { StyleSheet, View } from 'react-native';
 import { Stack, router, usePathname } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { AuthProvider } from '@/auth/AuthProvider';
 import { FeedbackProvider } from '@/audio/FeedbackProvider';
 import { GameProvider, useGameContext } from '@/game/GameProvider';
 import { LanguageProvider } from '@/i18n/LanguageProvider';
@@ -28,6 +29,9 @@ const ROUTE_FOR_PHASE: Record<Phase, string> = {
 /** Zolang er geen spel loopt mag de gebruiker vrij tussen menu, setup, instellingen, talen en uitleg. */
 const MENU_ROUTES = new Set(['/', '/setup', '/settings', '/languages', '/how-to-play']);
 
+/** Overlays die bovenop de fase-router mogen openen, ook tijdens een actief spel. */
+const OVERLAY_ROUTES = new Set(['/profile']);
+
 function PhaseRouter() {
   const { state } = useGameContext();
   const pathname = usePathname();
@@ -35,6 +39,7 @@ function PhaseRouter() {
 
   useEffect(() => {
     if (target === pathname) return;
+    if (OVERLAY_ROUTES.has(pathname)) return;
     if (state.phase === 'setup' && MENU_ROUTES.has(pathname)) return;
     router.replace(target as never);
   }, [state.phase, target, pathname]);
@@ -51,21 +56,23 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <FeedbackProvider>
         <LanguageProvider>
-          <GameProvider>
-            <StatusBar style="light" />
-            <PhaseRouter />
-            <GameAnalyticsBridge />
-            <View style={styles.root}>
-              <Stack
-                screenOptions={{
-                  headerShown: false,
-                  contentStyle: { backgroundColor: colors.bg },
-                  animation: 'fade',
-                  gestureEnabled: false,
-                }}
-              />
-            </View>
-          </GameProvider>
+          <AuthProvider>
+            <GameProvider>
+              <StatusBar style="light" />
+              <PhaseRouter />
+              <GameAnalyticsBridge />
+              <View style={styles.root}>
+                <Stack
+                  screenOptions={{
+                    headerShown: false,
+                    contentStyle: { backgroundColor: colors.bg },
+                    animation: 'fade',
+                    gestureEnabled: false,
+                  }}
+                />
+              </View>
+            </GameProvider>
+          </AuthProvider>
         </LanguageProvider>
       </FeedbackProvider>
     </SafeAreaProvider>

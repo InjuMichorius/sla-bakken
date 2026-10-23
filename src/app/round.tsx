@@ -1,9 +1,9 @@
 import { StyleSheet, Text, View } from 'react-native';
 import { AppButton } from '@/components/AppButton';
 import { Badge } from '@/components/Badge';
+import { GameMenu } from '@/components/GameMenu';
 import { RoundIcon } from '@/components/RoundIcon';
 import { Screen } from '@/components/Screen';
-import { QuitGameButton } from '@/components/QuitGameButton';
 import { Standings } from '@/components/Standings';
 import { TeamScoreboard } from '@/components/TeamScoreboard';
 import { ROUNDS } from '@/game/constants';
@@ -28,8 +28,8 @@ export default function RoundIntroScreen() {
     <Screen
       topBar={
         <>
-          <QuitGameButton />
           <TeamScoreboard />
+          <GameMenu />
         </>
       }
       contentStyle={styles.content}

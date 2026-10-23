@@ -1,9 +1,17 @@
-import { Platform, Pressable, StyleSheet, Switch, Text, View } from 'react-native';
+import { useRef, useState } from 'react';
+import { ActivityIndicator, Platform, Pressable, StyleSheet, Switch, Text, View } from 'react-native';
 import { Play, Volume2, VolumeX } from 'lucide-react-native';
 import { useFeedback } from '@/audio/FeedbackProvider';
 import { SOUNDS } from '@/audio/sounds';
+import { useAuth } from '@/auth/AuthProvider';
 
+import { AccountButton } from '@/components/AccountButton';
+import { AppleSignInButton } from '@/components/AppleSignInButton';
+import { AppButton } from '@/components/AppButton';
+import { AuthDivider } from '@/components/AuthDivider';
 import { BackFooter } from '@/components/BackFooter';
+import { ConfirmDialog } from '@/components/ConfirmDialog';
+import { EmailAuthForm } from '@/components/EmailAuthForm';
 import { Screen } from '@/components/Screen';
 import { useI18n } from '@/i18n/LanguageProvider';
 import { haptics } from '@/lib/haptics';
@@ -22,6 +30,30 @@ const isDev = process.env.NODE_ENV !== 'production';
 export default function SettingsScreen() {
   const { t } = useI18n();
   const { settings, setSoundEnabled, setVolume, toggleMuted, setHaptics, preview } = useFeedback();
+  const {
+    isConfigured: authConfigured,
+    isLoading: authLoading,
+    session,
+    profile,
+    error: authError,
+    signOut,
+    deleteAccount,
+    clearError,
+  } = useAuth();
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const deletingRef = useRef(false);
+
+  const handleDeleteAccount = async () => {
+    if (deletingRef.current) return;
+
+    deletingRef.current = true;
+    setIsDeleting(true);
+    await deleteAccount();
+    deletingRef.current = false;
+    setIsDeleting(false);
+    setConfirmDelete(false);
+  };
 
   return (
     <Screen
@@ -29,7 +61,7 @@ export default function SettingsScreen() {
         <>
           <View style={styles.topBarSide} />
           <Text style={styles.headerTitle}>{t('settings.title')}</Text>
-          <View style={styles.topBarSide} />
+          <AccountButton />
         </>
       }
       footer={<BackFooter />}
@@ -145,6 +177,61 @@ export default function SettingsScreen() {
         </View>
       </View>
 
+      {authConfigured ? (
+        <>
+          <Text style={styles.section}>{t('settings.accountSection')}</Text>
+          <View style={styles.card}>
+            {authLoading ? (
+              <View style={styles.accountLoading}>
+                <ActivityIndicator color={colors.accent} />
+              </View>
+            ) : session ? (
+              <>
+                <View style={styles.row}>
+                  <View style={styles.rowText}>
+                    <Text style={styles.rowLabel}>{profile?.name ?? t('common.unknown')}</Text>
+                    <Text style={styles.rowHint}>{t('settings.accountPoints', { n: profile?.points ?? 0 })}</Text>
+                  </View>
+                </View>
+                <View style={styles.divider} />
+                <View style={styles.accountActions}>
+                  <AppButton
+                    label={t('settings.signOut')}
+                    size="sm"
+                    variant="secondary"
+                    fullWidth={false}
+                    onPress={() => {
+                      void signOut();
+                    }}
+                  />
+                  <AppButton
+                    label={t('settings.deleteAccount')}
+                    size="sm"
+                    variant="dangerOutline"
+                    fullWidth={false}
+                    onPress={() => {
+                      clearError();
+                      setConfirmDelete(true);
+                    }}
+                  />
+                </View>
+                {authError ? <Text style={styles.accountError}>{authError}</Text> : null}
+              </>
+            ) : (
+              <View style={styles.accountSignIn}>
+                <View style={styles.rowText}>
+                  <Text style={styles.rowLabel}>{t('settings.signInTitle')}</Text>
+                  <Text style={styles.rowHint}>{t('settings.signInHint')}</Text>
+                </View>
+                <AppleSignInButton />
+                <AuthDivider />
+                <EmailAuthForm />
+              </View>
+            )}
+          </View>
+        </>
+      ) : null}
+
       {isDev ? (
         <>
           <Text style={styles.section}>Debug — analytics</Text>
@@ -186,6 +273,20 @@ export default function SettingsScreen() {
           </View>
         </>
       ) : null}
+
+      <ConfirmDialog
+        visible={confirmDelete}
+        title={t('settings.deleteAccountTitle')}
+        message={t('settings.deleteAccountMessage')}
+        confirmLabel={isDeleting ? t('settings.deleting') : t('settings.deleteAccount')}
+        destructive
+        onConfirm={() => {
+          void handleDeleteAccount();
+        }}
+        onCancel={() => {
+          if (!isDeleting) setConfirmDelete(false);
+        }}
+      />
     </Screen>
   );
 }
@@ -219,6 +320,10 @@ const styles = StyleSheet.create({
   rowText: { flex: 1, gap: 2 },
   rowLabel: { color: colors.text, fontSize: 16, fontWeight: '800' },
   rowHint: { color: colors.muted, fontSize: 13, lineHeight: 18 },
+  accountLoading: { alignItems: 'center', paddingVertical: spacing.xl },
+  accountSignIn: { gap: spacing.md, paddingVertical: spacing.md },
+  accountActions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, paddingVertical: spacing.md },
+  accountError: { color: colors.danger, fontSize: 13, lineHeight: 18, paddingBottom: spacing.md },
   chips: { flexDirection: 'row', gap: spacing.xs },
   chip: {
     minWidth: 52,

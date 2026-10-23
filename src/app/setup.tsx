@@ -3,6 +3,7 @@ import { Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-na
 import { router } from 'expo-router';
 import { CircleArrowLeft, CircleArrowRight, Check, Lock, SquarePen, Trash, UserPlus } from 'lucide-react-native';
 import { useFeedback } from '@/audio/FeedbackProvider';
+import { AccountButton } from '@/components/AccountButton';
 import { AppButton } from '@/components/AppButton';
 import { Avatar } from '@/components/Avatar';
 import { GameSettingsCard } from '@/components/GameSettingsCard';
@@ -106,20 +107,23 @@ export default function SetupScreen() {
         </View>
       }
       topBar={
-        <View style={styles.steps}>
-          {Array.from({ length: TOTAL_STEPS }, (_, i) => (
-            <View key={i} style={styles.stepTrack}>
-              <View style={[styles.stepDot, i <= step && { backgroundColor: colors.accent, borderColor: colors.accent }]}>
-                {i < step ? (
-                  <Check size={14} color="#241A00" strokeWidth={3} />
-                ) : (
-                  <Text style={[styles.stepDotText, i === step && styles.stepDotTextActive]}>{i + 1}</Text>
-                )}
+        <>
+          <View style={styles.steps}>
+            {Array.from({ length: TOTAL_STEPS }, (_, i) => (
+              <View key={i} style={styles.stepTrack}>
+                <View style={[styles.stepDot, i <= step && { backgroundColor: colors.accent, borderColor: colors.accent }]}>
+                  {i < step ? (
+                    <Check size={14} color="#241A00" strokeWidth={3} />
+                  ) : (
+                    <Text style={[styles.stepDotText, i === step && styles.stepDotTextActive]}>{i + 1}</Text>
+                  )}
+                </View>
+                {i < TOTAL_STEPS - 1 ? <View style={[styles.stepLine, i < step && { backgroundColor: colors.accent }]} /> : null}
               </View>
-              {i < TOTAL_STEPS - 1 ? <View style={[styles.stepLine, i < step && { backgroundColor: colors.accent }]} /> : null}
-            </View>
-          ))}
-        </View>
+            ))}
+          </View>
+          <AccountButton />
+        </>
       }
     >
 

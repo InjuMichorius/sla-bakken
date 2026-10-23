@@ -5,9 +5,9 @@ import { useFeedback } from '@/audio/FeedbackProvider';
 import { AppButton } from '@/components/AppButton';
 import { Avatar } from '@/components/Avatar';
 import { Badge } from '@/components/Badge';
+import { GameMenu } from '@/components/GameMenu';
 import { RoundIcon } from '@/components/RoundIcon';
 import { Screen } from '@/components/Screen';
-import { QuitGameButton } from '@/components/QuitGameButton';
 import { Standings } from '@/components/Standings';
 import { TeamScoreboard } from '@/components/TeamScoreboard';
 import { teamColor } from '@/game/colors';
@@ -34,20 +34,20 @@ function formatTime(seconds: number) {
 /**
  * Top bar for the in-round screens. The round badge is centred across the full
  * row instead of sitting in a flex slot, so a long title keeps its pill shape
- * rather than wrapping to a second line. The exit button and scoreboard stay in
+ * rather than wrapping to a second line. The scoreboard and game menu stay in
  * the normal flow on either side.
  */
 function RoundTopBar({ round, title }: { round: number; title: TranslationKey }) {
   const { t } = useI18n();
   return (
     <>
-      <QuitGameButton />
+      <TeamScoreboard />
       <View style={styles.topCenter} pointerEvents="none">
         <Badge tone="accent" style={styles.roundPill}>
           {t('play.round')} {round} · {t(title)}
         </Badge>
       </View>
-      <TeamScoreboard />
+      <GameMenu />
     </>
   );
 }
@@ -156,8 +156,8 @@ export default function PlayScreen() {
       <Screen
         topBar={
           <>
-            <QuitGameButton />
             <TeamScoreboard />
+            <GameMenu />
           </>
         }
         scroll={false}

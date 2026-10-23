@@ -2,6 +2,7 @@ import { Fragment } from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { CirclePlay, CircleQuestionMark, Languages, Settings } from 'lucide-react-native';
+import { AccountButton } from '@/components/AccountButton';
 import { AppButton } from '@/components/AppButton';
 import { Screen } from '@/components/Screen';
 import { useI18n } from '@/i18n/LanguageProvider';
@@ -12,7 +13,16 @@ export default function MainMenuScreen() {
   const tagline = [t('menu.taglineRounds'), t('menu.taglineTeams'), t('menu.taglinePhone')];
 
   return (
-    <Screen scroll={false} contentStyle={styles.content}>
+    <Screen
+      scroll={false}
+      topBar={
+        <>
+          <View style={styles.topBarSpacer} />
+          <AccountButton />
+        </>
+      }
+      contentStyle={styles.content}
+    >
       <View style={styles.hero}>
         <View style={styles.logo}>
           <Image source={require('../../assets/icon.png')} style={styles.logoImage} resizeMode="contain" />
@@ -57,6 +67,7 @@ export default function MainMenuScreen() {
 }
 
 const styles = StyleSheet.create({
+  topBarSpacer: { flex: 1 },
   content: { justifyContent: 'center', gap: spacing.xxl },
   hero: { alignItems: 'center', gap: spacing.sm },
   logo: {

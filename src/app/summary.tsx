@@ -4,8 +4,8 @@ import { PartyPopper, RotateCcw, Trophy } from 'lucide-react-native';
 import { useFeedback } from '@/audio/FeedbackProvider';
 import { AppButton } from '@/components/AppButton';
 import { Avatar } from '@/components/Avatar';
+import { GameMenu } from '@/components/GameMenu';
 import { Screen } from '@/components/Screen';
-import { QuitGameButton } from '@/components/QuitGameButton';
 import { TeamScoreboard } from '@/components/TeamScoreboard';
 import { ROUNDS } from '@/game/constants';
 import { useGameContext } from '@/game/GameProvider';
@@ -56,8 +56,8 @@ export default function SummaryScreen() {
     <Screen
       topBar={
         <>
-          <QuitGameButton />
           <TeamScoreboard />
+          <GameMenu />
         </>
       }
       contentStyle={styles.content}

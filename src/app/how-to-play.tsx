@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import { AccountButton } from '@/components/AccountButton';
 import { BackFooter } from '@/components/BackFooter';
 import { RoundIcon } from '@/components/RoundIcon';
 import { Screen } from '@/components/Screen';
@@ -48,7 +49,7 @@ export default function HowToPlayScreen() {
         <>
           <View style={styles.topBarSide} />
           <Text style={styles.headerTitle}>{t('menu.rules')}</Text>
-          <View style={styles.topBarSide} />
+          <AccountButton />
         </>
       }
       footer={<BackFooter />}

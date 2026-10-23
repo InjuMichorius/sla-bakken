@@ -4,8 +4,8 @@ import { CircleArrowRight, Check, RefreshCcw } from 'lucide-react-native';
 import { AppButton } from '@/components/AppButton';
 import { Avatar } from '@/components/Avatar';
 import { Badge } from '@/components/Badge';
+import { GameMenu } from '@/components/GameMenu';
 import { Screen } from '@/components/Screen';
-import { QuitGameButton } from '@/components/QuitGameButton';
 import { TeamScoreboard } from '@/components/TeamScoreboard';
 import { useGameContext } from '@/game/GameProvider';
 import type { Player, Team } from '@/game/types';
@@ -31,7 +31,16 @@ export default function WordEntryScreen() {
 
   if (!entry) {
     return (
-      <Screen topBar={<TeamScoreboard />} scroll={false} contentStyle={styles.centered}>
+      <Screen
+        topBar={
+          <>
+            <TeamScoreboard />
+            <GameMenu />
+          </>
+        }
+        scroll={false}
+        contentStyle={styles.centered}
+      >
         <Text style={styles.muted}>{t('words.done')}</Text>
         <AppButton label={t('words.toRules')} size="lg" onPress={startGame} />
       </Screen>
@@ -45,9 +54,9 @@ export default function WordEntryScreen() {
       <Screen
         topBar={
           <>
-            <QuitGameButton />
-            <RosterDots roster={roster} index={index} currentFill={0.5} />
             <TeamScoreboard />
+            <RosterDots roster={roster} index={index} currentFill={0.5} />
+            <GameMenu />
           </>
         }
         scroll={false}
@@ -158,9 +167,9 @@ function PlayerWordForm({ team, player, color, position, isLast, roster, index, 
     <Screen
       topBar={
         <>
-          <QuitGameButton />
-          <RosterDots roster={roster} index={index} currentFill={1} />
           <TeamScoreboard />
+          <RosterDots roster={roster} index={index} currentFill={1} />
+          <GameMenu />
         </>
       }
       footer={

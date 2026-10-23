@@ -31,8 +31,8 @@ export function TeamScoreboard() {
 }
 
 const styles = StyleSheet.create({
-  /** marginLeft: auto pins this to the far right of Screen's topBar row. */
-  row: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginLeft: 'auto' },
+  /** Sits at the start of Screen's topBar row; the game menu pins itself to the end. */
+  row: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   entry: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs + 2 },
   dot: { width: 10, height: 10, borderRadius: 5 },
   score: { fontSize: 15, fontWeight: '900', letterSpacing: -0.2, fontVariant: ['tabular-nums'] },
