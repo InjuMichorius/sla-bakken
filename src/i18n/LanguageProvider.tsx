@@ -22,6 +22,16 @@ function interpolate(template: string, params?: I18nParams) {
   );
 }
 
+export function translateDefaultPlayerName(name: string, language: Language): string {
+  const match = name.match(/^(?:Speler|Player|Spieler|Joueur)\s+(\d+)$/i);
+  if (match) {
+    const n = match[1];
+    const template = STRINGS['setup.playerDefault'][language];
+    return interpolate(template, { n });
+  }
+  return name;
+}
+
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [language, setLanguageState] = useState<Language>('nl');
 

@@ -9,7 +9,7 @@ import { Screen } from '@/components/Screen';
 import { TeamScoreboard } from '@/components/TeamScoreboard';
 import { useGameContext } from '@/game/GameProvider';
 import type { Player, Team } from '@/game/types';
-import { useI18n } from '@/i18n/LanguageProvider';
+import { translateDefaultPlayerName, useI18n } from '@/i18n/LanguageProvider';
 import { haptics } from '@/lib/haptics';
 import { colors, radius, spacing, noOutline } from '@/theme';
 import { pickRandomWord } from '@/game/randomWord';
@@ -27,7 +27,7 @@ export default function WordEntryScreen() {
 
   const entry = roster[index];
 
-  const { t } = useI18n();
+  const { t, language } = useI18n();
 
   if (!entry) {
     return (
@@ -72,14 +72,14 @@ export default function WordEntryScreen() {
               }}
               icon={<CircleArrowRight size={20} color="#241A00" />}
             />
-            <Text style={styles.footerHint}>{t('words.handoffHint', { name: entry.player.name })}</Text>
+            <Text style={styles.footerHint}>{t('words.handoffHint', { name: translateDefaultPlayerName(entry.player.name, language) })}</Text>
           </>
         }
       >
         <View style={styles.handoffBody}>
           <Text style={styles.handoffTitle}>{t('words.givePhone')}</Text>
-          <Avatar name={entry.player.name} color={color} size={104} />
-          <Text style={styles.handoffName}>{entry.player.name}</Text>
+          <Avatar name={translateDefaultPlayerName(entry.player.name, language)} color={color} size={104} />
+          <Text style={styles.handoffName}>{translateDefaultPlayerName(entry.player.name, language)}</Text>
           <Badge color={color} style={styles.teamBadge}>
             {entry.team.name}
           </Badge>
@@ -124,7 +124,7 @@ type PlayerWordFormProps = {
 function PlayerWordForm({ team, player, color, position, isLast, roster, index, onSave }: PlayerWordFormProps) {
   const { state, setPlayerWords } = useGameContext();
   const { t, language } = useI18n();
-  const inputs = useRef<(TextInput | null)[]>([]);
+  const inputs = useRef<any[]>([]);
   const perPlayer = state.wordsPerPlayer;
   const [words, setWords] = useState<string[]>(() => {
     const saved = state.wordEntries.filter((e) => e.playerId === player.id).map((e) => e.word);
@@ -153,8 +153,8 @@ function PlayerWordForm({ team, player, color, position, isLast, roster, index, 
   const confirm = (index: number) => {
     haptics.light();
     const next = inputs.current[index + 1];
-    if (next) next.focus();
-    else inputs.current[index]?.blur();
+    if (next) next.focus?.();
+    else inputs.current[index]?.blur?.();
   };
 
   const save = () => {
@@ -189,15 +189,15 @@ function PlayerWordForm({ team, player, color, position, isLast, roster, index, 
       }
     >
       <View style={styles.headRow}>
-        <Avatar name={player.name} color={color} size={58} />
-        <View style={styles.headText}>
-          <View style={styles.headLabelRow}>
-            <Text style={styles.headLabel}>{t('words.turnOf')}</Text>
-            <Badge color={color}>{team.name}</Badge>
-          </View>
-          <Text style={styles.headName} numberOfLines={1}>
-            {player.name}
-          </Text>
+      <Avatar name={translateDefaultPlayerName(player.name, language)} color={color} size={58} />
+      <View style={styles.headText}>
+        <View style={styles.headLabelRow}>
+          <Text style={styles.headLabel}>{t('words.turnOf')}</Text>
+          <Badge color={color}>{team.name}</Badge>
+        </View>
+        <Text style={styles.headName} numberOfLines={1}>
+          {translateDefaultPlayerName(player.name, language)}
+        </Text>
         </View>
         <Badge tone={filled === 0 ? 'danger' : filled === perPlayer ? 'success' : 'accent'}>
           {filled}/{perPlayer}
@@ -218,7 +218,7 @@ function PlayerWordForm({ team, player, color, position, isLast, roster, index, 
               onChangeText={(text) => setWords((prev) => prev.map((w, idx) => (idx === i ? text : w)))}
               onSubmitEditing={() => {
                 const next = inputs.current[i + 1];
-                if (next) next.focus();
+                if (next) next.focus?.();
                 else save();
               }}
               onFocus={() => setFocused(i)}

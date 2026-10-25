@@ -18,7 +18,7 @@ import {
 import { useGameContext } from '@/game/GameProvider';
 import { isNameTaken } from '@/game/names';
 import type { Team } from '@/game/types';
-import { useI18n } from '@/i18n/LanguageProvider';
+import { translateDefaultPlayerName, useI18n } from '@/i18n/LanguageProvider';
 import { getPlayerIdentity } from '@/lib/auth';
 import { haptics } from '@/lib/haptics';
 import { logAnalyticsEvent } from '@/lib/analytics';
@@ -27,7 +27,7 @@ import { colors, noOutline, radius, spacing } from '@/theme';
 const TOTAL_STEPS = 3;
 
 export default function SetupScreen() {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const {
     state,
     teams,
@@ -111,6 +111,7 @@ export default function SetupScreen() {
       }
       topBar={
         <>
+          <View style={styles.topBarSide} />
           <View style={styles.steps}>
             {Array.from({ length: TOTAL_STEPS }, (_, i) => (
               <View key={i} style={styles.stepTrack}>
@@ -178,7 +179,7 @@ const TeamCard = forwardRef<{ commit: () => void }, TeamCardProps>(function Team
   const [scanMessage, setScanMessage] = useState<string | null>(null);
   const [scanFailed, setScanFailed] = useState(false);
   const { play } = useFeedback();
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const color = team.color;
   const otherTeamNames = otherTeams.map((t) => t.name);
 
@@ -325,15 +326,15 @@ const TeamCard = forwardRef<{ commit: () => void }, TeamCardProps>(function Team
                 />
               ) : (
                 <>
-                  <Avatar name={player.name} color={color} size={40} />
+                  <Avatar name={translateDefaultPlayerName(player.name, language)} color={color} size={40} />
                   <Pressable
                     onPress={() => beginEditPlayer(player.id)}
                     accessibilityRole="button"
-                    accessibilityLabel={t('setup.editPlayerName', { name: player.name })}
+                    accessibilityLabel={t('setup.editPlayerName', { name: translateDefaultPlayerName(player.name, language) })}
                     style={({ pressed }) => [styles.playerNameWrap, pressed && styles.pressed]}
                   >
                     <Text style={styles.playerName} numberOfLines={1}>
-                      {player.name}
+                      {translateDefaultPlayerName(player.name, language)}
                     </Text>
                     <SquarePen size={16} color={colors.muted} />
                   </Pressable>
@@ -345,7 +346,7 @@ const TeamCard = forwardRef<{ commit: () => void }, TeamCardProps>(function Team
                         onRemovePlayer(player.id);
                       }}
                       accessibilityRole="button"
-                      accessibilityLabel={t('setup.removePlayer', { name: player.name })}
+                      accessibilityLabel={t('setup.removePlayer', { name: translateDefaultPlayerName(player.name, language) })}
                       style={({ pressed }) => [styles.removeButton, pressed && styles.pressed]}
                     >
                       <Trash size={16} color={colors.accent} />
@@ -371,7 +372,7 @@ const TeamCard = forwardRef<{ commit: () => void }, TeamCardProps>(function Team
             accessibilityLabel={t('setup.addPlayerTo', { team: team.name })}
             style={({ pressed }) => [styles.addPlayer, pressed && styles.pressed]}
           >
-            <UserPlus size={18} color="rgba(255, 255, 255, 0.7)" />
+            <UserPlus size={18} color="rgba(255, 255, 255, 0.72)" />
             <Text style={styles.addPlayerText}>{t('setup.addPlayer')}</Text>
           </Pressable>
 
@@ -388,7 +389,7 @@ const TeamCard = forwardRef<{ commit: () => void }, TeamCardProps>(function Team
             accessibilityLabel={t('setup.scanQrTo', { team: team.name })}
             style={({ pressed }) => [styles.scanPlayer, pressed && styles.pressed]}
           >
-            <ScanLine size={18} color={colors.accent} />
+            <ScanLine size={18} color="rgba(255, 255, 255, 0.72)" />
             <Text style={styles.scanPlayerText}>{t('setup.scanQr')}</Text>
           </Pressable>
         </View>
@@ -457,7 +458,7 @@ function NameInput({
   framed?: boolean;
   maxLength?: number;
 }) {
-  const ref = useRef<TextInput>(null);
+  const ref = useRef<any>(null);
   const { play } = useFeedback();
   const { t } = useI18n();
 
@@ -510,6 +511,7 @@ function NameInput({
 }
 
 const styles = StyleSheet.create({
+  topBarSide: { width: 44 },
   steps: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
   stepTrack: { flexDirection: 'row', alignItems: 'center' },
   stepDot: {
@@ -619,10 +621,10 @@ const styles = StyleSheet.create({
     minHeight: 50,
     borderRadius: radius.pill,
     borderWidth: 1,
-    borderColor: 'rgba(255, 197, 61, 0.55)',
-    backgroundColor: colors.accentSoft,
+    borderStyle: 'dashed',
+    borderColor: 'rgba(255, 255, 255, 0.28)',
   },
-  scanPlayerText: { color: colors.accent, fontSize: 15, fontWeight: '700' },
+  scanPlayerText: { color: 'rgba(255, 255, 255, 0.72)', fontSize: 15, fontWeight: '400' },
   scanMessage: { color: colors.success, fontSize: 13, fontWeight: '700', lineHeight: 18, textAlign: 'center' },
   scanMessageError: { color: colors.danger },
 

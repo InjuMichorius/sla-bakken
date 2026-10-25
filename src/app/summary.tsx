@@ -1,5 +1,5 @@
-import { useEffect, useRef } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { Animated, Dimensions, Easing, StyleSheet, Text, View } from 'react-native';
 import { PartyPopper, RotateCcw, Trophy } from 'lucide-react-native';
 import { useAuth } from '@/auth/AuthProvider';
 import { useFeedback } from '@/audio/FeedbackProvider';
@@ -10,7 +10,7 @@ import { Screen } from '@/components/Screen';
 import { TeamScoreboard } from '@/components/TeamScoreboard';
 import { ROUNDS } from '@/game/constants';
 import { useGameContext } from '@/game/GameProvider';
-import { useI18n } from '@/i18n/LanguageProvider';
+import { translateDefaultPlayerName, useI18n } from '@/i18n/LanguageProvider';
 import { haptics } from '@/lib/haptics';
 import { colors, radius, spacing } from '@/theme';
 
@@ -18,7 +18,7 @@ export default function SummaryScreen() {
   const { state, standings, newGame } = useGameContext();
   const { session, recordGameResult } = useAuth();
   const { play } = useFeedback();
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const winners = standings.filter((s) => s.isWinner);
   const isTie = winners.length > 1;
 
@@ -49,6 +49,34 @@ export default function SummaryScreen() {
     play('victory');
   }, [play]);
 
+  const [confetti] = useState(() => Array.from({ length: 80 }, (_, i) => ({
+    key: i,
+    x: new Animated.Value(Math.random() * Dimensions.get('window').width),
+    y: new Animated.Value(-20 - Math.random() * 200),
+    rot: new Animated.Value(0),
+    color: ['#FFC53D', '#22D3EE', '#A78BFA', '#22C55E', '#F43F5E'][i % 5],
+  })));
+
+  useEffect(() => {
+    const animations = confetti.map((piece) =>
+      Animated.parallel([
+        Animated.timing(piece.y, {
+          toValue: Dimensions.get('window').height + 100,
+          duration: 2000 + Math.random() * 1000,
+          easing: Easing.linear,
+          useNativeDriver: true,
+        }),
+        Animated.timing(piece.rot, {
+          toValue: 360 * (Math.random() > 0.5 ? 1 : -1) * (2 + Math.random() * 3),
+          duration: 2000 + Math.random() * 1000,
+          easing: Easing.linear,
+          useNativeDriver: true,
+        }),
+      ])
+    );
+    Animated.stagger(10, animations).start();
+  }, [confetti]);
+
   const recorded = useRef<string | null>(null);
   useEffect(() => {
     const userId = session?.user.id;
@@ -74,16 +102,38 @@ export default function SummaryScreen() {
   };
 
   return (
-    <Screen
-      topBar={
-        <>
-          <TeamScoreboard />
-          <GameMenu />
-        </>
-      }
-      contentStyle={styles.content}
-      footer={<AppButton label={t('summary.newGame')} size="xl" onPress={playAgain} icon={<RotateCcw size={20} color="#241A00" />} />}
-    >
+    <View style={styles.root}>
+      {confetti.map((piece) => (
+        <Animated.View
+          key={piece.key}
+          style={[
+            styles.confetti,
+            {
+              backgroundColor: piece.color,
+              transform: [
+                { translateX: piece.x },
+                { translateY: piece.y },
+                {
+                  rotate: piece.rot.interpolate({
+                    inputRange: [-1080, 1080],
+                    outputRange: ['-1080deg', '1080deg'],
+                  }),
+                },
+              ],
+            },
+          ]}
+        />
+      ))}
+      <Screen
+        topBar={
+          <>
+            <TeamScoreboard />
+            <GameMenu />
+          </>
+        }
+        contentStyle={styles.content}
+        footer={<AppButton label={t('summary.newGame')} size="xl" onPress={playAgain} icon={<RotateCcw size={20} color="#241A00" />} />}
+      >
       <View style={styles.hero}>
         <View style={styles.iconWrap}>
           {isTie ? <PartyPopper size={32} color={colors.accent} /> : <Trophy size={32} color={colors.accent} />}
@@ -119,10 +169,10 @@ export default function SummaryScreen() {
                 <View style={styles.roster}>
                   {team.players.map((player) => (
                     <View key={player.id} style={styles.player}>
-                      <Avatar name={player.name} color={row.color} size={28} />
-                      <Text style={styles.playerName} numberOfLines={1}>
-                        {player.name}
-                      </Text>
+                    <Avatar name={translateDefaultPlayerName(player.name, language)} color={row.color} size={28} />
+                    <Text style={styles.playerName} numberOfLines={1}>
+                      {translateDefaultPlayerName(player.name, language)}
+                    </Text>
                     </View>
                   ))}
                 </View>
@@ -154,11 +204,21 @@ export default function SummaryScreen() {
           </View>
         ))}
       </View>
-    </Screen>
+      </Screen>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  root: { flex: 1 },
+  confetti: {
+    position: 'absolute',
+    top: 0,
+    width: 10,
+    height: 16,
+    borderRadius: 2,
+    zIndex: 10,
+  },
   content: { justifyContent: 'flex-start', gap: spacing.lg },
   hero: { alignItems: 'center', gap: spacing.xs },
   iconWrap: {

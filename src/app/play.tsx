@@ -13,7 +13,7 @@ import { TeamScoreboard } from '@/components/TeamScoreboard';
 import { teamColor } from '@/game/colors';
 import { ROUNDS } from '@/game/constants';
 import { useGameContext } from '@/game/GameProvider';
-import { useI18n } from '@/i18n/LanguageProvider';
+import { translateDefaultPlayerName, useI18n } from '@/i18n/LanguageProvider';
 import type { TranslationKey } from '@/i18n/translations';
 import { haptics } from '@/lib/haptics';
 import { colors, radius, spacing } from '@/theme';
@@ -56,7 +56,7 @@ export default function PlayScreen() {
   const { state, currentTeam, currentPlayer, standings, totalWords, startTurn, correctGuess, passGuess, tick, endTurn, endRound, nextRound } =
     useGameContext();
   const { play, playLoop, stopLoop } = useFeedback();
-  const { t } = useI18n();
+  const { t, language } = useI18n();
 
   const meta = ROUNDS.find((r) => r.number === state.currentRound) ?? ROUNDS[0];
   const color = currentTeam?.color ?? teamColor(0);
@@ -174,7 +174,7 @@ export default function PlayScreen() {
           </Text>
         </View>
         <View style={styles.reviewBlock}>
-          <Standings standings={standings} title={t('play.standingsAfter', { n: state.currentRound })} />
+          <Standings animated={true} standings={standings} title={t('play.standingsAfter', { n: state.currentRound })} />
         </View>
         {!isLastRound ? (
           <View style={styles.nextRoundHint}>
@@ -206,8 +206,8 @@ topBar={<RoundTopBar round={state.currentRound} title={meta.title} />}
       >
         <View style={styles.handoffBody}>
           <Text style={styles.handoffTitle}>{t('words.givePhone')}</Text>
-          <Avatar name={currentPlayer?.name ?? t('common.unknown')} color={color} size={104} />
-          <Text style={styles.handoffName}>{currentPlayer?.name ?? t('common.unknown')}</Text>
+          <Avatar name={translateDefaultPlayerName(currentPlayer?.name ?? t('common.unknown'), language)} color={color} size={104} />
+          <Text style={styles.handoffName}>{translateDefaultPlayerName(currentPlayer?.name ?? t('common.unknown'), language)}</Text>
           <Badge color={color} style={styles.teamBadge}>
             {currentTeam?.name}
           </Badge>

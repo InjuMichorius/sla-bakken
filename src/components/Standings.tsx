@@ -1,4 +1,5 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { useEffect, useState, useRef } from 'react';
+import { Animated, StyleSheet, Text, View } from 'react-native';
 import { Trophy } from 'lucide-react-native';
 import { ROUNDS } from '@/game/constants';
 import { useGameContext } from '@/game/GameProvider';
@@ -11,35 +12,117 @@ type StandingsProps = {
   title?: string;
   /** Centres the title, for screens where the block itself is centred. */
   centerTitle?: boolean;
+  /** Whether to animate score bar changes. Defaults to true. */
+  animated?: boolean;
 };
 
-export function Standings({ standings, compact = false, title, centerTitle = false }: StandingsProps) {
+type BarAnim = {
+  value: Animated.Value;
+};
+
+export function Standings({ 
+  standings, 
+  compact = false, 
+  title, 
+  centerTitle = false, 
+  animated = true 
+}: StandingsProps) {
   const { totalWords } = useGameContext();
   // Scores accumulate over all rounds while the pot is refilled every round, so
   // the bar scales to the most points a team can collect in the whole game.
   // Otherwise a team that swept round 1 already shows a full bar in round 2.
   const max = Math.max(1, ROUNDS.length * totalWords);
+
+  const [anims, setAnims] = useState<Record<string, BarAnim>>({});
+  const prevScoresRef = useRef<Record<string, number>>({});
+
+  // Bereken de doel-percentage (tussen 4% en 100%) voor een score
+  const getTargetPercentage = (score: number) => {
+    return Math.min(100, Math.max(4, (score / max) * 100));
+  };
+
+  useEffect(() => {
+    setAnims((current) => {
+      const next = { ...current };
+      let changed = false;
+
+      standings.forEach((row) => {
+        const target = getTargetPercentage(row.score);
+        const prevScore = prevScoresRef.current[row.teamId];
+
+        if (!next[row.teamId]) {
+          // Als de animatie nog niet bestaat:
+          // Als animated aan staat én we hebben een eerdere score bekend, start dan daar (anders direct op target of 0)
+          const initialValue = animated && prevScore !== undefined 
+            ? getTargetPercentage(prevScore) 
+            : (animated ? getTargetPercentage(0) : target);
+
+          next[row.teamId] = { value: new Animated.Value(initialValue) };
+          changed = true;
+        }
+      });
+
+      return changed ? next : current;
+    });
+
+    // Onthoud de scores voor de volgende render vergelijking
+    standings.forEach((row) => {
+      prevScoresRef.current[row.teamId] = row.score;
+    });
+  }, [standings, max, animated]);
+
+  useEffect(() => {
+    if (!animated) return;
+
+    standings.forEach((row) => {
+      const anim = anims[row.teamId];
+      if (!anim) return;
+
+      const target = getTargetPercentage(row.score);
+      
+      Animated.timing(anim.value, {
+        toValue: target,
+        duration: 650,
+        useNativeDriver: false,
+      }).start();
+    });
+  }, [standings, max, anims, animated]);
+
   return (
     <View style={styles.wrap}>
       {title ? <Text style={[styles.title, centerTitle && styles.titleCenter]}>{title}</Text> : null}
-      {standings.map((row) => (
-        <View key={row.teamId} style={[styles.row, row.isWinner && styles.rowWinner]}>
-          <View style={[styles.dot, { backgroundColor: row.color }]} />
-          <Text style={styles.name} numberOfLines={1}>
-            {row.name}
-          </Text>
-          {!compact && row.isWinner ? <Trophy size={16} color={colors.accent} /> : null}
-          <View style={styles.barTrack}>
-            <View
-              style={[
-                styles.barFill,
-                { width: `${Math.min(100, Math.max(4, (row.score / max) * 100))}%`, backgroundColor: row.color },
-              ]}
-            />
+      {standings.map((row) => {
+        const anim = anims[row.teamId];
+        const widthValue = anim?.value;
+        const targetWidth = `${getTargetPercentage(row.score)}%`;
+
+        return (
+          <View key={row.teamId} style={[styles.row, row.isWinner && styles.rowWinner]}>
+            <View style={[styles.dot, { backgroundColor: row.color }]} />
+            <Text style={styles.name} numberOfLines={1}>
+              {row.name}
+            </Text>
+            {!compact && row.isWinner ? <Trophy size={16} color={colors.accent} /> : null}
+            <View style={styles.barTrack}>
+              <Animated.View
+                style={[
+                  styles.barFill,
+                  animated && widthValue
+                    ? { 
+                        width: widthValue.interpolate({ inputRange: [0, 100], outputRange: ['0%', '100%'] }), 
+                        backgroundColor: row.color 
+                      }
+                    : { 
+                        width: targetWidth, 
+                        backgroundColor: row.color 
+                      },
+                ]}
+              />
+            </View>
+            <Text style={styles.score}>{row.score}</Text>
           </View>
-          <Text style={styles.score}>{row.score}</Text>
-        </View>
-      ))}
+        );
+      })}
     </View>
   );
 }
