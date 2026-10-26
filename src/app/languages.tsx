@@ -39,8 +39,6 @@ export default function LanguagesScreen() {
       footer={<BackFooter />}
       contentStyle={styles.content}
     >
-      <Text style={styles.hint}>{t('languages.hint')}</Text>
-
       <View style={styles.card}>
         {LANGUAGES.map((option, index) => {
           const active = language === option.code;
@@ -55,7 +53,6 @@ export default function LanguagesScreen() {
             >
               <View style={styles.optionText}>
                 <Text style={styles.optionTitle}>{t(option.titleKey)}</Text>
-                <Text style={styles.optionHint}>{t(option.hintKey)}</Text>
               </View>
               <View style={[styles.check, active && styles.checkActive]}>
                 {active ? <Check size={16} color="#241A00" strokeWidth={3} /> : null}

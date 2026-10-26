@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Platform, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import { useAuth } from '@/auth/AuthProvider';
+import { AppleNameDialog } from '@/components/AppleNameDialog';
 import { useI18n } from '@/i18n/LanguageProvider';
 import { colors, radius, spacing } from '@/theme';
 
@@ -15,6 +16,9 @@ export function AppleSignInButton({ onSuccess, style }: AppleSignInButtonProps) 
   const { t } = useI18n();
   const [available, setAvailable] = useState(Platform.OS === 'ios');
   const [isBusy, setIsBusy] = useState(false);
+  const [namePromptOpen, setNamePromptOpen] = useState(false);
+  const [suggestedName, setSuggestedName] = useState('');
+  const [currentName, setCurrentName] = useState<string | null>(null);
 
   useEffect(() => {
     if (Platform.OS !== 'ios') return;
@@ -49,7 +53,17 @@ export function AppleSignInButton({ onSuccess, style }: AppleSignInButtonProps) 
     setIsBusy(true);
 
     try {
-      if (await signIn()) onSuccess?.();
+      const result = await signIn();
+      if (!result.ok) return;
+
+      if (result.suggestedName !== null) {
+        setSuggestedName(result.suggestedName);
+        setCurrentName(result.currentName);
+        setNamePromptOpen(true);
+        return;
+      }
+
+      onSuccess?.();
     } finally {
       setIsBusy(false);
     }
@@ -68,10 +82,22 @@ export function AppleSignInButton({ onSuccess, style }: AppleSignInButtonProps) 
           }}
         />
       </View>
-      {error ? (
+      {error && !namePromptOpen ? (
         <Text accessibilityLiveRegion="polite" style={styles.error}>
           {error}
         </Text>
+      ) : null}
+      {namePromptOpen ? (
+        <AppleNameDialog
+          initialName={suggestedName}
+          currentName={currentName}
+          onSaved={() => {
+            setNamePromptOpen(false);
+            setSuggestedName('');
+            setCurrentName(null);
+            onSuccess?.();
+          }}
+        />
       ) : null}
     </View>
   );

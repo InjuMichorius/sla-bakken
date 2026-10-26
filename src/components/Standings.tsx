@@ -12,7 +12,7 @@ type StandingsProps = {
   title?: string;
   /** Centres the title, for screens where the block itself is centred. */
   centerTitle?: boolean;
-  /** Whether to animate score bar changes. Defaults to true. */
+  /** Whether to animate score bar changes. Defaults to false; only the round review animates. */
   animated?: boolean;
 };
 
@@ -25,7 +25,7 @@ export function Standings({
   compact = false, 
   title, 
   centerTitle = false, 
-  animated = true 
+  animated = false
 }: StandingsProps) {
   const { totalWords } = useGameContext();
   // Scores accumulate over all rounds while the pot is refilled every round, so

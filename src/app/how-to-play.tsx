@@ -1,17 +1,70 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import { router } from 'expo-router';
+import { Check, CircleArrowLeft, CircleArrowRight } from 'lucide-react-native';
 import { AccountButton } from '@/components/AccountButton';
-import { BackFooter } from '@/components/BackFooter';
-import { RoundIcon } from '@/components/RoundIcon';
+import { AppButton } from '@/components/AppButton';
+import { HowToPreview, type HowToPreviewVariant } from '@/components/HowToPreview';
 import { Screen } from '@/components/Screen';
-import { ROUNDS } from '@/game/constants';
-import { colors, radius, spacing } from '@/theme';
 import { useI18n } from '@/i18n/LanguageProvider';
+import type { TranslationKey } from '@/i18n/translations';
 import { logAnalyticsEvent } from '@/lib/analytics';
+import { haptics } from '@/lib/haptics';
+import { colors, radius, spacing } from '@/theme';
+
+type HowToPage = {
+  title: TranslationKey;
+  subtitle: TranslationKey;
+  body: TranslationKey;
+  variant: HowToPreviewVariant;
+  rules?: TranslationKey[];
+  note?: TranslationKey;
+};
+
+const PAGES: HowToPage[] = [
+  {
+    title: 'howto.page1.title',
+    subtitle: 'howto.page1.subtitle',
+    body: 'howto.page1.body',
+    variant: 'setup',
+  },
+  {
+    title: 'howto.page2.title',
+    subtitle: 'howto.page2.subtitle',
+    body: 'howto.page2.body',
+    variant: 'words',
+  },
+  {
+    title: 'howto.page3.title',
+    subtitle: 'howto.page3.subtitle',
+    body: 'howto.page3.body',
+    variant: 'describe',
+    rules: ['rounds.describe.rule2', 'rounds.describe.rule3', 'rounds.describe.rule4'],
+  },
+  {
+    title: 'howto.page4.title',
+    subtitle: 'howto.page4.subtitle',
+    body: 'howto.page4.body',
+    variant: 'act',
+    rules: ['rounds.act.rule2', 'rounds.act.rule3'],
+  },
+  {
+    title: 'howto.page5.title',
+    subtitle: 'howto.page5.subtitle',
+    body: 'howto.page5.body',
+    variant: 'oneword',
+    rules: ['rounds.oneword.rule2', 'rounds.oneword.rule3'],
+    note: 'howto.page5.note',
+  },
+];
 
 export default function HowToPlayScreen() {
   const { t } = useI18n();
+  const [step, setStep] = useState(0);
   const tracked = useRef(false);
+  const page = PAGES[step];
+  const isFirst = step === 0;
+  const isLast = step === PAGES.length - 1;
 
   useEffect(() => {
     if (tracked.current) return;
@@ -19,132 +72,134 @@ export default function HowToPlayScreen() {
     logAnalyticsEvent('how_to_play_opened');
   }, []);
 
-  const STEPS: { title: string; body: string }[] = [
-    {
-      title: t('howto.step1.title'),
-      body: t('howto.step1.body'),
-    },
-    {
-      title: t('howto.step2.title'),
-      body: t('howto.step2.body'),
-    },
-    {
-      title: t('howto.step3.title'),
-      body: t('howto.step3.body'),
-    },
-    {
-      title: t('howto.step4.title'),
-      body: t('howto.step4.body'),
-    },
-  ];
+  const close = () => {
+    if (router.canGoBack()) router.back();
+    else router.replace('/');
+  };
 
-  const TURN_ACTIONS = [
-    { label: t('play.good'), tone: 'success' as const, body: t('howto.goedBody') },
-    { label: t('play.pass'), tone: 'muted' as const, body: t('howto.pasBody') },
-    { label: t('play.endTurn'), tone: 'danger' as const, body: t('howto.stopBody') },
-  ] as const;
+  const goBack = () => {
+    haptics.light();
+    if (isFirst) close();
+    else setStep((current) => current - 1);
+  };
+
+  const goNext = () => {
+    if (isLast) {
+      haptics.success();
+      close();
+      return;
+    }
+    haptics.light();
+    setStep((current) => current + 1);
+  };
+
   return (
     <Screen
       topBar={
         <>
           <View style={styles.topBarSide} />
-          <Text style={styles.headerTitle}>{t('menu.rules')}</Text>
-          <AccountButton />
-        </>
-      }
-      footer={<BackFooter />}
-      contentStyle={styles.content}
-    >
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>{t('howto.hey')}</Text>
-        <Text style={styles.body}>{t('howto.idea')}</Text>
-      </View>
-
-      <Text style={styles.section}>{t('howto.sectionSteps')}</Text>
-      <View style={styles.card}>
-        {STEPS.map((step, index) => (
-          <View key={step.title} style={[styles.stepRow, index === STEPS.length - 1 && styles.stepRowLast]}>
-            <View style={styles.stepIndex}>
-              <Text style={styles.stepIndexText}>{index + 1}</Text>
-            </View>
-            <View style={styles.stepText}>
-              <Text style={styles.stepTitle}>{step.title}</Text>
-              <Text style={styles.body}>{step.body}</Text>
-            </View>
-          </View>
-        ))}
-      </View>
-
-      <Text style={styles.section}>{t('howto.sectionRounds')}</Text>
-      <View style={styles.card}>
-        {ROUNDS.map((round, index) => (
-          <View key={round.number} style={[styles.roundBlock, index > 0 && styles.roundBlockSpaced]}>
-            <View style={styles.roundHead}>
-              <RoundIcon name={round.icon} size={18} />
-              <Text style={styles.roundTitle}>
-                {round.number}. {t(round.title)}
-              </Text>
-              <Text style={styles.roundTag}>{t(round.tagline)}</Text>
-            </View>
-            {round.rules.map((rule) => (
-              <View key={rule} style={styles.bulletRow}>
-                <View style={styles.bullet} />
-                <Text style={styles.body}>{t(rule)}</Text>
+          <View style={styles.steps} accessible accessibilityLabel={t('howto.stepOf', { n: step + 1, total: PAGES.length })}>
+            {PAGES.map((_, index) => (
+              <View key={index} style={styles.stepTrack}>
+                <View style={[styles.stepDot, index <= step && styles.stepDotActive]}>
+                  {index < step ? (
+                    <Check size={13} color="#241A00" strokeWidth={3} />
+                  ) : (
+                    <Text style={[styles.stepDotText, index === step && styles.stepDotTextActive]}>{index + 1}</Text>
+                  )}
+                </View>
+                {index < PAGES.length - 1 ? <View style={[styles.stepLine, index < step && styles.stepLineActive]} /> : null}
               </View>
             ))}
           </View>
-        ))}
-      </View>
-
-      <Text style={styles.section}>{t('howto.sectionTurn')}</Text>
-      <View style={styles.card}>
-        <Text style={styles.body}>{t('howto.turnIntro')}</Text>
-        <View style={styles.divider} />
-        {TURN_ACTIONS.map((action) => (
-          <View key={action.label} style={styles.actionRow}>
-            <View
-              style={[
-                styles.actionPill,
-                action.tone === 'success' && styles.actionPillSuccess,
-                action.tone === 'danger' && styles.actionPillDanger,
-              ]}
-            >
-              <Text
-                style={[
-                  styles.actionLabel,
-                  action.tone === 'success' && { color: colors.success },
-                  action.tone === 'danger' && { color: colors.danger },
-                ]}
-              >
-                {action.label}
-              </Text>
-            </View>
-            <Text style={[styles.body, styles.actionBody]}>{action.body}</Text>
+          <AccountButton />
+        </>
+      }
+      footer={
+        <View style={styles.footerRow}>
+          <AppButton
+            label={isFirst ? t('common.back') : t('howto.previous')}
+            variant="ghost"
+            size="lg"
+            onPress={goBack}
+            fullWidth={false}
+            sound="decline"
+            icon={<CircleArrowLeft size={18} color={colors.muted} />}
+          />
+          <View style={styles.footerGrow}>
+            <AppButton
+              label={isLast ? t('howto.finish') : t('howto.next')}
+              size="lg"
+              onPress={goNext}
+              icon={isLast ? <Check size={20} color="#241A00" strokeWidth={3} /> : <CircleArrowRight size={18} color="#241A00" />}
+            />
           </View>
-        ))}
+        </View>
+      }
+      contentStyle={styles.content}
+    >
+      <View style={styles.pageHeader}>
+        <Text style={styles.eyebrow}>{t('howto.stepOf', { n: step + 1, total: PAGES.length })}</Text>
+        <Text style={styles.pageTitle}>{t(page.title)}</Text>
+        <Text style={styles.pageSubtitle}>{t(page.subtitle)}</Text>
       </View>
 
-      <Text style={styles.section}>{t('howto.sectionPoints')}</Text>
-      <View style={styles.card}>
-        <Text style={styles.body}>{t('howto.points')}</Text>
-      </View>
+      <HowToPreview variant={page.variant} />
+
+      <Text style={styles.body}>{t(page.body)}</Text>
+
+      {page.rules ? (
+        <View style={styles.rulesCard}>
+          <Text style={styles.rulesTitle}>{t('howto.remember')}</Text>
+          {page.rules.map((rule) => (
+            <View key={rule} style={styles.ruleRow}>
+              <View style={styles.bullet} />
+              <Text style={styles.ruleText}>{t(rule)}</Text>
+            </View>
+          ))}
+        </View>
+      ) : null}
+
+      {page.note ? (
+        <View style={styles.noteCard}>
+          <View style={styles.noteIcon}>
+            <Check size={16} color={colors.accent} strokeWidth={3} />
+          </View>
+          <Text style={styles.noteText}>{t(page.note)}</Text>
+        </View>
+      ) : null}
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  content: { justifyContent: 'flex-start' },
-  headerTitle: { flex: 1, textAlign: 'center', color: colors.text, fontSize: 18, fontWeight: '900', letterSpacing: -0.3 },
+  content: { justifyContent: 'flex-start', gap: spacing.lg },
   topBarSide: { width: 44 },
-  section: {
-    color: colors.muted,
-    fontSize: 12,
-    fontWeight: '800',
-    letterSpacing: 1.4,
-    textTransform: 'uppercase',
-    marginTop: spacing.sm,
+  steps: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
+  stepTrack: { flexDirection: 'row', alignItems: 'center' },
+  stepDot: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  card: {
+  stepDotActive: { backgroundColor: colors.accent, borderColor: colors.accent },
+  stepDotText: { color: colors.muted, fontSize: 11, fontWeight: '900' },
+  stepDotTextActive: { color: '#241A00' },
+  stepLine: { width: 10, height: 2, borderRadius: 1, backgroundColor: colors.border },
+  stepLineActive: { backgroundColor: colors.accent },
+
+  pageHeader: { gap: spacing.xs },
+  eyebrow: { color: colors.accent, fontSize: 11, fontWeight: '900', letterSpacing: 1.5, textTransform: 'uppercase' },
+  pageTitle: { color: colors.text, fontSize: 28, fontWeight: '900', letterSpacing: -0.8, lineHeight: 33 },
+  pageSubtitle: { color: colors.muted, fontSize: 15, lineHeight: 22, fontWeight: '600' },
+  body: { color: colors.muted, fontSize: 15, lineHeight: 23 },
+
+  rulesCard: {
     backgroundColor: colors.surface,
     borderRadius: radius.lg,
     borderWidth: 1,
@@ -152,46 +207,37 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     gap: spacing.sm,
   },
-  cardTitle: { color: colors.text, fontSize: 17, fontWeight: '800' },
-  body: { color: colors.muted, fontSize: 14, lineHeight: 21 },
-  strong: { color: colors.text, fontWeight: '800' },
-  divider: { height: 1, backgroundColor: colors.border, marginVertical: spacing.xs },
+  rulesTitle: {
+    color: colors.muted,
+    fontSize: 11,
+    fontWeight: '900',
+    letterSpacing: 1.4,
+    textTransform: 'uppercase',
+  },
+  ruleRow: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm },
+  bullet: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.accent, marginTop: 8 },
+  ruleText: { flex: 1, color: colors.text, fontSize: 14, lineHeight: 21 },
 
-  stepRow: { flexDirection: 'row', gap: spacing.md, paddingBottom: spacing.md },
-  stepRowLast: { paddingBottom: 0 },
-  stepIndex: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+  noteCard: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: spacing.md,
     backgroundColor: colors.accentSoft,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 197, 61, 0.28)',
+    padding: spacing.lg,
+  },
+  noteIcon: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: 'rgba(255, 197, 61, 0.16)',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  stepIndexText: { color: colors.accent, fontSize: 12, fontWeight: '900' },
-  stepText: { flex: 1, gap: 2 },
-  stepTitle: { color: colors.text, fontSize: 15, fontWeight: '800' },
+  noteText: { flex: 1, color: colors.text, fontSize: 14, lineHeight: 21, fontWeight: '600' },
 
-  roundBlock: { gap: spacing.xs },
-  roundBlockSpaced: { borderTopWidth: 1, borderTopColor: colors.border, paddingTop: spacing.md },
-  roundHead: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginBottom: spacing.xs },
-  roundTitle: { color: colors.text, fontSize: 15, fontWeight: '800' },
-  roundTag: { color: colors.accent, fontSize: 12, fontWeight: '700' },
-  bulletRow: { flexDirection: 'row', gap: spacing.sm, alignItems: 'flex-start' },
-  bullet: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.border, marginTop: 8 },
-
-  actionRow: { flexDirection: 'row', gap: spacing.md, alignItems: 'flex-start' },
-  actionPill: {
-    minWidth: 104,
-    borderRadius: radius.pill,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.surfaceAlt,
-    alignItems: 'center',
-    paddingVertical: spacing.xs,
-    paddingHorizontal: spacing.sm,
-  },
-  actionPillSuccess: { borderColor: 'rgba(52, 211, 153, 0.4)', backgroundColor: colors.successSoft },
-  actionPillDanger: { borderColor: 'rgba(248, 113, 113, 0.4)', backgroundColor: colors.dangerSoft },
-  actionLabel: { color: colors.text, fontSize: 13, fontWeight: '800' },
-  actionBody: { flex: 1 },
+  footerRow: { flexDirection: 'row', gap: spacing.md, alignItems: 'center' },
+  footerGrow: { flex: 1 },
 });

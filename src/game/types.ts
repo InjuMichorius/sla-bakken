@@ -36,8 +36,22 @@ export type Point = {
 };
 
 export type GuessTiming = {
+  id: string;
   word: string;
   seconds: number;
+};
+
+export type AcceptedGuess = {
+  id: string;
+  word: string;
+  teamId: string;
+  teamName: string;
+  playerId: string;
+  playerName: string;
+  round: number;
+  turn: number;
+  passes: number;
+  seconds: number | null;
 };
 
 export type GameState = {
@@ -62,6 +76,8 @@ export type GameState = {
   wordOpenedAt: number | null;
   /** Per correct geraden woord de tijd die het open stond. */
   guessTimes: GuessTiming[];
+  /** Goedgekeurde woorden per ronde, zodat een vergissing teruggedraaid kan worden. */
+  acceptedGuesses: AcceptedGuess[];
   /** Langste reeks direct goed geraden woorden binnen één beurt. */
   maxGuessStreak: number;
   /** Lopende reeks in de huidige beurt. */
@@ -92,6 +108,7 @@ export const initialGameState: GameState = {
   timerStartedAt: null,
   wordOpenedAt: null,
   guessTimes: [],
+  acceptedGuesses: [],
   maxGuessStreak: 0,
   guessStreak: 0,
   pot: [],

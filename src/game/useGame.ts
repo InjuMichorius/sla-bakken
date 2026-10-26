@@ -80,6 +80,7 @@ export type GameContextValue = {
   startTurn: () => void;
   correctGuess: () => void;
   passGuess: () => void;
+  rejectGuess: (guessId: string) => void;
   tick: (now: number) => void;
   endTurn: () => void;
   endRound: () => void;
@@ -178,6 +179,7 @@ export function useGame(): GameContextValue {
     startTurn: () => send({ type: 'START_TURN', now: Date.now() }),
     correctGuess: () => send({ type: 'CORRECT_GUESS', now: Date.now() }),
     passGuess: () => send({ type: 'PASS_GUESS', now: Date.now() }),
+    rejectGuess: (guessId) => send({ type: 'REJECT_GUESS', guessId }),
     tick: (now) => send({ type: 'TICK', now }),
     endTurn: () => send({ type: 'END_TURN' }),
     endRound: () => send({ type: 'END_ROUND' }),

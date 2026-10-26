@@ -5,16 +5,27 @@ import {
   deleteAccount as deleteAccountFromSupabase,
   getProfile,
   listFriends as listFriendsFromSupabase,
-  recordGameResult as recordGameResultFromSupabase,
+  recordGameResults as recordGameResultsFromSupabase,
+  removeFriend as removeFriendFromSupabase,
   signInWithApple,
   signInWithEmail as signInWithEmailFromSupabase,
   signOut as signOutFromSupabase,
   signUpWithEmail as signUpWithEmailFromSupabase,
+  updateProfileName as updateProfileNameFromSupabase,
+  MAX_PROFILE_NAME_LENGTH,
   type Friend,
-  type GameStats,
+  type GameResultEntry,
+  type PlayerGameStats,
   type Profile,
 } from '@/lib/auth';
 import { getSupabase, isSupabaseConfigured } from '@/lib/supabase';
+
+export type AppleSignInOutcome = {
+  ok: boolean;
+  canceled: boolean;
+  suggestedName: string | null;
+  currentName: string | null;
+};
 
 type AuthContextValue = {
   session: Session | null;
@@ -24,7 +35,8 @@ type AuthContextValue = {
   isLoading: boolean;
   isConfigured: boolean;
   error: string | null;
-  signIn: () => Promise<boolean>;
+  signIn: () => Promise<AppleSignInOutcome>;
+  updateName: (name: string) => Promise<boolean>;
   signInWithEmail: (email: string, password: string) => Promise<boolean>;
   signUpWithEmail: (
     email: string,
@@ -34,8 +46,9 @@ type AuthContextValue = {
   signOut: () => Promise<void>;
   deleteAccount: () => Promise<boolean>;
   refreshProfile: () => Promise<void>;
-  recordGameResult: (gameId: string, points: number) => Promise<GameStats | null>;
+  recordGameResults: (gameId: string, results: GameResultEntry[]) => Promise<PlayerGameStats[]>;
   addFriend: (userId: string) => Promise<Friend | null>;
+  removeFriend: (userId: string) => Promise<boolean>;
   clearError: () => void;
 };
 
@@ -61,6 +74,17 @@ function emailErrorMessage(error: unknown): string {
   return errorMessage(error);
 }
 
+function nameErrorMessage(error: unknown): string {
+  const message = error instanceof Error ? error.message : '';
+
+  if (/name_taken/i.test(message)) return 'Deze naam is al in gebruik.';
+  if (/name_too_long/i.test(message)) return `Kies een naam van maximaal ${MAX_PROFILE_NAME_LENGTH} tekens.`;
+  if (/name_required/i.test(message)) return 'Vul een naam in.';
+  if (/not_authenticated/i.test(message)) return 'Log eerst in om je naam te wijzigen.';
+
+  return emailErrorMessage(error);
+}
+
 function friendErrorMessage(error: unknown): string {
   const message = error instanceof Error ? error.message : '';
   if (/invalid_friend/i.test(message)) return 'Je kunt jezelf niet als vriend toevoegen.';
@@ -78,11 +102,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<string | null>(null);
 
   const loadProfile = useCallback(
-    async (userId: string) => {
-      if (!isConfigured) return;
+    async (userId: string): Promise<Profile | null> => {
+      if (!isConfigured) return null;
+
+      let loadedProfile: Profile | null = null;
 
       try {
-        setProfile(await getProfile(userId));
+        loadedProfile = await getProfile(userId);
+        setProfile(loadedProfile);
       } catch (profileError) {
         setError(errorMessage(profileError));
       }
@@ -92,6 +119,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } catch (friendsError) {
         setError(friendErrorMessage(friendsError));
       }
+
+      return loadedProfile;
     },
     [isConfigured],
   );
@@ -139,19 +168,45 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, [isConfigured, loadProfile]);
 
-  const signIn = useCallback(async (): Promise<boolean> => {
+  const signIn = useCallback(async (): Promise<AppleSignInOutcome> => {
     setError(null);
 
     try {
       const result = await signInWithApple();
-      if (result.canceled) return false;
-      if (result.userId) await loadProfile(result.userId);
-      return true;
+      if (result.canceled) {
+        return { ok: false, canceled: true, suggestedName: null, currentName: null };
+      }
+
+      const loadedProfile = result.userId ? await loadProfile(result.userId) : null;
+      const needsName = !result.nameConfirmed;
+
+      return {
+        ok: true,
+        canceled: false,
+        suggestedName: needsName ? (result.suggestedName ?? loadedProfile?.name ?? '') : null,
+        currentName: needsName ? (loadedProfile?.name ?? null) : null,
+      };
     } catch (signInError) {
       setError(errorMessage(signInError));
-      return false;
+      return { ok: false, canceled: false, suggestedName: null, currentName: null };
     }
   }, [loadProfile]);
+
+  const updateName = useCallback(
+    async (name: string): Promise<boolean> => {
+      setError(null);
+
+      try {
+        await updateProfileNameFromSupabase(name);
+        if (session?.user.id) await loadProfile(session.user.id);
+        return true;
+      } catch (nameError) {
+        setError(nameErrorMessage(nameError));
+        return false;
+      }
+    },
+    [loadProfile, session],
+  );
 
   const signInWithEmail = useCallback(
     async (email: string, password: string): Promise<boolean> => {
@@ -224,18 +279,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [loadProfile, session]);
 
-  const recordGameResult = useCallback(async (gameId: string, points: number): Promise<GameStats | null> => {
-    try {
-      const stats = await recordGameResultFromSupabase(gameId, points);
-      if (stats) {
-        setProfile((current) => (current ? { ...current, ...stats } : current));
+  const recordGameResults = useCallback(
+    async (gameId: string, results: GameResultEntry[]): Promise<PlayerGameStats[]> => {
+      setError(null);
+
+      try {
+        const stats = await recordGameResultsFromSupabase(gameId, results);
+        const own = stats.find((row) => row.user_id === session?.user.id);
+        if (own) {
+          setProfile((current) =>
+            current ? { ...current, points: own.points, games_played: own.games_played } : current,
+          );
+        }
+
+        try {
+          setFriends(await listFriendsFromSupabase());
+        } catch (friendsError) {
+          setError(friendErrorMessage(friendsError));
+        }
+
+        return stats;
+      } catch (recordError) {
+        setError(errorMessage(recordError));
+        return [];
       }
-      return stats;
-    } catch (recordError) {
-      setError(errorMessage(recordError));
-      return null;
-    }
-  }, []);
+    },
+    [session?.user.id],
+  );
 
   const addFriend = useCallback(async (userId: string): Promise<Friend | null> => {
     setError(null);
@@ -254,6 +324,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const removeFriend = useCallback(async (userId: string): Promise<boolean> => {
+    setError(null);
+
+    try {
+      const removed = await removeFriendFromSupabase(userId);
+      if (removed) {
+        setFriends((current) => current.filter((entry) => entry.friend_id !== userId));
+      }
+      return removed;
+    } catch (friendError) {
+      setError(friendErrorMessage(friendError));
+      return false;
+    }
+  }, []);
+
   const value = useMemo<AuthContextValue>(
     () => ({
       session,
@@ -264,13 +349,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isConfigured,
       error,
       signIn,
+      updateName,
       signInWithEmail,
       signUpWithEmail,
       signOut,
       deleteAccount,
       refreshProfile,
-      recordGameResult,
+      recordGameResults,
       addFriend,
+      removeFriend,
       clearError: () => setError(null),
     }),
     [
@@ -281,10 +368,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isConfigured,
       isLoading,
       profile,
-      recordGameResult,
+      recordGameResults,
       refreshProfile,
+      removeFriend,
       session,
       signIn,
+      updateName,
       signInWithEmail,
       signOut,
       signUpWithEmail,

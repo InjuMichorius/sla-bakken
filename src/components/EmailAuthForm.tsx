@@ -5,6 +5,7 @@ import { useFeedback } from '@/audio/FeedbackProvider';
 import { useAuth } from '@/auth/AuthProvider';
 import { AppButton } from '@/components/AppButton';
 import { useI18n } from '@/i18n/LanguageProvider';
+import { MAX_PROFILE_NAME_LENGTH } from '@/lib/auth';
 import { haptics } from '@/lib/haptics';
 import { colors, radius, spacing } from '@/theme';
 
@@ -58,6 +59,10 @@ export function EmailAuthForm() {
       setLocalError(t('auth.usernameRequired'));
       return;
     }
+    if (mode === 'signUp' && trimmedName.length > MAX_PROFILE_NAME_LENGTH) {
+      setLocalError(t('auth.usernameTooLong', { n: MAX_PROFILE_NAME_LENGTH }));
+      return;
+    }
 
     haptics.light();
     setBusy(true);
@@ -102,6 +107,7 @@ export function EmailAuthForm() {
             autoCapitalize="words"
             autoComplete="name"
             textContentType="name"
+            maxLength={MAX_PROFILE_NAME_LENGTH}
             editable={!busy}
           />
         ) : null}
@@ -191,6 +197,7 @@ type FieldProps = {
   textContentType?: 'emailAddress' | 'name' | 'newPassword' | 'password';
   keyboardType?: 'default' | 'email-address';
   secureTextEntry?: boolean;
+  maxLength?: number;
   editable?: boolean;
   onSubmitEditing?: () => void;
 };
@@ -206,6 +213,7 @@ function Field({
   textContentType,
   keyboardType = 'default',
   secureTextEntry,
+  maxLength,
   editable = true,
   onSubmitEditing,
 }: FieldProps) {
@@ -223,6 +231,7 @@ function Field({
         textContentType={textContentType}
         keyboardType={keyboardType}
         secureTextEntry={secureTextEntry}
+        maxLength={maxLength}
         editable={editable}
         onSubmitEditing={onSubmitEditing}
         style={styles.input}

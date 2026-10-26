@@ -30,7 +30,7 @@ const ROUTE_FOR_PHASE: Record<Phase, string> = {
 const MENU_ROUTES = new Set(['/', '/setup', '/settings', '/languages', '/how-to-play']);
 
 /** Overlays die bovenop de fase-router mogen openen, ook tijdens een actief spel. */
-const OVERLAY_ROUTES = new Set(['/profile']);
+const OVERLAY_ROUTES = new Set(['/profile', '/settings', '/languages', '/word-review']);
 
 function PhaseRouter() {
   const { state } = useGameContext();

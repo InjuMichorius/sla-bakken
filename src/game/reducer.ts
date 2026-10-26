@@ -1,7 +1,7 @@
 import { nextFreeTeamColor, teamColor, isTeamColor } from './colors';
 import { MAX_WORDS_PER_PLAYER, MIN_PLAYERS_PER_TEAM, MIN_TEAMS, MIN_WORDS_PER_PLAYER, ROUNDS } from './constants';
 import { isNameTaken, nextAvailablePlayerName, nextFreePlayerName, normalizePlayerName, normalizeTeamName } from './names';
-import type { GameState, Point, Team } from './types';
+import type { AcceptedGuess, GameState, Point, Team } from './types';
 import { initialGameState } from './types';
 
 export type GameAction =
@@ -23,6 +23,7 @@ export type GameAction =
   | { type: 'START_TURN'; now?: number }
   | { type: 'CORRECT_GUESS'; now?: number }
   | { type: 'PASS_GUESS'; now?: number }
+  | { type: 'REJECT_GUESS'; guessId: string }
   | { type: 'TICK'; now: number }
   | { type: 'END_TURN' }
   | { type: 'END_ROUND' }
@@ -70,6 +71,31 @@ export function allWords(state: GameState): string[] {
       seen.add(key);
       return true;
     });
+}
+
+function streakStats(
+  guesses: AcceptedGuess[],
+  currentRound: number,
+  currentTurn: number,
+  currentPasses: number,
+): { max: number; current: number } {
+  let max = 0;
+  let running = 0;
+  let previousKey: string | null = null;
+
+  for (const guess of guesses) {
+    const key = `${guess.round}:${guess.turn}:${guess.passes}`;
+    running = key === previousKey ? running + 1 : 1;
+    previousKey = key;
+    max = Math.max(max, running);
+  }
+
+  const last = guesses[guesses.length - 1];
+  const current =
+    last && last.round === currentRound && last.turn === currentTurn && last.passes === currentPasses
+      ? running
+      : 0;
+  return { max, current };
 }
 
 function freshScores(teams: Team[]): Record<string, number> {
@@ -278,6 +304,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         timerRemaining: state.turnSeconds,
         wordOpenedAt: null,
         guessTimes: [],
+        acceptedGuesses: [],
         maxGuessStreak: 0,
         guessStreak: 0,
       };
@@ -314,6 +341,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         currentWord: null,
         currentTeamIndex: startTeamIndex,
         currentPlayerIndex: 0,
+        acceptedGuesses: [],
       };
     }
 
@@ -351,13 +379,32 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
     case 'CORRECT_GUESS': {
       const { rest, current } = popCurrent(state.pot);
       if (current == null) return state;
-      const teamId = state.teams[state.currentTeamIndex]?.id;
+      const team = state.teams[state.currentTeamIndex];
+      const player = team?.players[state.currentPlayerIndex];
+      const teamId = team?.id;
       const scores = teamId ? { ...state.scores, [teamId]: (state.scores[teamId] ?? 0) + 1 } : state.scores;
       const now = action.now ?? Date.now();
-      const guessTimes =
-        state.wordOpenedAt != null
-          ? [...state.guessTimes, { word: current, seconds: Math.max(0, Math.round((now - state.wordOpenedAt) / 100) / 10) }]
-          : state.guessTimes;
+      const guessId = uid();
+      const seconds = state.wordOpenedAt != null ? Math.max(0, Math.round((now - state.wordOpenedAt) / 100) / 10) : null;
+      const guessTimes = seconds != null ? [...state.guessTimes, { id: guessId, word: current, seconds }] : state.guessTimes;
+      const acceptedGuesses =
+        team && player
+          ? [
+              ...state.acceptedGuesses,
+              {
+                id: guessId,
+                word: current,
+                teamId: team.id,
+                teamName: team.name,
+                playerId: player.id,
+                playerName: player.name,
+                round: state.currentRound,
+                turn: state.turnsThisRound,
+                passes: state.turnPasses,
+                seconds,
+              },
+            ]
+          : state.acceptedGuesses;
       const { pot, current: next } = redraw(rest, null);
       return {
         ...state,
@@ -369,6 +416,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         guessStreak: state.guessStreak + 1,
         maxGuessStreak: Math.max(state.maxGuessStreak, state.guessStreak + 1),
         guessTimes,
+        acceptedGuesses,
         wordOpenedAt: next == null ? null : now,
         phase: next == null ? 'roundReview' : 'playing',
       };
@@ -386,6 +434,42 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         turnPasses: state.turnPasses + 1,
         guessStreak: 0,
         wordOpenedAt: next == null ? null : now,
+      };
+    }
+
+    case 'REJECT_GUESS': {
+      if (state.phase !== 'playing' && state.phase !== 'handoff') return state;
+      const guess = state.acceptedGuesses.find((entry) => entry.id === action.guessId);
+      if (!guess || guess.round !== state.currentRound) return state;
+
+      const acceptedGuesses = state.acceptedGuesses.filter((entry) => entry.id !== guess.id);
+      const { max, current } = streakStats(
+        acceptedGuesses,
+        state.currentRound,
+        state.turnsThisRound,
+        state.turnPasses,
+      );
+      const scores = {
+        ...state.scores,
+        [guess.teamId]: Math.max(0, (state.scores[guess.teamId] ?? 0) - 1),
+      };
+      const rest = state.currentWord != null ? state.pot.slice(0, -1) : state.pot;
+      const returned = shuffle([...rest, guess.word]);
+      const pot = state.currentWord != null ? [...returned, state.currentWord] : returned;
+      const currentWord = state.currentWord ?? pot[pot.length - 1] ?? null;
+      const isCurrentTurn = guess.turn === state.turnsThisRound;
+
+      return {
+        ...state,
+        scores,
+        pot,
+        currentWord,
+        acceptedGuesses,
+        guessTimes: state.guessTimes.filter((entry) => entry.id !== guess.id),
+        totalWords: Math.max(0, state.totalWords - 1),
+        turnPoints: isCurrentTurn ? Math.max(0, state.turnPoints - 1) : state.turnPoints,
+        guessStreak: current,
+        maxGuessStreak: max,
       };
     }
 

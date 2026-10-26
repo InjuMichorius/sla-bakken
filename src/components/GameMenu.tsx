@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react';
 import { Modal, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
-import { LogOut, Menu as MenuIcon, Pencil, UserRound } from 'lucide-react-native';
+import { Languages, LogOut, Menu as MenuIcon, Pencil, Settings, Undo2, UserRound } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFeedback } from '@/audio/FeedbackProvider';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
@@ -13,7 +13,7 @@ import { colors, radius, spacing } from '@/theme';
 type GameMenuAction = 'edit' | 'end';
 
 export function GameMenu() {
-  const { reset } = useGameContext();
+  const { reset, state } = useGameContext();
   const { play } = useFeedback();
   const { t } = useI18n();
   const insets = useSafeAreaInsets();
@@ -21,6 +21,9 @@ export function GameMenu() {
   const [confirmAction, setConfirmAction] = useState<GameMenuAction | null>(null);
 
   const close = () => setOpen(false);
+  const canRejectWord =
+    (state.phase === 'playing' || state.phase === 'handoff') &&
+    state.acceptedGuesses.some((guess) => guess.round === state.currentRound);
 
   const openMenu = () => {
     haptics.light();
@@ -28,11 +31,11 @@ export function GameMenu() {
     setOpen(true);
   };
 
-  const openProfile = () => {
+  const openRoute = (path: '/settings' | '/languages' | '/profile' | '/word-review') => {
     close();
     haptics.light();
     play('accept');
-    router.push('/profile');
+    router.push(path);
   };
 
   const askConfirm = (action: GameMenuAction) => {
@@ -84,10 +87,27 @@ export function GameMenu() {
               onPress={() => askConfirm('edit')}
             />
             <MenuItem
+              icon={<Settings size={18} color={colors.text} />}
+              label={t('menu.settings')}
+              onPress={() => openRoute('/settings')}
+            />
+            <MenuItem
+              icon={<Languages size={18} color={colors.text} />}
+              label={t('menu.languages')}
+              onPress={() => openRoute('/languages')}
+            />
+            <MenuItem
               icon={<UserRound size={18} color={colors.text} />}
               label={t('menu.profile')}
-              onPress={openProfile}
+              onPress={() => openRoute('/profile')}
             />
+            {canRejectWord ? (
+              <MenuItem
+                icon={<Undo2 size={18} color={colors.text} />}
+                label={t('menu.rejectWord')}
+                onPress={() => openRoute('/word-review')}
+              />
+            ) : null}
             <View style={styles.divider} />
             <MenuItem
               icon={<LogOut size={18} color={colors.danger} />}

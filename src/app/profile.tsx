@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
-import { LogOut, QrCode, ScanLine, Star } from 'lucide-react-native';
+import { LogOut, QrCode, ScanLine, Star, Trash2 } from 'lucide-react-native';
 import { useAuth } from '@/auth/AuthProvider';
 import { AccountQrDialog } from '@/components/AccountQrDialog';
 import { AppleSignInButton } from '@/components/AppleSignInButton';
@@ -24,12 +24,13 @@ function formatDate(value: string | null | undefined, locale: string): string | 
 
 export default function ProfileScreen() {
   const { t, language } = useI18n();
-  const { isConfigured, isLoading, session, profile, friends, error, signOut, addFriend } = useAuth();
+  const { isConfigured, isLoading, session, profile, friends, error, signOut, addFriend, removeFriend } = useAuth();
   const [signOutVisible, setSignOutVisible] = useState(false);
   const [qrVisible, setQrVisible] = useState(false);
   const [scannerVisible, setScannerVisible] = useState(false);
   const [scanMessage, setScanMessage] = useState<string | null>(null);
   const [scanFailed, setScanFailed] = useState(false);
+  const [friendToRemove, setFriendToRemove] = useState<(typeof friends)[number] | null>(null);
 
   const name = profile?.name?.trim() || t('common.unknown');
   const points = profile?.points ?? 0;
@@ -142,9 +143,26 @@ export default function ProfileScreen() {
               friends.map((friend) => (
                 <View key={friend.friend_id} style={styles.friendRow}>
                   <Avatar name={friend.name} color={colors.success} size={36} />
-                  <Text style={styles.friendName} numberOfLines={1}>
-                    {friend.name}
-                  </Text>
+                  <View style={styles.friendInfo}>
+                    <Text style={styles.friendName} numberOfLines={1}>
+                      {friend.name}
+                    </Text>
+                    <View style={styles.friendPointsRow}>
+                      <Star size={12} color={colors.accent} fill={colors.accent} />
+                      <Text style={styles.friendPoints}>
+                        {t('profile.friendPoints', { n: friend.points ?? 0 })}
+                      </Text>
+                    </View>
+                  </View>
+                  <Pressable
+                    onPress={() => setFriendToRemove(friend)}
+                    accessibilityRole="button"
+                    accessibilityLabel={`${t('profile.removeFriend')}: ${friend.name}`}
+                    hitSlop={8}
+                    style={({ pressed }) => [styles.removeFriendButton, pressed && styles.pressed]}
+                  >
+                    <Trash2 size={16} color={colors.danger} />
+                  </Pressable>
                 </View>
               ))
             ) : (
@@ -184,6 +202,20 @@ export default function ProfileScreen() {
           void signOut().then(() => router.replace('/'));
         }}
         onCancel={() => setSignOutVisible(false)}
+      />
+
+      <ConfirmDialog
+        visible={friendToRemove !== null}
+        title={t('profile.removeFriendTitle')}
+        message={t('profile.removeFriendMessage', { name: friendToRemove?.name ?? '' })}
+        confirmLabel={t('profile.removeFriendConfirm')}
+        destructive
+        onConfirm={() => {
+          const friend = friendToRemove;
+          setFriendToRemove(null);
+          if (friend) void removeFriend(friend.friend_id);
+        }}
+        onCancel={() => setFriendToRemove(null)}
       />
 
       {session ? (
@@ -310,7 +342,18 @@ const styles = StyleSheet.create({
   friendsTitle: { color: colors.text, fontSize: 16, fontWeight: '900' },
   friendsCount: { color: colors.muted, fontSize: 13, fontWeight: '800' },
   friendRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
-  friendName: { color: colors.text, fontSize: 15, fontWeight: '700', flex: 1 },
+  friendInfo: { flex: 1, gap: 2 },
+  friendName: { color: colors.text, fontSize: 15, fontWeight: '700' },
+  friendPointsRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
+  friendPoints: { color: colors.muted, fontSize: 12, fontWeight: '700' },
+  removeFriendButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.dangerSoft,
+  },
   friendsEmpty: { color: colors.muted, fontSize: 13, lineHeight: 19 },
   hint: { color: colors.muted, fontSize: 14, lineHeight: 20, textAlign: 'center' },
   card: {

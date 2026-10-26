@@ -17,6 +17,15 @@ export type GameStats = {
   games_played: number;
 };
 
+export type GameResultEntry = {
+  userId: string;
+  points: number;
+};
+
+export type PlayerGameStats = GameStats & {
+  user_id: string;
+};
+
 export type PlayerIdentity = {
   id: string;
   name: string;
@@ -25,13 +34,18 @@ export type PlayerIdentity = {
 export type Friend = {
   friend_id: string;
   name: string;
+  points: number;
   added_at: string;
 };
 
 export type AppleSignInResult = {
   canceled: boolean;
   userId: string | null;
+  suggestedName: string | null;
+  nameConfirmed: boolean;
 };
+
+export const MAX_PROFILE_NAME_LENGTH = 10;
 
 function formatFullName(fullName: AppleAuthentication.AppleAuthenticationFullName | null): string | null {
   if (!fullName) return null;
@@ -72,7 +86,7 @@ export async function signInWithApple(): Promise<AppleSignInResult> {
     });
   } catch (error) {
     if (isAppleSignInCancellation(error)) {
-      return { canceled: true, userId: null };
+      return { canceled: true, userId: null, suggestedName: null, nameConfirmed: false };
     }
     throw error;
   }
@@ -91,27 +105,14 @@ export async function signInWithApple(): Promise<AppleSignInResult> {
   if (error) throw error;
 
   const userId = data.user?.id ?? null;
-  const fullName = formatFullName(credential.fullName);
-
-  if (userId && fullName) {
-    const { error: metadataError } = await supabase.auth.updateUser({
-      data: {
-        full_name: fullName,
-        given_name: credential.fullName?.givenName ?? null,
-        family_name: credential.fullName?.familyName ?? null,
-      },
-    });
-
-    if (metadataError) {
-      console.warn('[auth] Naam opslaan in gebruikersmetadata mislukt', metadataError);
-    }
-  }
+  const suggestedName = formatFullName(credential.fullName);
+  const nameConfirmed = data.user?.user_metadata?.name_confirmed === true;
 
   if (credential.authorizationCode) {
     await storeAppleRefreshToken(credential.authorizationCode);
   }
 
-  return { canceled: false, userId };
+  return { canceled: false, userId, suggestedName, nameConfirmed };
 }
 
 async function storeAppleRefreshToken(authorizationCode: string): Promise<void> {
@@ -145,6 +146,39 @@ export async function isNameAvailable(name: string): Promise<boolean> {
   return data === true;
 }
 
+export async function updateProfileName(name: string): Promise<void> {
+  const trimmed = name.trim();
+  if (!trimmed) throw new Error('name_required');
+  if (trimmed.length > MAX_PROFILE_NAME_LENGTH) throw new Error('name_too_long');
+
+  const supabase = getSupabase();
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
+  if (userError) throw userError;
+  if (!user) throw new Error('not_authenticated');
+
+  const currentProfile = await getProfile(user.id);
+  if (currentProfile?.name.trim().toLowerCase() === trimmed.toLowerCase()) return;
+
+  if (!(await isNameAvailable(trimmed))) throw new Error('name_taken');
+
+  const { error } = await supabase.from('users').update({ name: trimmed }).eq('id', user.id);
+  if (error) {
+    if (/duplicate|unique/i.test(error.message)) throw new Error('name_taken');
+    throw error;
+  }
+
+  const { error: metadataError } = await supabase.auth.updateUser({
+    data: { full_name: trimmed, name_confirmed: true },
+  });
+  if (metadataError) {
+    console.warn('[auth] Naam opslaan in gebruikersmetadata mislukt', metadataError);
+  }
+}
+
 export async function getPlayerIdentity(userId: string): Promise<PlayerIdentity | null> {
   const { data, error } = await getSupabase().rpc('get_player_identity', { p_user_id: userId });
   if (error) throw error;
@@ -168,12 +202,20 @@ export async function listFriends(): Promise<Friend[]> {
   return (data ?? []) as Friend[];
 }
 
+export async function removeFriend(userId: string): Promise<boolean> {
+  const { data, error } = await getSupabase().rpc('remove_friend', { p_friend_id: userId });
+  if (error) throw error;
+  return data === true;
+}
+
 export async function signUpWithEmail(
   email: string,
   password: string,
   name: string,
 ): Promise<EmailSignUpResult> {
   const trimmedName = name.trim();
+  if (!trimmedName) throw new Error('name_required');
+  if (trimmedName.length > MAX_PROFILE_NAME_LENGTH) throw new Error('name_too_long');
   if (!(await isNameAvailable(trimmedName))) {
     throw new Error('name_taken');
   }
@@ -182,7 +224,7 @@ export async function signUpWithEmail(
     email: email.trim(),
     password,
     options: {
-      data: { full_name: trimmedName },
+      data: { full_name: trimmedName, name_confirmed: true },
     },
   });
 
@@ -204,16 +246,20 @@ export async function getProfile(userId: string): Promise<Profile | null> {
   return (data as Profile | null) ?? null;
 }
 
-export async function recordGameResult(gameId: string, points: number): Promise<GameStats | null> {
-  const { data, error } = await getSupabase().rpc('record_game_result', {
+export async function recordGameResults(
+  gameId: string,
+  results: GameResultEntry[],
+): Promise<PlayerGameStats[]> {
+  const { data, error } = await getSupabase().rpc('record_game_results', {
     p_game_id: gameId,
-    p_points: points,
+    p_results: results.map((result) => ({
+      user_id: result.userId,
+      points: result.points,
+    })),
   });
 
   if (error) throw error;
-
-  const row = (Array.isArray(data) ? data[0] : data) as GameStats | null | undefined;
-  return row ?? null;
+  return (data ?? []) as PlayerGameStats[];
 }
 
 async function functionErrorMessage(error: unknown): Promise<string> {

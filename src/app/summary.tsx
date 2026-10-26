@@ -16,7 +16,7 @@ import { colors, radius, spacing } from '@/theme';
 
 export default function SummaryScreen() {
   const { state, standings, newGame } = useGameContext();
-  const { session, recordGameResult } = useAuth();
+  const { session, recordGameResults } = useAuth();
   const { play } = useFeedback();
   const { t, language } = useI18n();
   const winners = standings.filter((s) => s.isWinner);
@@ -83,18 +83,27 @@ export default function SummaryScreen() {
     const gameId = state.gameId;
     if (state.phase !== 'summary' || !userId || !gameId) return;
 
+    const results = new Map<string, number>();
+    state.teams.forEach((team) => {
+      const score = standings.find((row) => row.teamId === team.id)?.score ?? 0;
+      team.players.forEach((player) => {
+        if (player.userId && !results.has(player.userId)) results.set(player.userId, score);
+      });
+    });
+
+    if (!results.has(userId)) return;
+
     const key = `${gameId}:${userId}`;
     if (recorded.current === key) return;
 
-    const team = state.teams.find((entry) => entry.players.some((player) => player.userId === userId));
-    if (!team) return;
-
-    const score = standings.find((row) => row.teamId === team.id)?.score ?? 0;
     recorded.current = key;
-    void recordGameResult(gameId, score).then((stats) => {
-      if (!stats) recorded.current = null;
+    void recordGameResults(
+      gameId,
+      Array.from(results, ([playerId, points]) => ({ userId: playerId, points })),
+    ).then((stats) => {
+      if (stats.length === 0) recorded.current = null;
     });
-  }, [recordGameResult, session?.user.id, standings, state.gameId, state.phase, state.teams]);
+  }, [recordGameResults, session?.user.id, standings, state.gameId, state.phase, state.teams]);
 
   const playAgain = () => {
     haptics.medium();
