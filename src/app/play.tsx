@@ -10,6 +10,7 @@ import { RoundIcon } from '@/components/RoundIcon';
 import { Screen } from '@/components/Screen';
 import { Standings } from '@/components/Standings';
 import { TeamScoreboard } from '@/components/TeamScoreboard';
+import { TurnHeader } from '@/components/TurnHeader';
 import { teamColor } from '@/game/colors';
 import { ROUNDS } from '@/game/constants';
 import { useGameContext } from '@/game/GameProvider';
@@ -226,6 +227,10 @@ topBar={<RoundTopBar round={state.currentRound} title={meta.title} />}
     );
   }
 
+  // Tijdens een faseovergang kan dit scherm nog even in beeld staan; toon dan
+  // nooit de speelweergave met timer en woord.
+  if (state.phase !== 'playing') return null;
+
   const onCorrect = () => {
     haptics.success();
     correctGuess();
@@ -242,17 +247,20 @@ topBar={<RoundTopBar round={state.currentRound} title={meta.title} />}
       scroll={false}
       contentStyle={styles.playContent}
     >
-      <View style={styles.turnRow}>
-        <View style={[styles.colorBar, { backgroundColor: color }]} />
-        <View style={styles.turnText}>
-          <Text style={styles.turnTeam}>{currentTeam?.name}</Text>
-          <Text style={styles.turnPlayer}>{currentPlayer?.name}</Text>
+      {currentTeam && currentPlayer ? (
+        <View style={styles.turnHeader}>
+          <TurnHeader
+            team={currentTeam}
+            player={currentPlayer}
+            color={color}
+            trailing={
+              <Text style={[styles.turnCount, state.turnPoints > 0 && styles.turnCountActive]}>
+                {state.turnPoints}
+              </Text>
+            }
+          />
         </View>
-        <View style={styles.turnPoints}>
-          <Text style={styles.turnPointsValue}>{state.totalWords}</Text>
-          <Text style={styles.turnPointsLabel}>{t('play.guessed')}</Text>
-        </View>
-      </View>
+      ) : null}
 
       <View style={styles.playTop}>
         <View style={styles.timerRow}>
@@ -327,23 +335,9 @@ const styles = StyleSheet.create({
   timerText: { color: colors.text, fontSize: 44, fontWeight: '900', letterSpacing: -1.5, fontVariant: ['tabular-nums'] },
   timerTextUrgent: { color: colors.danger },
   timerUnit: { color: colors.muted, fontSize: 11, fontWeight: '800', letterSpacing: 1.4, textTransform: 'uppercase' },
-  turnRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-    backgroundColor: colors.surface,
-    borderBottomWidth: 1,
-    borderColor: colors.border,
-  },
-  colorBar: { width: 5, height: 40, borderRadius: radius.pill },
-  turnText: { flex: 1 },
-  turnTeam: { color: colors.muted, fontSize: 12, fontWeight: '800', letterSpacing: 0.8, textTransform: 'uppercase' },
-  turnPlayer: { color: colors.text, fontSize: 20, fontWeight: '900' },
-  turnPoints: { alignItems: 'flex-end' },
-  turnPointsValue: { color: colors.accent, fontSize: 26, fontWeight: '900' },
-  turnPointsLabel: { color: colors.muted, fontSize: 11, fontWeight: '700' },
+  turnHeader: { paddingHorizontal: spacing.lg, paddingTop: spacing.lg },
+  turnCount: { color: colors.text, fontSize: 26, fontWeight: '900', fontVariant: ['tabular-nums'], textAlign: 'right' },
+  turnCountActive: { color: colors.accent },
   wordBox: {
     flex: 1,
     margin: spacing.lg,

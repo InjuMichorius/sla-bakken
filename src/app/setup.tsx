@@ -27,7 +27,7 @@ import { colors, noOutline, radius, spacing } from '@/theme';
 const TOTAL_STEPS = 3;
 
 export default function SetupScreen() {
-  const { t, language } = useI18n();
+  const { t } = useI18n();
   const {
     state,
     teams,

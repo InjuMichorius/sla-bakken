@@ -21,7 +21,7 @@ export default function WordReviewScreen() {
   const guesses = state.acceptedGuesses.filter((guess) => guess.round === state.currentRound).slice().reverse();
 
   useEffect(() => {
-    if (state.phase === 'playing' || state.phase === 'handoff') return;
+    if (state.phase === 'playing' || state.phase === 'handoff' || state.phase === 'turnReview') return;
     if (router.canGoBack()) router.back();
     else router.replace('/play');
   }, [state.phase]);

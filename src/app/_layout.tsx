@@ -22,6 +22,7 @@ const ROUTE_FOR_PHASE: Record<Phase, string> = {
   roundIntro: '/round',
   handoff: '/play',
   playing: '/play',
+  turnReview: '/turn-review',
   roundReview: '/play',
   summary: '/summary',
 };

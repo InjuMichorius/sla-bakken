@@ -7,14 +7,17 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "scheme": "slabakken",
+    "runtimeVersion": {
+      "policy": "fingerprint"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/13a014e6-8d4e-4a47-9396-9bcf7ba86ca9"
+    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.inju.slabakken",
       "googleServicesFile": "./GoogleService-Info.plist",
       "usesAppleSignIn": true,
-      "config": {
-        "usesNonExemptEncryption": false
-      },
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
@@ -50,7 +53,14 @@
     ],
     "plugins": [
       "expo-router",
-      "expo-audio",
+      [
+        "expo-audio",
+        {
+          "microphonePermission": false,
+          "recordAudioAndroid": false,
+          "enableBackgroundPlayback": false
+        }
+      ],
       "expo-asset",
       "expo-apple-authentication",
       [
@@ -71,6 +81,7 @@
         }
       ],
       "@react-native-firebase/crashlytics",
+      "./plugins/withFirebaseConfigure",
       [
         "expo-build-properties",
         {
@@ -87,6 +98,15 @@
           "cameraPermission": "Sla Bakken gebruikt de camera om account-QR-codes en spelers te scannen.",
           "recordAudioAndroid": false,
           "barcodeScannerEnabled": true
+        }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#0B0E14"
         }
       ]
     ],

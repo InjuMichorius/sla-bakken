@@ -7,6 +7,7 @@ import { Badge } from '@/components/Badge';
 import { GameMenu } from '@/components/GameMenu';
 import { Screen } from '@/components/Screen';
 import { TeamScoreboard } from '@/components/TeamScoreboard';
+import { TurnHeader } from '@/components/TurnHeader';
 import { useGameContext } from '@/game/GameProvider';
 import type { Player, Team } from '@/game/types';
 import { translateDefaultPlayerName, useI18n } from '@/i18n/LanguageProvider';
@@ -188,21 +189,16 @@ function PlayerWordForm({ team, player, color, position, isLast, roster, index, 
         </>
       }
     >
-      <View style={styles.headRow}>
-      <Avatar name={translateDefaultPlayerName(player.name, language)} color={color} size={58} />
-      <View style={styles.headText}>
-        <View style={styles.headLabelRow}>
-          <Text style={styles.headLabel}>{t('words.turnOf')}</Text>
-          <Badge color={color}>{team.name}</Badge>
-        </View>
-        <Text style={styles.headName} numberOfLines={1}>
-          {translateDefaultPlayerName(player.name, language)}
-        </Text>
-        </View>
-        <Badge tone={filled === 0 ? 'danger' : filled === perPlayer ? 'success' : 'accent'}>
-          {filled}/{perPlayer}
-        </Badge>
-      </View>
+      <TurnHeader
+        team={team}
+        player={player}
+        color={color}
+        trailing={
+          <Badge tone={filled === 0 ? 'danger' : filled === perPlayer ? 'success' : 'accent'}>
+            {filled}/{perPlayer}
+          </Badge>
+        }
+      />
 
       <Text style={styles.instruction}>{t('words.instructions', { n: perPlayer })}</Text>
 
@@ -327,11 +323,6 @@ const styles = StyleSheet.create({
   dotFull: { backgroundColor: colors.accent },
   /** Half fill splits the dot vertically, so the halves read as pie slices. */
   dotFill: { position: 'absolute', top: 0, bottom: 0, left: 0, backgroundColor: colors.accent },
-  headRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
-  headText: { flex: 1 },
-  headLabelRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  headLabel: { color: colors.muted, fontSize: 11, fontWeight: '800', letterSpacing: 1.2, textTransform: 'uppercase' },
-  headName: { color: colors.text, fontSize: 26, fontWeight: '900', letterSpacing: -0.5, marginTop: spacing.sm },
   instruction: { color: colors.muted, fontSize: 14, lineHeight: 20 },
   fields: { gap: spacing.md },
   fieldRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },

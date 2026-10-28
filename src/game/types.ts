@@ -28,7 +28,7 @@ export type RoundResult = {
   completed: boolean;
 };
 
-export type Phase = 'setup' | 'wordEntry' | 'roundIntro' | 'handoff' | 'playing' | 'roundReview' | 'summary';
+export type Phase = 'setup' | 'wordEntry' | 'roundIntro' | 'handoff' | 'playing' | 'turnReview' | 'roundReview' | 'summary';
 
 export type Point = {
   teamIndex: number;

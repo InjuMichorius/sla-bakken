@@ -83,6 +83,7 @@ export type GameContextValue = {
   rejectGuess: (guessId: string) => void;
   tick: (now: number) => void;
   endTurn: () => void;
+  continueTurn: () => void;
   endRound: () => void;
   nextRound: () => void;
   /** Nieuw spel: teams blijven staan, de woorden worden opnieuw ingevuld. */
@@ -182,6 +183,7 @@ export function useGame(): GameContextValue {
     rejectGuess: (guessId) => send({ type: 'REJECT_GUESS', guessId }),
     tick: (now) => send({ type: 'TICK', now }),
     endTurn: () => send({ type: 'END_TURN' }),
+    continueTurn: () => send({ type: 'CONTINUE_TURN' }),
     endRound: () => send({ type: 'END_ROUND' }),
     nextRound: () => send({ type: 'NEXT_ROUND' }),
     newGame: () => send({ type: 'NEW_GAME' }),

@@ -26,6 +26,7 @@ export type GameAction =
   | { type: 'REJECT_GUESS'; guessId: string }
   | { type: 'TICK'; now: number }
   | { type: 'END_TURN' }
+  | { type: 'CONTINUE_TURN' }
   | { type: 'END_ROUND' }
   | { type: 'NEXT_ROUND' }
   | { type: 'NEW_GAME' }
@@ -418,7 +419,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         guessTimes,
         acceptedGuesses,
         wordOpenedAt: next == null ? null : now,
-        phase: next == null ? 'roundReview' : 'playing',
+        phase: next == null ? 'turnReview' : 'playing',
       };
     }
 
@@ -438,7 +439,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
     }
 
     case 'REJECT_GUESS': {
-      if (state.phase !== 'playing' && state.phase !== 'handoff') return state;
+      if (state.phase !== 'playing' && state.phase !== 'handoff' && state.phase !== 'turnReview') return state;
       const guess = state.acceptedGuesses.find((entry) => entry.id === action.guessId);
       if (!guess || guess.round !== state.currentRound) return state;
 
@@ -486,7 +487,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       const point = nextPoint(state);
       return {
         ...state,
-        phase: 'handoff',
+        phase: 'turnReview',
         pot,
         currentWord: next,
         currentTeamIndex: point.teamIndex,
@@ -499,6 +500,13 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         timerRemaining: state.turnSeconds,
         timerStartedAt: null,
       };
+    }
+
+    case 'CONTINUE_TURN': {
+      if (state.phase !== 'turnReview') return state;
+      // Is de pot leeg, dan is de ronde klaar en volgt de tussenstand. Een
+      // afgekeurd woord kan de pot weer vullen; dan gaat het spel gewoon door.
+      return { ...state, phase: state.pot.length === 0 ? 'roundReview' : 'handoff' };
     }
 
     case 'END_ROUND': {

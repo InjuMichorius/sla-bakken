@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useCallback, useEffect, useState, useRef } from 'react';
 import { Animated, StyleSheet, Text, View } from 'react-native';
 import { Trophy } from 'lucide-react-native';
 import { ROUNDS } from '@/game/constants';
@@ -37,9 +37,10 @@ export function Standings({
   const prevScoresRef = useRef<Record<string, number>>({});
 
   // Bereken de doel-percentage (tussen 4% en 100%) voor een score
-  const getTargetPercentage = (score: number) => {
-    return Math.min(100, Math.max(4, (score / max) * 100));
-  };
+  const getTargetPercentage = useCallback(
+    (score: number) => Math.min(100, Math.max(4, (score / max) * 100)),
+    [max],
+  );
 
   useEffect(() => {
     setAnims((current) => {
@@ -69,7 +70,7 @@ export function Standings({
     standings.forEach((row) => {
       prevScoresRef.current[row.teamId] = row.score;
     });
-  }, [standings, max, animated]);
+  }, [standings, max, animated, getTargetPercentage]);
 
   useEffect(() => {
     if (!animated) return;
@@ -86,7 +87,7 @@ export function Standings({
         useNativeDriver: false,
       }).start();
     });
-  }, [standings, max, anims, animated]);
+  }, [standings, max, anims, animated, getTargetPercentage]);
 
   return (
     <View style={styles.wrap}>

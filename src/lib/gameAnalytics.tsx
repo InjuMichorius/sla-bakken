@@ -76,7 +76,7 @@ export function GameAnalyticsBridge() {
     }
 
     // Ronde klaar: de pot is leeg en we gaan naar de tussenstand.
-    if (prev.phase === 'playing' && state.phase === 'roundReview') {
+    if (state.phase === 'roundReview' && prev.phase !== 'roundReview') {
       const startedAt = roundStartedAt.current ?? Date.now();
       logAnalyticsEvent('round_completed', {
         round_number: state.currentRound,

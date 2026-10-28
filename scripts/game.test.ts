@@ -48,6 +48,7 @@ function guessWholePot(state: GameState) {
   const remaining = state.pot.length;
   let next = gameReducer(state, { type: 'START_TURN' });
   for (let i = 0; i < remaining; i++) next = gameReducer(next, { type: 'CORRECT_GUESS' });
+  if (next.phase === 'turnReview') next = gameReducer(next, { type: 'CONTINUE_TURN' });
   return next;
 }
 
@@ -218,6 +219,7 @@ check('beurten wisselen altijd van team', () => {
     order.push(`${s.currentTeamIndex}/${s.currentPlayerIndex}`);
     s = gameReducer(s, { type: 'START_TURN' });
     s = gameReducer(s, { type: 'END_TURN' });
+    s = gameReducer(s, { type: 'CONTINUE_TURN' });
     assert.equal(s.currentTeamIndex, (i + 1) % 3, `verwacht team ${(i + 1) % 3} op beurt ${i + 1}`);
   }
   for (let teamIndex = 0; teamIndex < 3; teamIndex++) {
@@ -248,6 +250,7 @@ check('twee teams: A1 B1 A2 B2 ...', () => {
     order.push(`${team.name}${team.players[s.currentPlayerIndex].name}`);
     s = gameReducer(s, { type: 'START_TURN' });
     s = gameReducer(s, { type: 'END_TURN' });
+    s = gameReducer(s, { type: 'CONTINUE_TURN' });
   }
   assert.equal(order.join(' '), 'A1 B1 A2 B2 A1 B1');
 });
@@ -260,6 +263,7 @@ check('ongelijke teamgroottes blijven wisselen', () => {
     teams.add(s.currentTeamIndex);
     s = gameReducer(s, { type: 'START_TURN' });
     s = gameReducer(s, { type: 'END_TURN' });
+    s = gameReducer(s, { type: 'CONTINUE_TURN' });
   }
   assert.deepEqual([...teams].sort(), [0, 1, 2]);
 });
@@ -341,7 +345,9 @@ check('afkeuren na een beurt raakt de nieuwe beurtpunten niet', () => {
   s = gameReducer(s, { type: 'CORRECT_GUESS' });
   const guess = s.acceptedGuesses[0];
   s = gameReducer(s, { type: 'END_TURN' });
+  assert.equal(s.phase, 'turnReview', 'eerst de woorden controleren');
   s = gameReducer(s, { type: 'REJECT_GUESS', guessId: guess.id });
+  s = gameReducer(s, { type: 'CONTINUE_TURN' });
   assert.equal(s.phase, 'handoff');
   assert.equal(s.scores[teamId], 0);
   assert.equal(s.turnPoints, 0);
@@ -370,6 +376,8 @@ check('tijdverloop rekent af en wisselt van beurt', () => {
   const before = `${s.currentTeamIndex}/${s.currentPlayerIndex}`;
   s = gameReducer(s, { type: 'TICK', now: start + 30_000 });
   assert.equal(s.timerRemaining, 30, 'timer reset bij 0');
+  assert.equal(s.phase, 'turnReview');
+  s = gameReducer(s, { type: 'CONTINUE_TURN' });
   assert.equal(s.phase, 'handoff');
   assert.notEqual(`${s.currentTeamIndex}/${s.currentPlayerIndex}`, before);
 });
@@ -386,6 +394,17 @@ check('pot leeg sluit de ronde af', () => {
   assert.equal(s.currentWord, null);
   assert.equal(s.phase, 'roundReview');
   assert.equal(s.totalWords, total);
+});
+check('pot leeg toont eerst de woordencontrole', () => {
+  let s = gameReducer(withWords(seededSetup()), { type: 'START_GAME', startTeamIndex: 0 });
+  s = gameReducer(s, { type: 'START_ROUND', round: 1 });
+  const remaining = s.pot.length;
+  s = gameReducer(s, { type: 'START_TURN' });
+  for (let i = 0; i < remaining; i++) s = gameReducer(s, { type: 'CORRECT_GUESS' });
+  assert.equal(s.pot.length, 0);
+  assert.equal(s.phase, 'turnReview', 'eerst de woorden controleren');
+  s = gameReducer(s, { type: 'CONTINUE_TURN' });
+  assert.equal(s.phase, 'roundReview');
 });
 
 console.log('\nrondes');
@@ -464,6 +483,7 @@ check('een gestopte beurt geeft de andere ploeg de volgende ronde', () => {
   s = gameReducer(s, { type: 'START_ROUND', round: 1 });
   s = gameReducer(s, { type: 'START_TURN' });
   s = gameReducer(s, { type: 'END_TURN' });
+  s = gameReducer(s, { type: 'CONTINUE_TURN' });
   assert.equal(s.currentTeamIndex, 1, 'de beurt schuift op naar het volgende team');
   s = gameReducer(s, { type: 'END_ROUND' });
   s = gameReducer(s, { type: 'NEXT_ROUND' });

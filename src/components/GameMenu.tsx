@@ -22,7 +22,7 @@ export function GameMenu() {
 
   const close = () => setOpen(false);
   const canRejectWord =
-    (state.phase === 'playing' || state.phase === 'handoff') &&
+    (state.phase === 'playing' || state.phase === 'handoff' || state.phase === 'turnReview') &&
     state.acceptedGuesses.some((guess) => guess.round === state.currentRound);
 
   const openMenu = () => {

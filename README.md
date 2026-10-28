@@ -2,7 +2,7 @@
 
 Het hoedenspel voor **één telefoon**. Teams leveren elk geheime woorden aan, en raden elkaars woorden tijdens drie rondes: omschrijven, uitbeelden en één woord. Geen accounts, geen netwerk nodig voor het spel zelf — de hele staat leeft in het geheugen.
 
-Gebouwd met **Expo SDK 57** + **Expo Router**. Draait op iOS, Android én web (statische export).
+Gebouwd met **Expo SDK 58** + **Expo Router**. Draait op iOS, Android én web (statische export).
 
 ---
 
@@ -255,6 +255,7 @@ src/
 │   ├── words.tsx           # route /words         → woorden invoeren (+ handoff)
 │   ├── round.tsx           # route /round         → introductie per ronde
 │   ├── play.tsx            # route /play          → handoff, spelen én ronde-overzicht
+│   ├── turn-review.tsx     # route /turn-review   → woorden van de beurt controleren
 │   └── summary.tsx         # route /summary       → eindstand
 ├── audio/                  # geluidslag
 │   ├── sounds.ts           # registry: sleutel, label, hint en `require()` per geluid
@@ -281,6 +282,9 @@ scripts/
 ├── game.test.ts            # testsuite voor reducer/woordenbank/standings
 ├── ts-loader.mjs           # registreert de TS-resolver
 └── ts-hooks.mjs            # lost extensionless imports op (Metro-stijl)
+
+plugins/
+└── withFirebaseConfigure.js # voegt FirebaseApp.configure() toe aan de Swift AppDelegate
 ```
 
 ---
@@ -375,7 +379,7 @@ npm test          # alleen de tests
 npm run verify    # tests + typecheck + lint, zoals in CI
 ```
 
-`scripts/game.test.ts` (419 regels, `node:assert` + `node:test`) dekt:
+`scripts/game.test.ts` (611 regels, `node:assert` + `node:test`) dekt:
 
 - teams/spelers aanmaken, hernoemen, verwijderen en de setup-validatie
 - de volledige beurtrotatie (ook met ongelijke teamgroottes)
@@ -404,14 +408,14 @@ Profielen staan in `eas.json`:
 | Profiel | Doel |
 | --- | --- |
 | `development` | development client, interne distributie |
-| `preview` | interne release |
-| `production` | productie, `autoIncrement` op buildnummers |
+| `preview` | interne release, kanaal `preview`, EAS-environment `preview` |
+| `production` | productie, `autoIncrement`, kanaal `production`, EAS-environment `production` |
 
 ### OTA-updates
 
-`.github/workflows/eas-update.yml` publiceert bij elke push naar `main` automatisch een **EAS Update** naar kanaal `production`: install → `expo lint` → `tsc --noEmit` → `bunx eas-cli update --auto --non-interactive --channel production`. De workflow gebruikt Bun (`oven-sh/setup-bun@v2`) met `bun install --frozen-lockfile`.
+`.github/workflows/eas-update.yml` publiceert bij elke push naar `main` automatisch een **EAS Update** naar kanaal `production`: `npm ci` → `npm run verify` → `expo-doctor` → `eas update --channel production --environment production`. De workflow gebruikt `package-lock.json`; er is geen Bun-lockfile nodig.
 
-Daarom: **JS-only wijzigingen hoeven geen nieuwe store-build** — zolang er geen native code of config-plugin verandert, wordt je update binnen enkele minuten uitgerold. Eén kanttekeling: de workflow installeert met `bun install --frozen-lockfile`, terwijl de repo op dit moment alleen `package-lock.json` bevat en geen `bun.lock` — controleer die combinatie vóór je op `main` pusht.
+`app.json` gebruikt `runtimeVersion` met de `fingerprint`-policy. Daardoor krijgt een update alleen dezelfde runtime als de native config en dependencies onveranderd zijn. **JS-only wijzigingen hoeven dus geen nieuwe store-build**; bij native wijzigingen (zoals een config-plugin of dependency) is een nieuwe build vereist. De EAS-environment `production` levert de `EXPO_PUBLIC_SUPABASE_*`-variabelen aan zowel builds als updates.
 
 ### Web-deploy
 
@@ -423,21 +427,21 @@ Daarom: **JS-only wijzigingen hoeven geen nieuwe store-build** — zolang er gee
 
 | Package | Versie | Rol |
 | --- | --- | --- |
-| `expo` | ~57.0.26 | SDK-basis |
-| `expo-router` | ~57.0.24 | File-based routing, `Stack`, web HTML root |
-| `expo-haptics` | ~57.0.3 | Haptische feedback |
-| `expo-audio` | ~57.0.5 | Geïnstalleerd, nog niet gebruikt |
-| `expo-asset`, `expo-constants`, `expo-linking` | ~57 | SDK-modules, voorgekeken door Expo |
-| `expo-status-bar` | ~57.0.1 | Statusbalk (altijd licht) |
-| `react` / `react-dom` | 19.2.3 | UI-runtime |
-| `react-native` | 0.86.3 | Native runtime |
-| `react-native-web` | ^0.21.2 | Webtarget |
-| `react-native-safe-area-context` | ~5.7.0 | Safe areas |
-| `react-native-screens` | ~4.26.0 | Native stack-primitieven |
-| `react-native-svg` | 15.15.4 | SVG-rendering van de iconen |
+| `expo` | ~58.0.21 | SDK-basis |
+| `expo-router` | ~58.0.28 | File-based routing, `Stack`, web HTML root |
+| `expo-haptics` | ~58.0.7 | Haptische feedback |
+| `expo-audio` | ~58.0.10 | Geluidseffecten en achtergrondmuziek |
+| `expo-asset`, `expo-constants`, `expo-linking` | ~58 | SDK-modules, voorgekeken door Expo |
+| `expo-status-bar` | ~58.0.4 | Statusbalk (altijd licht) |
+| `react` / `react-dom` | 19.3.0 | UI-runtime |
+| `react-native` | 0.88.0 | Native runtime |
+| `react-native-web` | ^0.21.4 | Webtarget |
+| `react-native-safe-area-context` | ~5.10.1 | Safe areas |
+| `react-native-screens` | ~4.30.0 | Native stack-primitieven |
+| `react-native-svg` | 15.16.0 | SVG-rendering van de iconen |
 | `lucide-react-native` | ^1.49.0 | Iconenset |
 | `typescript` | ~6.0.3 | TypeScript, `strict` |
-| `eslint` + `eslint-config-expo` | ^9.39.5 / ~57.0.2 | Linting |
+| `eslint` + `eslint-config-expo` | ^9.39.5 / ~58.0.4 | Linting |
 
 TypeScript draait in `strict`-modus met de path-alias `@/*` → `src/*`.
 

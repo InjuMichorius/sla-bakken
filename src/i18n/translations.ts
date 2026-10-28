@@ -336,6 +336,13 @@ export const STRINGS = {
   'play.standingsAfter': { nl: 'Tussenstand na ronde {n}', en: 'Scores after round {n}', de: 'Zwischenstand nach Runde {n}', fr: 'Classement après la manche {n}' },
   'play.nextRound': { nl: 'Volgende ronde:', en: 'Next round:', de: 'Nächste Runde:', fr: 'Prochaine manche:' },
 
+  /* Beurt controleren */
+  'turnReview.title': { nl: 'Controleer de woorden', en: 'Check the words', de: 'Wörter prüfen', fr: 'Vérifiez les mots' },
+  'turnReview.subtitle': { nl: 'Fout: vertaling, deel van het woord of klinkt als.', en: 'Wrong if it is a translation, part of the word, or sounds like it.', de: 'Falsch bei Übersetzung, Wortteil oder wenn es so klingt.', fr: 'Faux : traduction, partie du mot ou ressemble au mot.' },
+  'turnReview.empty': { nl: 'Geen woorden geraden in deze beurt.', en: 'No words guessed this turn.', de: 'In diesem Zug wurden keine Wörter geraten.', fr: 'Aucun mot deviné pendant ce tour.' },
+  'turnReview.continue': { nl: '{n} goed, doorgaan', en: '{n} correct, continue', de: '{n} richtig, weiter', fr: '{n} correct, continuer' },
+  'turnReview.toggleLabel': { nl: 'Goedkeuring voor {word}', en: 'Approval for {word}', de: 'Freigabe für {word}', fr: 'Validation de {word}' },
+
   /* Woord afkeuren */
   'wordReview.title': { nl: 'Woord afkeuren', en: 'Reject a word', de: 'Wort ablehnen', fr: 'Rejeter un mot' },
   'wordReview.subtitle': { nl: 'Klopt een goedgekeurd woord niet? Keur het af: het woord gaat terug in de pot en het punt gaat van de score af.', en: 'Was a word approved by mistake? Reject it: the word returns to the pot and the point is removed from the score.', de: 'Wurde ein Wort versehentlich gewertet? Lehne es ab: Das Wort kommt zurück in den Topf und der Punkt wird von der Punktzahl abgezogen.', fr: 'Un mot a-t-il été validé par erreur ? Rejetez-le : le mot retourne dans le pot et le point est retiré du score.' },
