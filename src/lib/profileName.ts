@@ -10,3 +10,9 @@ export function isProfileNameFormatValid(name: string): boolean {
   const trimmed = name.trim();
   return trimmed.length > 0 && trimmed.length <= MAX_PROFILE_NAME_LENGTH && !isReservedProfileName(trimmed);
 }
+
+export function hasConfirmedProfileName(
+  user: { user_metadata?: Record<string, unknown> } | null | undefined,
+): boolean {
+  return user?.user_metadata?.name_confirmed === true;
+}

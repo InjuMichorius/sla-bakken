@@ -83,6 +83,7 @@ function nameErrorMessage(error: unknown): string {
   if (/name_too_long/i.test(message)) return `Kies een naam van maximaal ${MAX_PROFILE_NAME_LENGTH} tekens.`;
   if (/name_required/i.test(message)) return 'Vul een naam in.';
   if (/not_authenticated/i.test(message)) return 'Log eerst in om je naam te wijzigen.';
+  if (/name_confirm_failed/i.test(message)) return 'Kon je naam niet bevestigen. Probeer het opnieuw.';
 
   return emailErrorMessage(error);
 }

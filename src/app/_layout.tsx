@@ -11,6 +11,7 @@ import { AuthProvider } from '@/auth/AuthProvider';
 import { FeedbackProvider } from '@/audio/FeedbackProvider';
 import { GameProvider, useGameContext } from '@/game/GameProvider';
 import { LanguageProvider } from '@/i18n/LanguageProvider';
+import { ProfileNameGate } from '@/components/ProfileNameGate';
 import { Phase } from '@/game/types';
 import { initAnalytics } from '@/lib/analytics';
 import { GameAnalyticsBridge } from '@/lib/gameAnalytics';
@@ -94,6 +95,7 @@ export default function RootLayout() {
               <StatusBar style="light" />
               <PhaseRouter />
               <GameAnalyticsBridge />
+              <ProfileNameGate />
               <View style={styles.root}>
                 <Stack
                   screenOptions={{

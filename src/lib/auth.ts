@@ -3,9 +3,9 @@ import { FunctionsHttpError } from '@supabase/supabase-js';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import * as Crypto from 'expo-crypto';
 import { getSupabase } from './supabase';
-import { isProfileNameFormatValid, isReservedProfileName, MAX_PROFILE_NAME_LENGTH } from './profileName';
+import { hasConfirmedProfileName, isProfileNameFormatValid, isReservedProfileName, MAX_PROFILE_NAME_LENGTH } from './profileName';
 
-export { MAX_PROFILE_NAME_LENGTH, isProfileNameFormatValid, isReservedProfileName } from './profileName';
+export { hasConfirmedProfileName, MAX_PROFILE_NAME_LENGTH, isProfileNameFormatValid, isReservedProfileName } from './profileName';
 
 export type Profile = {
   id: string;
@@ -165,7 +165,12 @@ export async function updateProfileName(name: string): Promise<void> {
   if (!user) throw new Error('not_authenticated');
 
   const currentProfile = await getProfile(user.id);
-  if (currentProfile?.name.trim().toLowerCase() === trimmed.toLowerCase()) return;
+  if (
+    currentProfile?.name.trim().toLowerCase() === trimmed.toLowerCase() &&
+    hasConfirmedProfileName(user)
+  ) {
+    return;
+  }
 
   if (!(await isNameAvailable(trimmed))) throw new Error('name_taken');
 
@@ -179,7 +184,7 @@ export async function updateProfileName(name: string): Promise<void> {
     data: { full_name: trimmed, name_confirmed: true },
   });
   if (metadataError) {
-    console.warn('[auth] Naam opslaan in gebruikersmetadata mislukt', metadataError);
+    throw new Error('name_confirm_failed');
   }
 }
 

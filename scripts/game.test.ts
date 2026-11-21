@@ -7,7 +7,7 @@ import { DE_WORD_BANK } from '../src/game/wordBank.de.ts';
 import { FR_WORD_BANK } from '../src/game/wordBank.fr.ts';
 import type { GameState } from '../src/game/types.ts';
 import { initialGameState } from '../src/game/types.ts';
-import { isProfileNameFormatValid, isReservedProfileName, MAX_PROFILE_NAME_LENGTH } from '../src/lib/profileName.ts';
+import { hasConfirmedProfileName, isProfileNameFormatValid, isReservedProfileName, MAX_PROFILE_NAME_LENGTH } from '../src/lib/profileName.ts';
 
 let failures = 0;
 function check(name: string, fn: () => void) {
@@ -616,7 +616,7 @@ check('standaardnamen zijn gereserveerd', () => {
   }
 });
 check('gewone namen blijven beschikbaar', () => {
-  for (const name of ['Inju', 'San ne', 'Spelers', 'Speler 1x']) {
+  for (const name of ['Sanne', 'San ne', 'Spelers', 'Speler 1x']) {
     assert.equal(isReservedProfileName(name), false, name);
     assert.equal(isProfileNameFormatValid(name), true, name);
   }
@@ -625,6 +625,12 @@ check('naamlimiet blijft maximaal 10 tekens', () => {
   assert.equal(MAX_PROFILE_NAME_LENGTH, 10);
   assert.equal(isProfileNameFormatValid('1234567890'), true);
   assert.equal(isProfileNameFormatValid('12345678901'), false);
+});
+check('alleen bevestigde metadata geldt als gekozen naam', () => {
+  assert.equal(hasConfirmedProfileName(null), false);
+  assert.equal(hasConfirmedProfileName({}), false);
+  assert.equal(hasConfirmedProfileName({ user_metadata: { name_confirmed: false } }), false);
+  assert.equal(hasConfirmedProfileName({ user_metadata: { name_confirmed: true } }), true);
 });
 
 console.log(failures === 0 ? '\nAlles slaagt\n' : `\n${failures} test(s) gefaald\n`);

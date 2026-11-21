@@ -14,6 +14,7 @@ import { EmailAuthForm } from '@/components/EmailAuthForm';
 import { QrScannerDialog } from '@/components/QrScannerDialog';
 import { Screen } from '@/components/Screen';
 import { useI18n } from '@/i18n/LanguageProvider';
+import { hasConfirmedProfileName } from '@/lib/profileName';
 import { colors, radius, spacing, fonts } from '@/theme';
 
 function formatDate(value: string | null | undefined, locale: string): string | null {
@@ -34,7 +35,8 @@ export default function ProfileScreen() {
   const [nameEditorOpen, setNameEditorOpen] = useState(false);
   const [friendToRemove, setFriendToRemove] = useState<(typeof friends)[number] | null>(null);
 
-  const name = profile?.name?.trim() || t('common.unknown');
+  const confirmedName = hasConfirmedProfileName(session?.user ?? null) ? profile?.name?.trim() : null;
+  const name = confirmedName || t('common.unknown');
   const points = profile?.points ?? 0;
   const gamesPlayed = profile?.games_played ?? 0;
   const firstLogin = formatDate(profile?.first_login, language);

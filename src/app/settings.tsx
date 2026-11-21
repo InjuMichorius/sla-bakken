@@ -15,6 +15,7 @@ import { EmailAuthForm } from '@/components/EmailAuthForm';
 import { Screen } from '@/components/Screen';
 import { useI18n } from '@/i18n/LanguageProvider';
 import { haptics } from '@/lib/haptics';
+import { hasConfirmedProfileName } from '@/lib/profileName';
 import {
   isAnalyticsEnabled,
   logAnalyticsEvent,
@@ -43,6 +44,8 @@ export default function SettingsScreen() {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const deletingRef = useRef(false);
+  const confirmedName = hasConfirmedProfileName(session?.user ?? null) ? profile?.name?.trim() : null;
+  const displayName = confirmedName || t('common.unknown');
 
   const handleDeleteAccount = async () => {
     if (deletingRef.current) return;
@@ -189,7 +192,7 @@ export default function SettingsScreen() {
               <>
                 <View style={styles.row}>
                   <View style={styles.rowText}>
-                    <Text style={styles.rowLabel}>{profile?.name ?? t('common.unknown')}</Text>
+                    <Text style={styles.rowLabel}>{displayName}</Text>
                     <Text style={styles.rowHint}>{t('settings.accountPoints', { n: profile?.points ?? 0 })}</Text>
                   </View>
                 </View>
