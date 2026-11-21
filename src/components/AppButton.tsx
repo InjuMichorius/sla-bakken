@@ -2,7 +2,7 @@ import { ReactNode } from 'react';
 import { GestureResponderEvent, Platform, Pressable, PressableProps, StyleSheet, Text, View, ViewStyle } from 'react-native';
 import { useFeedback } from '@/audio/FeedbackProvider';
 import type { SoundKey } from '@/audio/sounds';
-import { colors, radius, spacing } from '@/theme';
+import { colors, radius, spacing, fonts } from '@/theme';
 
 type Variant = 'primary' | 'secondary' | 'ghost' | 'success' | 'danger' | 'dangerOutline';
 type Size = 'sm' | 'md' | 'lg' | 'xl';
@@ -84,7 +84,7 @@ export function AppButton({ label, variant = 'primary', size = 'md', icon, iconO
       {iconOnly ? null : (
         <Text
           numberOfLines={1}
-          style={[styles.label, { color: foreground[variant], fontSize: dims.fontSize, opacity: disabled ? 0.7 : 1 }]}
+          style={[styles.label, { fontFamily: fonts.body, color: foreground[variant], fontSize: dims.fontSize, opacity: disabled ? 0.7 : 1 }]}
         >
           {label}
         </Text>
@@ -124,5 +124,5 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
     marginLeft: spacing.xs,
   },
-  badgeText: { color: colors.muted, fontSize: 11, fontWeight: '800', letterSpacing: 0.4 },
+  badgeText: { fontFamily: fonts.body, color: colors.muted, fontSize: 11, fontWeight: '800', letterSpacing: 0.4 },
 });

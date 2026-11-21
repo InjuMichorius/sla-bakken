@@ -17,7 +17,7 @@ import { useGameContext } from '@/game/GameProvider';
 import { translateDefaultPlayerName, useI18n } from '@/i18n/LanguageProvider';
 import type { TranslationKey } from '@/i18n/translations';
 import { haptics } from '@/lib/haptics';
-import { colors, radius, spacing } from '@/theme';
+import { colors, radius, spacing, fonts } from '@/theme';
 
 /**
  * Aftellen start pas in de laatste paar seconden, en het maximale volume ligt
@@ -332,11 +332,11 @@ const styles = StyleSheet.create({
   },
   timerRingUrgent: { borderColor: colors.warning, backgroundColor: 'rgba(251, 146, 60, 0.14)' },
   timerRingCritical: { borderColor: colors.danger, backgroundColor: colors.dangerSoft },
-  timerText: { color: colors.text, fontSize: 44, fontWeight: '900', letterSpacing: -1.5, fontVariant: ['tabular-nums'] },
+  timerText: { fontFamily: fonts.display, color: colors.text, fontSize: 44, fontWeight: '400', letterSpacing: -1.5, fontVariant: ['tabular-nums'] },
   timerTextUrgent: { color: colors.danger },
-  timerUnit: { color: colors.muted, fontSize: 11, fontWeight: '800', letterSpacing: 1.4, textTransform: 'uppercase' },
+  timerUnit: { fontFamily: fonts.body, color: colors.muted, fontSize: 11, fontWeight: '800', letterSpacing: 1.4, textTransform: 'uppercase' },
   turnHeader: { paddingHorizontal: spacing.lg, paddingTop: spacing.lg },
-  turnCount: { color: colors.text, fontSize: 26, fontWeight: '900', fontVariant: ['tabular-nums'], textAlign: 'right' },
+  turnCount: { fontFamily: fonts.display, color: colors.text, fontSize: 26, fontWeight: '400', fontVariant: ['tabular-nums'], textAlign: 'right' },
   turnCountActive: { color: colors.accent },
   wordBox: {
     flex: 1,
@@ -350,15 +350,15 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     gap: spacing.md,
   },
-  wordLabel: { color: colors.muted, fontSize: 11, fontWeight: '800', letterSpacing: 2 },
-  word: {
+  wordLabel: { fontFamily: fonts.body, color: colors.muted, fontSize: 11, fontWeight: '800', letterSpacing: 2 },
+  word: { fontFamily: fonts.display,
     color: colors.text,
     fontSize: 46,
-    fontWeight: '900',
+    fontWeight: '400',
     textAlign: 'center',
     letterSpacing: -1,
   },
-  wordRule: { color: colors.accent, fontSize: 14, fontWeight: '700', textAlign: 'center' },
+  wordRule: { fontFamily: fonts.body, color: colors.accent, fontSize: 14, fontWeight: '700', textAlign: 'center' },
   actions: { paddingHorizontal: spacing.lg, paddingBottom: spacing.lg, gap: spacing.md },
   goedButton: { width: '100%' },
   actionRow: { flexDirection: 'row', gap: spacing.md },
@@ -373,12 +373,12 @@ const styles = StyleSheet.create({
   /** Mirrors the word-entry handoff, so both handovers share the same title height. */
   handoffContent: { justifyContent: 'flex-start', gap: spacing.lg },
   handoffBody: { flex: 1, alignItems: 'center', justifyContent: 'flex-start', gap: spacing.lg, paddingTop: spacing.xl },
-  handoffTitle: { color: colors.text, fontSize: 30, fontWeight: '900', letterSpacing: -0.7, textAlign: 'center' },
-  handoffName: { color: colors.text, fontSize: 36, fontWeight: '900', letterSpacing: -1, textAlign: 'center' },
+  handoffTitle: { fontFamily: fonts.display, color: colors.text, fontSize: 30, fontWeight: '400', letterSpacing: -0.7, textAlign: 'center' },
+  handoffName: { fontFamily: fonts.display, color: colors.text, fontSize: 36, fontWeight: '400', letterSpacing: -1, textAlign: 'center' },
   /** Badge stretches to the start by default, which breaks the centred handoff column. */
   teamBadge: { alignSelf: 'center' },
   handoffRule: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm },
-  handoffRuleText: { color: colors.muted, fontSize: 13, textAlign: 'center' },
+  handoffRuleText: { fontFamily: fonts.body, color: colors.muted, fontSize: 13, textAlign: 'center' },
   handoffStandings: { width: '100%' },
 
   reviewContent: { justifyContent: 'flex-start', gap: spacing.xl },
@@ -393,8 +393,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  reviewTitle: { color: colors.text, fontSize: 30, fontWeight: '900', letterSpacing: -0.8, textAlign: 'center' },
-  reviewBody: { color: colors.muted, fontSize: 14, lineHeight: 21, textAlign: 'center' },
+  reviewTitle: { fontFamily: fonts.display, color: colors.text, fontSize: 30, fontWeight: '400', letterSpacing: -0.8, textAlign: 'center' },
+  reviewBody: { fontFamily: fonts.body, color: colors.muted, fontSize: 14, lineHeight: 21, textAlign: 'center' },
   reviewBlock: { width: '100%' },
   nextRoundHint: {
     flexDirection: 'row',
@@ -406,6 +406,6 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     padding: spacing.lg,
   },
-  nextRoundText: { color: colors.muted, fontSize: 14, flex: 1 },
+  nextRoundText: { fontFamily: fonts.body, color: colors.muted, fontSize: 14, flex: 1 },
   strong: { color: colors.text, fontWeight: '800' },
 });

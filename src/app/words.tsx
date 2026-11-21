@@ -12,7 +12,7 @@ import { useGameContext } from '@/game/GameProvider';
 import type { Player, Team } from '@/game/types';
 import { translateDefaultPlayerName, useI18n } from '@/i18n/LanguageProvider';
 import { haptics } from '@/lib/haptics';
-import { colors, radius, spacing, noOutline } from '@/theme';
+import { colors, radius, spacing, noOutline, fonts } from '@/theme';
 import { pickRandomWord } from '@/game/randomWord';
 import type { RosterEntry } from '@/game/useGame';
 import { logAnalyticsEvent } from '@/lib/analytics';
@@ -297,11 +297,11 @@ function RosterDots({ roster, index, currentFill }: { roster: RosterEntry[]; ind
 
 const styles = StyleSheet.create({
   centered: { alignItems: 'center', justifyContent: 'center', gap: spacing.sm },
-  muted: { color: colors.muted, fontSize: 15, marginBottom: spacing.lg },
+  muted: { fontFamily: fonts.body, color: colors.muted, fontSize: 15, marginBottom: spacing.lg },
   handoffContent: { justifyContent: 'flex-start', gap: spacing.xl },
   handoffBody: { flex: 1, alignItems: 'center', justifyContent: 'flex-start', gap: spacing.lg, paddingTop: spacing.xl },
-  handoffTitle: { color: colors.text, fontSize: 30, fontWeight: '900', letterSpacing: -0.7, textAlign: 'center' },
-  handoffName: { color: colors.text, fontSize: 36, fontWeight: '900', letterSpacing: -1, textAlign: 'center' },
+  handoffTitle: { fontFamily: fonts.display, color: colors.text, fontSize: 30, fontWeight: '400', letterSpacing: -0.7, textAlign: 'center' },
+  handoffName: { fontFamily: fonts.display, color: colors.text, fontSize: 36, fontWeight: '400', letterSpacing: -1, textAlign: 'center' },
   /** Badge stretches to the start by default, which breaks the centred handoff column. */
   teamBadge: { alignSelf: 'center' },
   /**
@@ -323,12 +323,12 @@ const styles = StyleSheet.create({
   dotFull: { backgroundColor: colors.accent },
   /** Half fill splits the dot vertically, so the halves read as pie slices. */
   dotFill: { position: 'absolute', top: 0, bottom: 0, left: 0, backgroundColor: colors.accent },
-  instruction: { color: colors.muted, fontSize: 14, lineHeight: 20 },
+  instruction: { fontFamily: fonts.body, color: colors.muted, fontSize: 14, lineHeight: 20 },
   fields: { gap: spacing.md },
   fieldRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   fieldAction: { width: FIELD_SIZE, height: FIELD_SIZE, borderRadius: FIELD_SIZE / 2, paddingHorizontal: 0 },
-  indexText: { width: 16, color: colors.text, fontSize: 15, fontWeight: '800', textAlign: 'center' },
-  input: {
+  indexText: { fontFamily: fonts.body, width: 16, color: colors.text, fontSize: 15, fontWeight: '800', textAlign: 'center' },
+  input: { fontFamily: fonts.body,
     flex: 1,
     height: FIELD_SIZE,
     color: colors.text,
@@ -342,5 +342,5 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
   },
   inputFocused: { borderColor: colors.accent },
-  footerHint: { color: colors.muted, fontSize: 13, lineHeight: 18, textAlign: 'center' },
+  footerHint: { fontFamily: fonts.body, color: colors.muted, fontSize: 13, lineHeight: 18, textAlign: 'center' },
 });

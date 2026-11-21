@@ -1,6 +1,6 @@
 import { StyleSheet, Text, View } from 'react-native';
 import { useGameContext } from '@/game/GameProvider';
-import { spacing } from '@/theme';
+import { spacing, fonts } from '@/theme';
 
 /**
  * Live score for every team, pinned to the top-right of a screen. Sits on every
@@ -35,5 +35,5 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   entry: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs + 2 },
   dot: { width: 10, height: 10, borderRadius: 5 },
-  score: { fontSize: 15, fontWeight: '900', letterSpacing: -0.2, fontVariant: ['tabular-nums'] },
+  score: { fontFamily: fonts.body, fontSize: 15, fontWeight: '900', letterSpacing: -0.2, fontVariant: ['tabular-nums'] },
 });

@@ -8,7 +8,7 @@ import { AppButton } from '@/components/AppButton';
 import { useI18n } from '@/i18n/LanguageProvider';
 import { accountIdFromQr } from '@/lib/accountQr';
 import { haptics } from '@/lib/haptics';
-import { colors, radius, spacing } from '@/theme';
+import { colors, radius, spacing, fonts } from '@/theme';
 
 type QrScannerDialogProps = {
   visible: boolean;
@@ -166,7 +166,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.md },
-  title: { color: colors.text, fontSize: 20, fontWeight: '900', flex: 1 },
+  title: { fontFamily: fonts.display, color: colors.text, fontSize: 20, fontWeight: '400', flex: 1 },
   closeButton: {
     width: 44,
     height: 44,
@@ -189,8 +189,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 197, 61, 0.06)',
   },
   footer: { gap: spacing.sm, alignItems: 'center' },
-  hint: { color: colors.text, fontSize: 15, fontWeight: '700', textAlign: 'center' },
-  error: { color: colors.danger, fontSize: 14, fontWeight: '800', textAlign: 'center' },
+  hint: { fontFamily: fonts.body, color: colors.text, fontSize: 15, fontWeight: '700', textAlign: 'center' },
+  error: { fontFamily: fonts.body, color: colors.danger, fontSize: 14, fontWeight: '800', textAlign: 'center' },
   permissionCard: {
     width: '100%',
     maxWidth: 380,
@@ -212,6 +212,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignSelf: 'center',
   },
-  permissionTitle: { color: colors.text, fontSize: 20, fontWeight: '900', textAlign: 'center' },
-  permissionBody: { color: colors.muted, fontSize: 15, lineHeight: 21, textAlign: 'center' },
+  permissionTitle: { fontFamily: fonts.display, color: colors.text, fontSize: 20, fontWeight: '400', textAlign: 'center' },
+  permissionBody: { fontFamily: fonts.body, color: colors.muted, fontSize: 15, lineHeight: 21, textAlign: 'center' },
 });

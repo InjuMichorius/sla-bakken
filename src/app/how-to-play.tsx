@@ -10,7 +10,7 @@ import { useI18n } from '@/i18n/LanguageProvider';
 import type { TranslationKey } from '@/i18n/translations';
 import { logAnalyticsEvent } from '@/lib/analytics';
 import { haptics } from '@/lib/haptics';
-import { colors, radius, spacing } from '@/theme';
+import { colors, radius, spacing, fonts } from '@/theme';
 
 type HowToPage = {
   title: TranslationKey;
@@ -188,16 +188,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   stepDotActive: { backgroundColor: colors.accent, borderColor: colors.accent },
-  stepDotText: { color: colors.muted, fontSize: 11, fontWeight: '900' },
+  stepDotText: { fontFamily: fonts.body, color: colors.muted, fontSize: 11, fontWeight: '900' },
   stepDotTextActive: { color: '#241A00' },
   stepLine: { width: 10, height: 2, borderRadius: 1, backgroundColor: colors.border },
   stepLineActive: { backgroundColor: colors.accent },
 
   pageHeader: { gap: spacing.xs },
-  eyebrow: { color: colors.accent, fontSize: 11, fontWeight: '900', letterSpacing: 1.5, textTransform: 'uppercase' },
-  pageTitle: { color: colors.text, fontSize: 28, fontWeight: '900', letterSpacing: -0.8, lineHeight: 33 },
-  pageSubtitle: { color: colors.muted, fontSize: 15, lineHeight: 22, fontWeight: '600' },
-  body: { color: colors.muted, fontSize: 15, lineHeight: 23 },
+  eyebrow: { fontFamily: fonts.body, color: colors.accent, fontSize: 11, fontWeight: '900', letterSpacing: 1.5, textTransform: 'uppercase' },
+  pageTitle: { fontFamily: fonts.display, color: colors.text, fontSize: 28, fontWeight: '400', letterSpacing: -0.8, lineHeight: 33 },
+  pageSubtitle: { fontFamily: fonts.body, color: colors.muted, fontSize: 15, lineHeight: 22, fontWeight: '600' },
+  body: { fontFamily: fonts.body, color: colors.muted, fontSize: 15, lineHeight: 23 },
 
   rulesCard: {
     backgroundColor: colors.surface,
@@ -207,7 +207,7 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     gap: spacing.sm,
   },
-  rulesTitle: {
+  rulesTitle: { fontFamily: fonts.body,
     color: colors.muted,
     fontSize: 11,
     fontWeight: '900',
@@ -216,7 +216,7 @@ const styles = StyleSheet.create({
   },
   ruleRow: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm },
   bullet: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.accent, marginTop: 8 },
-  ruleText: { flex: 1, color: colors.text, fontSize: 14, lineHeight: 21 },
+  ruleText: { fontFamily: fonts.body, flex: 1, color: colors.text, fontSize: 14, lineHeight: 21 },
 
   noteCard: {
     flexDirection: 'row',
@@ -236,7 +236,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  noteText: { flex: 1, color: colors.text, fontSize: 14, lineHeight: 21, fontWeight: '600' },
+  noteText: { fontFamily: fonts.body, flex: 1, color: colors.text, fontSize: 14, lineHeight: 21, fontWeight: '600' },
 
   footerRow: { flexDirection: 'row', gap: spacing.md, alignItems: 'center' },
   footerGrow: { flex: 1 },

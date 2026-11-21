@@ -3,6 +3,8 @@
   "version": "1.0.0",
   "main": "expo-router/entry",
   "dependencies": {
+    "@expo-google-fonts/alfa-slab-one": "^0.4.1",
+    "@expo-google-fonts/arvo": "^0.4.1",
     "@react-native-async-storage/async-storage": "2.2.0",
     "@react-native-firebase/analytics": "^26.4.0",
     "@react-native-firebase/app": "^26.4.0",
@@ -17,6 +19,7 @@
     "expo-constants": "~58.0.13",
     "expo-crypto": "~58.0.7",
     "expo-dev-client": "~58.0.17",
+    "expo-font": "~58.0.12",
     "expo-haptics": "~58.0.7",
     "expo-linking": "~58.0.15",
     "expo-router": "~58.0.28",

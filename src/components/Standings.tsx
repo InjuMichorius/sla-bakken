@@ -4,7 +4,7 @@ import { Trophy } from 'lucide-react-native';
 import { ROUNDS } from '@/game/constants';
 import { useGameContext } from '@/game/GameProvider';
 import { TeamScore } from '@/game/reducer';
-import { colors, radius, spacing } from '@/theme';
+import { colors, radius, spacing, fonts } from '@/theme';
 
 type StandingsProps = {
   standings: TeamScore[];
@@ -130,7 +130,7 @@ export function Standings({
 
 const styles = StyleSheet.create({
   wrap: { gap: spacing.sm },
-  title: { color: colors.muted, fontSize: 12, fontWeight: '800', letterSpacing: 1, textTransform: 'uppercase' },
+  title: { fontFamily: fonts.body, color: colors.muted, fontSize: 12, fontWeight: '800', letterSpacing: 1, textTransform: 'uppercase' },
   titleCenter: { alignSelf: 'stretch', textAlign: 'center' },
   row: {
     flexDirection: 'row',
@@ -145,8 +145,8 @@ const styles = StyleSheet.create({
   },
   rowWinner: { borderColor: 'rgba(255, 197, 61, 0.45)' },
   dot: { width: 12, height: 12, borderRadius: 6 },
-  name: { color: colors.text, fontSize: 15, fontWeight: '700', flexShrink: 1, maxWidth: '38%' },
+  name: { fontFamily: fonts.body, color: colors.text, fontSize: 15, fontWeight: '700', flexShrink: 1, maxWidth: '38%' },
   barTrack: { flex: 1, height: 8, borderRadius: radius.pill, backgroundColor: colors.surfaceAlt, overflow: 'hidden' },
   barFill: { height: '100%', borderRadius: radius.pill },
-  score: { color: colors.text, fontSize: 18, fontWeight: '900', minWidth: 28, textAlign: 'right' },
+  score: { fontFamily: fonts.body, color: colors.text, fontSize: 18, fontWeight: '900', minWidth: 28, textAlign: 'right' },
 });

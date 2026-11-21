@@ -12,7 +12,7 @@ import { ROUNDS } from '@/game/constants';
 import { useGameContext } from '@/game/GameProvider';
 import { translateDefaultPlayerName, useI18n } from '@/i18n/LanguageProvider';
 import { haptics } from '@/lib/haptics';
-import { colors, radius, spacing } from '@/theme';
+import { colors, radius, spacing, fonts } from '@/theme';
 
 export default function SummaryScreen() {
   const { state, standings, newGame } = useGameContext();
@@ -242,9 +242,9 @@ const styles = StyleSheet.create({
     marginTop: -spacing.md,
     marginBottom: spacing.md,
   },
-  eyebrow: { color: colors.muted, fontSize: 12, fontWeight: '800', letterSpacing: 1.4, textTransform: 'uppercase' },
-  winner: { color: colors.text, fontSize: 36, fontWeight: '900', letterSpacing: -1, textAlign: 'center' },
-  winnerLabel: { color: colors.accent, fontSize: 15, fontWeight: '700' },
+  eyebrow: { fontFamily: fonts.body, color: colors.muted, fontSize: 12, fontWeight: '800', letterSpacing: 1.4, textTransform: 'uppercase' },
+  winner: { fontFamily: fonts.display, color: colors.text, fontSize: 36, fontWeight: '400', letterSpacing: -1, textAlign: 'center' },
+  winnerLabel: { fontFamily: fonts.body, color: colors.accent, fontSize: 15, fontWeight: '700' },
   podium: { gap: spacing.sm },
   podiumRow: {
     gap: spacing.sm,
@@ -255,11 +255,11 @@ const styles = StyleSheet.create({
   },
   podiumHeader: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   podiumDot: { width: 12, height: 12, borderRadius: 6 },
-  podiumName: { color: colors.text, fontSize: 17, fontWeight: '800', flex: 1 },
-  podiumScore: { color: colors.text, fontSize: 24, fontWeight: '900' },
+  podiumName: { fontFamily: fonts.body, color: colors.text, fontSize: 17, fontWeight: '800', flex: 1 },
+  podiumScore: { fontFamily: fonts.display, color: colors.text, fontSize: 24, fontWeight: '400' },
   roster: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md },
   player: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  playerName: { color: colors.muted, fontSize: 13, fontWeight: '700' },
+  playerName: { fontFamily: fonts.body, color: colors.muted, fontSize: 13, fontWeight: '700' },
   stats: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   stat: {
     flexGrow: 1,
@@ -272,9 +272,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   statWide: { flexGrow: 2 },
-  statValue: { color: colors.text, fontSize: 22, fontWeight: '900' },
-  statValueWord: { fontSize: 18, maxWidth: '100%' },
-  statLabel: { color: colors.muted, fontSize: 11, fontWeight: '600', textAlign: 'center' },
+  statValue: { fontFamily: fonts.display, color: colors.text, fontSize: 22, fontWeight: '400' },
+  statValueWord: { fontFamily: fonts.body, fontSize: 18, maxWidth: '100%' },
+  statLabel: { fontFamily: fonts.body, color: colors.muted, fontSize: 11, fontWeight: '600', textAlign: 'center' },
   rounds: { gap: spacing.xs },
   roundRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   roundIndex: {
@@ -285,7 +285,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  roundIndexText: { color: colors.muted, fontSize: 11, fontWeight: '900' },
-  roundName: { color: colors.text, fontSize: 14, fontWeight: '700', width: 110 },
-  roundRule: { color: colors.muted, fontSize: 13, flex: 1 },
+  roundIndexText: { fontFamily: fonts.body, color: colors.muted, fontSize: 11, fontWeight: '900' },
+  roundName: { fontFamily: fonts.body, color: colors.text, fontSize: 14, fontWeight: '700', width: 110 },
+  roundRule: { fontFamily: fonts.body, color: colors.muted, fontSize: 13, flex: 1 },
 });

@@ -4,7 +4,7 @@ import { AppButton } from '@/components/AppButton';
 import { Avatar } from '@/components/Avatar';
 import { useI18n } from '@/i18n/LanguageProvider';
 import { accountQrValue } from '@/lib/accountQr';
-import { colors, radius, spacing } from '@/theme';
+import { colors, radius, spacing, fonts } from '@/theme';
 
 type AccountQrDialogProps = {
   visible: boolean;
@@ -69,13 +69,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.lg,
   },
-  title: { color: colors.text, fontSize: 22, fontWeight: '900', textAlign: 'center' },
+  title: { fontFamily: fonts.display, color: colors.text, fontSize: 22, fontWeight: '400', textAlign: 'center' },
   identity: { alignItems: 'center', gap: spacing.sm, maxWidth: '100%' },
-  name: { color: colors.text, fontSize: 18, fontWeight: '800', textAlign: 'center' },
+  name: { fontFamily: fonts.body, color: colors.text, fontSize: 18, fontWeight: '800', textAlign: 'center' },
   qrFrame: {
     backgroundColor: '#FFFFFF',
     borderRadius: radius.md,
     padding: spacing.sm,
   },
-  hint: { color: colors.muted, fontSize: 14, lineHeight: 20, textAlign: 'center' },
+  hint: { fontFamily: fonts.body, color: colors.muted, fontSize: 14, lineHeight: 20, textAlign: 'center' },
 });

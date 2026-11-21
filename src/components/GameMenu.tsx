@@ -8,7 +8,7 @@ import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { useGameContext } from '@/game/GameProvider';
 import { useI18n } from '@/i18n/LanguageProvider';
 import { haptics } from '@/lib/haptics';
-import { colors, radius, spacing } from '@/theme';
+import { colors, radius, spacing, fonts } from '@/theme';
 
 type GameMenuAction = 'edit' | 'end';
 
@@ -199,7 +199,7 @@ const styles = StyleSheet.create({
     shadowRadius: 18,
     elevation: 8,
   },
-  panelTitle: {
+  panelTitle: { fontFamily: fonts.body,
     color: colors.muted,
     fontSize: 11,
     fontWeight: '800',
@@ -230,7 +230,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceAlt,
   },
   itemIconDanger: { backgroundColor: colors.dangerSoft },
-  itemLabel: { color: colors.text, fontSize: 15, fontWeight: '800', flex: 1 },
+  itemLabel: { fontFamily: fonts.body, color: colors.text, fontSize: 15, fontWeight: '800', flex: 1 },
   itemLabelDanger: { color: colors.danger },
   divider: { height: 1, backgroundColor: colors.border, marginVertical: spacing.xs },
 });

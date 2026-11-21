@@ -6,7 +6,7 @@ import { AccountButton } from '@/components/AccountButton';
 import { AppButton } from '@/components/AppButton';
 import { Screen } from '@/components/Screen';
 import { useI18n } from '@/i18n/LanguageProvider';
-import { colors, spacing } from '@/theme';
+import { colors, spacing, fonts } from '@/theme';
 
 export default function MainMenuScreen() {
   const { t } = useI18n();
@@ -81,9 +81,9 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   logoImage: { width: '100%', height: '100%' },
-  title: { color: colors.text, fontSize: 40, fontWeight: '900', letterSpacing: -1.2 },
+  title: { fontFamily: fonts.display, color: colors.text, fontSize: 40, fontWeight: '400', letterSpacing: -1.2 },
   tagline: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   taglineDot: { width: 5, height: 5, borderRadius: 2.5, backgroundColor: colors.muted },
-  taglineText: { color: colors.muted, fontSize: 15, fontWeight: '600' },
+  taglineText: { fontFamily: fonts.body, color: colors.muted, fontSize: 15, fontWeight: '600' },
   menu: { gap: spacing.md },
 });

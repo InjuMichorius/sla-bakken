@@ -33,5 +33,25 @@ export const spacing = {
   xxl: 32,
 } as const;
 
+export const fonts = {
+  display: 'Alfa Slab One',
+  body: 'Arvo',
+} as const;
+
+export const fontSize = {
+  tiny: 7,
+  small: 11,
+  caption: 12,
+  meta: 13,
+  body: 14,
+  bodyLarge: 15,
+  input: 17,
+  callout: 20,
+  section: 24,
+  heading: 30,
+  title: 36,
+  display: 46,
+} as const;
+
 /** react-native-web draws a focus ring on inputs; the native types don't know about it. */
 export const noOutline: TextStyle = Platform.OS === 'web' ? ({ outlineStyle: 'none' } as unknown as TextStyle) : {};

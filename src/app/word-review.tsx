@@ -11,7 +11,7 @@ import { useGameContext } from '@/game/GameProvider';
 import type { AcceptedGuess } from '@/game/types';
 import { translateDefaultPlayerName, useI18n } from '@/i18n/LanguageProvider';
 import { haptics } from '@/lib/haptics';
-import { colors, radius, spacing } from '@/theme';
+import { colors, radius, spacing, fonts } from '@/theme';
 
 export default function WordReviewScreen() {
   const { state, rejectGuess } = useGameContext();
@@ -103,7 +103,7 @@ export default function WordReviewScreen() {
 
 const styles = StyleSheet.create({
   content: { justifyContent: 'flex-start' },
-  round: {
+  round: { fontFamily: fonts.body,
     color: colors.accent,
     fontSize: 12,
     fontWeight: '900',
@@ -120,11 +120,11 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   cardTop: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
-  word: { color: colors.text, fontSize: 22, fontWeight: '900', flex: 1 },
-  score: { color: colors.danger, fontSize: 18, fontWeight: '900' },
+  word: { fontFamily: fonts.display, color: colors.text, fontSize: 22, fontWeight: '400', flex: 1 },
+  score: { fontFamily: fonts.body, color: colors.danger, fontSize: 18, fontWeight: '900' },
   meta: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   dot: { width: 10, height: 10, borderRadius: 5 },
-  metaText: { color: colors.muted, fontSize: 13, fontWeight: '700', flex: 1 },
+  metaText: { fontFamily: fonts.body, color: colors.muted, fontSize: 13, fontWeight: '700', flex: 1 },
   rejectButton: { alignSelf: 'flex-start', marginTop: spacing.xs },
   empty: {
     alignItems: 'center',
@@ -143,5 +143,5 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: colors.surfaceAlt,
   },
-  emptyText: { color: colors.muted, fontSize: 14, lineHeight: 20, textAlign: 'center' },
+  emptyText: { fontFamily: fonts.body, color: colors.muted, fontSize: 14, lineHeight: 20, textAlign: 'center' },
 });

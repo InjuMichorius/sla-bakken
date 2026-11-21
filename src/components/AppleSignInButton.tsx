@@ -4,7 +4,7 @@ import * as AppleAuthentication from 'expo-apple-authentication';
 import { useAuth } from '@/auth/AuthProvider';
 import { AppleNameDialog } from '@/components/AppleNameDialog';
 import { useI18n } from '@/i18n/LanguageProvider';
-import { colors, radius, spacing } from '@/theme';
+import { colors, radius, spacing, fonts } from '@/theme';
 
 type AppleSignInButtonProps = {
   onSuccess?: () => void;
@@ -108,7 +108,7 @@ const styles = StyleSheet.create({
   buttonWrapper: { width: '100%' },
   button: { width: '100%', height: 52 },
   busy: { opacity: 0.6 },
-  error: { color: colors.danger, fontSize: 13, lineHeight: 18, textAlign: 'center' },
+  error: { fontFamily: fonts.body, color: colors.danger, fontSize: 13, lineHeight: 18, textAlign: 'center' },
   unavailable: {
     borderRadius: radius.md,
     borderWidth: 1,
@@ -117,5 +117,5 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
   },
-  unavailableText: { color: colors.muted, fontSize: 13, lineHeight: 18, textAlign: 'center' },
+  unavailableText: { fontFamily: fonts.body, color: colors.muted, fontSize: 13, lineHeight: 18, textAlign: 'center' },
 });

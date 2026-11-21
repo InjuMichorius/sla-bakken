@@ -8,7 +8,7 @@ import { TeamScoreboard } from '@/components/TeamScoreboard';
 import { useGameContext } from '@/game/GameProvider';
 import { useI18n } from '@/i18n/LanguageProvider';
 import { haptics } from '@/lib/haptics';
-import { colors, radius, spacing } from '@/theme';
+import { colors, radius, spacing, fonts } from '@/theme';
 
 export default function TurnReviewScreen() {
   const { state, rejectGuess, continueTurn } = useGameContext();
@@ -112,8 +112,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: spacing.sm,
   },
-  title: { color: colors.text, fontSize: 30, fontWeight: '900', letterSpacing: -0.8, textAlign: 'center' },
-  subtitle: { color: colors.muted, fontSize: 14, lineHeight: 21, textAlign: 'center' },
+  title: { fontFamily: fonts.display, color: colors.text, fontSize: 30, fontWeight: '400', letterSpacing: -0.8, textAlign: 'center' },
+  subtitle: { fontFamily: fonts.body, color: colors.muted, fontSize: 14, lineHeight: 21, textAlign: 'center' },
   list: { gap: spacing.sm },
   row: {
     flexDirection: 'row',
@@ -127,7 +127,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
   },
   rowRejected: { borderColor: colors.danger },
-  word: { color: colors.text, fontSize: 20, fontWeight: '900', flex: 1 },
+  word: { fontFamily: fonts.display, color: colors.text, fontSize: 20, fontWeight: '400', flex: 1 },
   toggle: {
     width: 38,
     height: 38,
@@ -147,5 +147,5 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     padding: spacing.xl,
   },
-  emptyText: { color: colors.muted, fontSize: 14, lineHeight: 20, textAlign: 'center' },
+  emptyText: { fontFamily: fonts.body, color: colors.muted, fontSize: 14, lineHeight: 20, textAlign: 'center' },
 });

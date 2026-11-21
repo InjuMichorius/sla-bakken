@@ -13,7 +13,7 @@ import { useAuth } from '@/auth/AuthProvider';
 import { AppButton } from '@/components/AppButton';
 import { useI18n } from '@/i18n/LanguageProvider';
 import { isNameAvailable, MAX_PROFILE_NAME_LENGTH } from '@/lib/auth';
-import { colors, noOutline, radius, spacing } from '@/theme';
+import { colors, noOutline, radius, spacing, fonts } from '@/theme';
 
 type CheckState = 'idle' | 'checking' | 'available' | 'taken' | 'error';
 
@@ -208,13 +208,13 @@ const styles = StyleSheet.create({
     padding: spacing.xl,
     gap: spacing.md,
   },
-  title: { color: colors.text, fontSize: 20, fontWeight: '900' },
-  hint: { color: colors.muted, fontSize: 15, lineHeight: 21 },
+  title: { fontFamily: fonts.display, color: colors.text, fontSize: 20, fontWeight: '400' },
+  hint: { fontFamily: fonts.body, color: colors.muted, fontSize: 15, lineHeight: 21 },
   field: { gap: 6 },
   labelRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  label: { color: colors.muted, fontSize: 12, fontWeight: '800', letterSpacing: 0.6, textTransform: 'uppercase' },
-  counter: { color: colors.muted, fontSize: 12, fontWeight: '700' },
-  input: {
+  label: { fontFamily: fonts.body, color: colors.muted, fontSize: 12, fontWeight: '800', letterSpacing: 0.6, textTransform: 'uppercase' },
+  counter: { fontFamily: fonts.body, color: colors.muted, fontSize: 12, fontWeight: '700' },
+  input: { fontFamily: fonts.body,
     minHeight: 48,
     borderRadius: radius.md,
     borderWidth: 1,
@@ -225,8 +225,8 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     paddingHorizontal: spacing.lg,
   },
-  status: { color: colors.muted, fontSize: 13, lineHeight: 18 },
+  status: { fontFamily: fonts.body, color: colors.muted, fontSize: 13, lineHeight: 18 },
   statusSuccess: { color: colors.success },
   statusDanger: { color: colors.danger },
-  error: { color: colors.danger, fontSize: 13, lineHeight: 18 },
+  error: { fontFamily: fonts.body, color: colors.danger, fontSize: 13, lineHeight: 18 },
 });

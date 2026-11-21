@@ -8,7 +8,7 @@ import { Screen } from '@/components/Screen';
 import { useI18n } from '@/i18n/LanguageProvider';
 import type { Language } from '@/i18n/translations';
 import { haptics } from '@/lib/haptics';
-import { colors, radius, spacing } from '@/theme';
+import { colors, radius, spacing, fonts } from '@/theme';
 
 const LANGUAGES: { code: Language; titleKey: 'languages.nl' | 'languages.en' | 'languages.de' | 'languages.fr'; hintKey: 'languages.nlHint' | 'languages.enHint' | 'languages.deHint' | 'languages.frHint' }[] = [
   { code: 'nl', titleKey: 'languages.nl', hintKey: 'languages.nlHint' },
@@ -67,9 +67,9 @@ export default function LanguagesScreen() {
 
 const styles = StyleSheet.create({
   content: { justifyContent: 'flex-start' },
-  headerTitle: { flex: 1, textAlign: 'center', color: colors.text, fontSize: 18, fontWeight: '900', letterSpacing: -0.3 },
+  headerTitle: { fontFamily: fonts.body, flex: 1, textAlign: 'center', color: colors.text, fontSize: 18, fontWeight: '900', letterSpacing: -0.3 },
   topBarSide: { width: 44 },
-  hint: { color: colors.muted, fontSize: 14, lineHeight: 20 },
+  hint: { fontFamily: fonts.body, color: colors.muted, fontSize: 14, lineHeight: 20 },
   card: {
     backgroundColor: colors.surface,
     borderRadius: radius.lg,
@@ -89,8 +89,8 @@ const styles = StyleSheet.create({
   },
   optionBorder: { borderTopWidth: 1, borderTopColor: colors.border },
   optionText: { flex: 1, gap: 2 },
-  optionTitle: { color: colors.text, fontSize: 17, fontWeight: '800' },
-  optionHint: { color: colors.muted, fontSize: 13, lineHeight: 18 },
+  optionTitle: { fontFamily: fonts.body, color: colors.text, fontSize: 17, fontWeight: '800' },
+  optionHint: { fontFamily: fonts.body, color: colors.muted, fontSize: 13, lineHeight: 18 },
   check: {
     width: 32,
     height: 32,

@@ -7,7 +7,7 @@ import { AppButton } from '@/components/AppButton';
 import { useI18n } from '@/i18n/LanguageProvider';
 import { MAX_PROFILE_NAME_LENGTH } from '@/lib/auth';
 import { haptics } from '@/lib/haptics';
-import { colors, radius, spacing } from '@/theme';
+import { colors, radius, spacing, fonts } from '@/theme';
 
 type Mode = 'signIn' | 'signUp';
 
@@ -257,13 +257,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   tabActive: { backgroundColor: colors.accent },
-  tabLabel: { color: colors.muted, fontSize: 14, fontWeight: '800' },
+  tabLabel: { fontFamily: fonts.body, color: colors.muted, fontSize: 14, fontWeight: '800' },
   tabLabelActive: { color: '#241A00' },
   pressed: { opacity: 0.75 },
   form: { gap: spacing.md },
   field: { gap: 6 },
-  label: { color: colors.muted, fontSize: 12, fontWeight: '800', letterSpacing: 0.6, textTransform: 'uppercase' },
-  input: {
+  label: { fontFamily: fonts.body, color: colors.muted, fontSize: 12, fontWeight: '800', letterSpacing: 0.6, textTransform: 'uppercase' },
+  input: { fontFamily: fonts.body,
     minHeight: 48,
     borderRadius: radius.md,
     borderWidth: 1,
@@ -274,7 +274,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     paddingHorizontal: spacing.lg,
   },
-  error: { color: colors.danger, fontSize: 13, lineHeight: 18 },
-  notice: { color: colors.success, fontSize: 13, lineHeight: 18 },
-  hint: { color: colors.muted, fontSize: 12, lineHeight: 17, textAlign: 'center' },
+  error: { fontFamily: fonts.body, color: colors.danger, fontSize: 13, lineHeight: 18 },
+  notice: { fontFamily: fonts.body, color: colors.success, fontSize: 13, lineHeight: 18 },
+  hint: { fontFamily: fonts.body, color: colors.muted, fontSize: 12, lineHeight: 17, textAlign: 'center' },
 });

@@ -3,7 +3,7 @@ import { Check, Lock, Plus, SkipForward, Sparkles, SquarePen, Timer, UserRound, 
 import { RoundIcon } from '@/components/RoundIcon';
 import { TEAM_COLORS } from '@/game/colors';
 import { useI18n } from '@/i18n/LanguageProvider';
-import { colors, radius, spacing } from '@/theme';
+import { colors, radius, spacing, fonts } from '@/theme';
 
 export type HowToPreviewVariant = 'setup' | 'words' | 'describe' | 'act' | 'oneword';
 
@@ -226,7 +226,7 @@ function MiniTeam({ color, name }: { color: string; name: string }) {
 function MiniAvatar({ label, color, size = 22 }: { label: string; color: string; size?: number }) {
   return (
     <View style={[styles.avatar, { width: size, height: size, borderRadius: size / 2, backgroundColor: color }]}>
-      <Text style={[styles.avatarText, { fontSize: size * 0.34 }]}>{label}</Text>
+      <Text style={[styles.avatarText, { fontFamily: fonts.body, fontSize: size * 0.34 }]}>{label}</Text>
     </View>
   );
 }
@@ -292,7 +292,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.sm + 2,
     paddingVertical: 5,
   },
-  tagText: { color: colors.muted, fontSize: 9, fontWeight: '900', letterSpacing: 0.8, textTransform: 'uppercase' },
+  tagText: { fontFamily: fonts.body, color: colors.muted, fontSize: 9, fontWeight: '900', letterSpacing: 0.8, textTransform: 'uppercase' },
 
   setupTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   miniSteps: { flexDirection: 'row', alignItems: 'center' },
@@ -319,7 +319,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  miniHeading: { color: colors.text, fontSize: 15, fontWeight: '900', letterSpacing: -0.2 },
+  miniHeading: { fontFamily: fonts.body, color: colors.text, fontSize: 15, fontWeight: '900', letterSpacing: -0.2 },
 
   teamCard: {
     borderRadius: radius.md,
@@ -332,7 +332,7 @@ const styles = StyleSheet.create({
   },
   teamTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   teamDot: { width: 7, height: 7, borderRadius: 4 },
-  teamName: { flex: 1, color: colors.text, fontSize: 11, fontWeight: '800' },
+  teamName: { fontFamily: fonts.body, flex: 1, color: colors.text, fontSize: 11, fontWeight: '800' },
   peopleRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   avatar: { alignItems: 'center', justifyContent: 'center' },
   avatarText: { color: '#10131A', fontWeight: '900' },
@@ -356,7 +356,7 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
   },
   settingsRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', minHeight: 15 },
-  settingsLabel: { color: colors.muted, fontSize: 9, fontWeight: '700' },
+  settingsLabel: { fontFamily: fonts.body, color: colors.muted, fontSize: 9, fontWeight: '700' },
   settingsDivider: { height: 1, backgroundColor: colors.border, marginVertical: 2 },
   valuePill: {
     minWidth: 26,
@@ -366,7 +366,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
     paddingVertical: 1,
   },
-  valueText: { color: colors.text, fontSize: 9, fontWeight: '900' },
+  valueText: { fontFamily: fonts.body, color: colors.text, fontSize: 9, fontWeight: '900' },
 
   playHeader: {
     flexDirection: 'row',
@@ -382,11 +382,11 @@ const styles = StyleSheet.create({
   },
   teamBar: { width: 3, height: 24, borderRadius: 2 },
   playHeaderText: { flex: 1 },
-  miniMuted: { color: colors.muted, fontSize: 7, fontWeight: '800', letterSpacing: 0.4, textTransform: 'uppercase' },
-  miniPlayer: { color: colors.text, fontSize: 11, fontWeight: '900' },
+  miniMuted: { fontFamily: fonts.body, color: colors.muted, fontSize: 7, fontWeight: '800', letterSpacing: 0.4, textTransform: 'uppercase' },
+  miniPlayer: { fontFamily: fonts.body, color: colors.text, fontSize: 11, fontWeight: '900' },
   score: { alignItems: 'flex-end' },
-  scoreValue: { fontSize: 14, fontWeight: '900', lineHeight: 15 },
-  scoreLabel: { color: colors.muted, fontSize: 6, fontWeight: '700' },
+  scoreValue: { fontFamily: fonts.body, fontSize: 14, fontWeight: '900', lineHeight: 15 },
+  scoreLabel: { fontFamily: fonts.body, color: colors.muted, fontSize: 6, fontWeight: '700' },
 
   handoffCard: {
     flexDirection: 'row',
@@ -399,7 +399,7 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   handoffText: { flex: 1 },
-  handoffName: { color: colors.text, fontSize: 13, fontWeight: '900' },
+  handoffName: { fontFamily: fonts.body, color: colors.text, fontSize: 13, fontWeight: '900' },
   miniPrimaryButton: {
     alignItems: 'center',
     justifyContent: 'center',
@@ -407,7 +407,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.accent,
     paddingVertical: 5,
   },
-  miniPrimaryButtonText: { color: '#241A00', fontSize: 9, fontWeight: '900' },
+  miniPrimaryButtonText: { fontFamily: fonts.body, color: '#241A00', fontSize: 9, fontWeight: '900' },
 
   formCard: {
     flex: 1,
@@ -419,9 +419,9 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   formHeader: { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 1 },
-  formTitle: { flex: 1, color: colors.text, fontSize: 9, fontWeight: '800' },
+  formTitle: { fontFamily: fonts.body, flex: 1, color: colors.text, fontSize: 9, fontWeight: '800' },
   countPill: { borderRadius: radius.pill, backgroundColor: colors.accentSoft, paddingHorizontal: 5, paddingVertical: 1 },
-  countText: { color: colors.accent, fontSize: 7, fontWeight: '900' },
+  countText: { fontFamily: fonts.body, color: colors.accent, fontSize: 7, fontWeight: '900' },
   field: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -433,8 +433,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
     paddingVertical: 4,
   },
-  fieldIndex: { color: colors.muted, fontSize: 7, fontWeight: '900', width: 6 },
-  fieldValue: { flex: 1, color: colors.text, fontSize: 9, fontWeight: '800' },
+  fieldIndex: { fontFamily: fonts.body, color: colors.muted, fontSize: 7, fontWeight: '900', width: 6 },
+  fieldValue: { fontFamily: fonts.body, flex: 1, color: colors.text, fontSize: 9, fontWeight: '800' },
   fieldValueMuted: { color: colors.muted, fontWeight: '600' },
 
   roundRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 5 },
@@ -449,7 +449,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 7,
     paddingVertical: 3,
   },
-  roundPillText: { color: colors.text, fontSize: 8, fontWeight: '800' },
+  roundPillText: { fontFamily: fonts.body, color: colors.text, fontSize: 8, fontWeight: '800' },
   timerPill: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -459,7 +459,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
     paddingVertical: 3,
   },
-  timerText: { color: colors.text, fontSize: 9, fontWeight: '900', fontVariant: ['tabular-nums'] },
+  timerText: { fontFamily: fonts.body, color: colors.text, fontSize: 9, fontWeight: '900', fontVariant: ['tabular-nums'] },
 
   wordCard: {
     flex: 1,
@@ -473,10 +473,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 8,
   },
-  wordLabel: { color: colors.muted, fontSize: 7, fontWeight: '900', letterSpacing: 1.2 },
-  wordText: { color: colors.text, fontSize: 24, fontWeight: '900', letterSpacing: -0.6, textAlign: 'center' },
+  wordLabel: { fontFamily: fonts.body, color: colors.muted, fontSize: 7, fontWeight: '900', letterSpacing: 1.2 },
+  wordText: { fontFamily: fonts.display, color: colors.text, fontSize: 24, fontWeight: '400', letterSpacing: -0.6, textAlign: 'center' },
   wordFooter: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap', gap: 5 },
-  wordRule: { color: colors.accent, fontSize: 8, fontWeight: '700', textAlign: 'center' },
+  wordRule: { fontFamily: fonts.body, color: colors.accent, fontSize: 8, fontWeight: '700', textAlign: 'center' },
   smallChip: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -486,7 +486,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 5,
     paddingVertical: 2,
   },
-  smallChipText: { color: colors.muted, fontSize: 7, fontWeight: '800' },
+  smallChipText: { fontFamily: fonts.body, color: colors.muted, fontSize: 7, fontWeight: '800' },
 
   actionsRow: { flexDirection: 'row', gap: 6 },
   miniAction: {
@@ -500,6 +500,6 @@ const styles = StyleSheet.create({
     paddingVertical: 7,
   },
   miniActionGood: { backgroundColor: colors.success },
-  miniActionText: { color: colors.text, fontSize: 9, fontWeight: '900' },
+  miniActionText: { fontFamily: fonts.body, color: colors.text, fontSize: 9, fontWeight: '900' },
   miniActionTextGood: { color: '#04231A' },
 });

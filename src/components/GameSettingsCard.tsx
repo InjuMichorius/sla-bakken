@@ -8,7 +8,7 @@ import {
 } from '@/game/constants';
 import { useI18n } from '@/i18n/LanguageProvider';
 import { haptics } from '@/lib/haptics';
-import { colors, radius, spacing } from '@/theme';
+import { colors, radius, spacing, fonts } from '@/theme';
 
 /** Instellingenkaart: woorden per speler, tijd per beurt en de drie rondes. */
 export function GameSettingsCard({
@@ -112,7 +112,7 @@ const styles = StyleSheet.create({
   settingRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   settingBlock: { gap: spacing.sm },
   settingText: { flex: 1, gap: 2 },
-  settingLabel: { color: colors.text, fontSize: 17, fontWeight: '800' },
+  settingLabel: { fontFamily: fonts.body, color: colors.text, fontSize: 17, fontWeight: '800' },
   stepper: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -131,7 +131,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: colors.surface,
   },
-  stepperValue: { color: colors.accent, fontSize: 22, fontWeight: '900', minWidth: 34, textAlign: 'center' },
+  stepperValue: { fontFamily: fonts.display, color: colors.accent, fontSize: 22, fontWeight: '400', minWidth: 34, textAlign: 'center' },
   divider: { height: 1, backgroundColor: colors.border },
   secondsRow: { flexDirection: 'row', gap: spacing.sm, flexWrap: 'wrap' },
   secondsChip: {
@@ -149,12 +149,12 @@ const styles = StyleSheet.create({
     }),
   },
   secondsChipActive: { borderColor: colors.accent, backgroundColor: colors.accent },
-  secondsChipText: { color: colors.text, fontSize: 15, fontWeight: '800' },
+  secondsChipText: { fontFamily: fonts.body, color: colors.text, fontSize: 15, fontWeight: '800' },
   secondsChipTextActive: { color: '#241A00' },
 
   rounds: { gap: spacing.sm },
   roundRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
-  roundNumber: {
+  roundNumber: { fontFamily: fonts.body,
     width: 26,
     height: 26,
     borderRadius: 13,
@@ -166,7 +166,7 @@ const styles = StyleSheet.create({
     lineHeight: 26,
     overflow: 'hidden',
   },
-  roundTitle: { color: colors.text, fontSize: 15, fontWeight: '800', minWidth: 110 },
-  roundVerb: { color: colors.muted, fontSize: 13, flex: 1 },
+  roundTitle: { fontFamily: fonts.body, color: colors.text, fontSize: 15, fontWeight: '800', minWidth: 110 },
+  roundVerb: { fontFamily: fonts.body, color: colors.muted, fontSize: 13, flex: 1 },
   pressed: { opacity: 0.7 },
 });

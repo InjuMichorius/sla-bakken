@@ -1,8 +1,7 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { Image, StyleSheet, Text, View } from 'react-native';
 import { AppButton } from '@/components/AppButton';
 import { Badge } from '@/components/Badge';
 import { GameMenu } from '@/components/GameMenu';
-import { RoundIcon } from '@/components/RoundIcon';
 import { Screen } from '@/components/Screen';
 import { Standings } from '@/components/Standings';
 import { TeamScoreboard } from '@/components/TeamScoreboard';
@@ -10,7 +9,13 @@ import { ROUNDS } from '@/game/constants';
 import { useGameContext } from '@/game/GameProvider';
 import { useI18n } from '@/i18n/LanguageProvider';
 import { haptics } from '@/lib/haptics';
-import { colors, radius, spacing } from '@/theme';
+import { colors, radius, spacing, fonts } from '@/theme';
+
+const ROUND_IMAGES = {
+  'message-circle': require('../../assets/images/verboden-woord.jpeg'),
+  hand: require('../../assets/images/uitbeelden.jpeg'),
+  zap: require('../../assets/images/1woord.jpeg'),
+};
 
 export default function RoundIntroScreen() {
   const { state, standings, totalWords, startRound } = useGameContext();
@@ -37,9 +42,7 @@ export default function RoundIntroScreen() {
     >
       <View style={styles.top}>
         <View style={styles.hero}>
-          <View style={styles.heroIcon}>
-            <RoundIcon name={meta.icon} size={34} />
-          </View>
+          <Image source={ROUND_IMAGES[meta.icon]} style={styles.heroImage} resizeMode="cover" />
           <Text style={styles.title}>{t(meta.title)}</Text>
           <Badge tone="muted" style={styles.potBadge}>
             {t('round.wordsInPot', { n: totalWords })}
@@ -73,18 +76,16 @@ const styles = StyleSheet.create({
   top: { gap: spacing.lg },
   hero: { alignItems: 'center', gap: spacing.sm },
   potBadge: { alignSelf: 'center' },
-  heroIcon: {
-    width: 76,
-    height: 76,
-    borderRadius: 38,
+  heroImage: {
+    width: '100%',
+    height: 150,
+    borderRadius: radius.md,
     backgroundColor: colors.accentSoft,
     borderWidth: 1,
     borderColor: 'rgba(255, 197, 61, 0.35)',
-    alignItems: 'center',
-    justifyContent: 'center',
     marginBottom: spacing.sm,
   },
-  title: { color: colors.text, fontSize: 34, fontWeight: '900', letterSpacing: -0.8 },
+  title: { fontFamily: fonts.display, color: colors.text, fontSize: 34, fontWeight: '400', letterSpacing: -0.8 },
   rules: {
     backgroundColor: colors.surface,
     borderRadius: radius.lg,
@@ -102,8 +103,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  ruleIndexText: { color: colors.accent, fontSize: 12, fontWeight: '900' },
-  ruleText: { color: colors.text, fontSize: 14, lineHeight: 20, flex: 1 },
+  ruleIndexText: { fontFamily: fonts.body, color: colors.accent, fontSize: 12, fontWeight: '900' },
+  ruleText: { fontFamily: fonts.body, color: colors.text, fontSize: 14, lineHeight: 20, flex: 1 },
   review: {
     backgroundColor: colors.surface,
     borderRadius: radius.lg,
@@ -112,5 +113,5 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     gap: spacing.md,
   },
-  reviewTitle: { color: colors.muted, fontSize: 12, fontWeight: '800', letterSpacing: 1, textTransform: 'uppercase' },
+  reviewTitle: { fontFamily: fonts.body, color: colors.muted, fontSize: 12, fontWeight: '800', letterSpacing: 1, textTransform: 'uppercase' },
 });

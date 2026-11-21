@@ -22,7 +22,7 @@ import {
   sendAnalyticsTestEvent,
   sendAnalyticsTestNonFatal,
 } from '@/lib/analytics';
-import { colors, radius, spacing } from '@/theme';
+import { colors, radius, spacing, fonts } from '@/theme';
 
 const VOLUME_STEPS = [25, 50, 75, 100];
 const isDev = process.env.NODE_ENV !== 'production';
@@ -293,9 +293,9 @@ export default function SettingsScreen() {
 
 const styles = StyleSheet.create({
   content: { justifyContent: 'flex-start' },
-  headerTitle: { flex: 1, textAlign: 'center', color: colors.text, fontSize: 18, fontWeight: '900', letterSpacing: -0.3 },
+  headerTitle: { fontFamily: fonts.body, flex: 1, textAlign: 'center', color: colors.text, fontSize: 18, fontWeight: '900', letterSpacing: -0.3 },
   topBarSide: { width: 44 },
-  section: {
+  section: { fontFamily: fonts.body,
     color: colors.muted,
     fontSize: 12,
     fontWeight: '800',
@@ -318,12 +318,12 @@ const styles = StyleSheet.create({
   },
   rowDimmed: { opacity: 0.5 },
   rowText: { flex: 1, gap: 2 },
-  rowLabel: { color: colors.text, fontSize: 16, fontWeight: '800' },
-  rowHint: { color: colors.muted, fontSize: 13, lineHeight: 18 },
+  rowLabel: { fontFamily: fonts.body, color: colors.text, fontSize: 16, fontWeight: '800' },
+  rowHint: { fontFamily: fonts.body, color: colors.muted, fontSize: 13, lineHeight: 18 },
   accountLoading: { alignItems: 'center', paddingVertical: spacing.xl },
   accountSignIn: { gap: spacing.md, paddingVertical: spacing.md },
   accountActions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, paddingVertical: spacing.md },
-  accountError: { color: colors.danger, fontSize: 13, lineHeight: 18, paddingBottom: spacing.md },
+  accountError: { fontFamily: fonts.body, color: colors.danger, fontSize: 13, lineHeight: 18, paddingBottom: spacing.md },
   chips: { flexDirection: 'row', gap: spacing.xs },
   chip: {
     minWidth: 52,
@@ -340,7 +340,7 @@ const styles = StyleSheet.create({
     }),
   },
   chipActive: { borderColor: colors.accent, backgroundColor: colors.accent },
-  chipText: { color: colors.text, fontSize: 13, fontWeight: '800' },
+  chipText: { fontFamily: fonts.body, color: colors.text, fontSize: 13, fontWeight: '800' },
   chipTextActive: { color: '#241A00' },
   divider: { height: 1, backgroundColor: colors.border },
   soundRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingVertical: spacing.md },
@@ -375,7 +375,7 @@ const styles = StyleSheet.create({
       default: {},
     }),
   },
-  debugButtonText: { color: colors.text, fontSize: 13, fontWeight: '800' },
+  debugButtonText: { fontFamily: fonts.body, color: colors.text, fontSize: 13, fontWeight: '800' },
   debugButtonDanger: { borderColor: 'rgba(248, 113, 113, 0.5)', backgroundColor: colors.dangerSoft },
-  debugButtonDangerText: { color: colors.danger, fontSize: 13, fontWeight: '800' },
+  debugButtonDangerText: { fontFamily: fonts.body, color: colors.danger, fontSize: 13, fontWeight: '800' },
 });

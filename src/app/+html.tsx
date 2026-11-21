@@ -11,7 +11,7 @@ export default function Root({ children }: PropsWithChildren) {
         <meta charSet="utf-8" />
         <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, viewport-fit=cover" />
-        <title>Sla Bakken — het hoedenspel voor één telefoon</title>
+        <title>Sla Bakken • het hoedenspel voor één telefoon</title>
         <meta
           name="description"
           content="Sla Bakken (hoedenspel) met teams, geheime woorden en drie rondes: omschrijven, uitbeelden en één woord. Speel met één telefoon."

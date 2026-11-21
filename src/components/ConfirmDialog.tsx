@@ -1,7 +1,7 @@
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useFeedback } from '@/audio/FeedbackProvider';
 import { useI18n } from '@/i18n/LanguageProvider';
-import { colors, radius, spacing } from '@/theme';
+import { colors, radius, spacing, fonts } from '@/theme';
 
 type ConfirmDialogProps = {
   visible: boolean;
@@ -89,8 +89,8 @@ const styles = StyleSheet.create({
     padding: spacing.xl,
     gap: spacing.md,
   },
-  title: { color: colors.text, fontSize: 20, fontWeight: '900' },
-  message: { color: colors.muted, fontSize: 15, lineHeight: 21 },
+  title: { fontFamily: fonts.display, color: colors.text, fontSize: 20, fontWeight: '400' },
+  message: { fontFamily: fonts.body, color: colors.muted, fontSize: 15, lineHeight: 21 },
   actions: { flexDirection: 'row', gap: spacing.md, marginTop: spacing.sm },
   button: {
     flex: 1,
@@ -101,10 +101,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   cancel: { borderColor: colors.border, backgroundColor: colors.surfaceAlt },
-  cancelLabel: { color: colors.text, fontSize: 15, fontWeight: '800' },
+  cancelLabel: { fontFamily: fonts.body, color: colors.text, fontSize: 15, fontWeight: '800' },
   confirm: { borderColor: 'transparent', backgroundColor: colors.accent },
   confirmDestructive: { backgroundColor: colors.danger },
-  confirmLabel: { color: '#241A00', fontSize: 15, fontWeight: '900' },
+  confirmLabel: { fontFamily: fonts.body, color: '#241A00', fontSize: 15, fontWeight: '900' },
   confirmLabelDestructive: { color: '#2A0707' },
   pressed: { opacity: 0.75 },
 });

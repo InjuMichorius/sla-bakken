@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
-import { colors, radius } from '@/theme';
+import { colors, radius, fonts } from '@/theme';
 
 // const AVATAR_STYLE = 'toon-head';
 const AVATAR_STYLE = 'critters';
@@ -27,7 +27,7 @@ export function Avatar({ name, color, size = 44 }: AvatarProps) {
   if (failed) {
     return (
       <View style={[styles.fallback, { width: size, height: size, borderRadius: size / 2, backgroundColor: color }]}>
-        <Text style={[styles.initials, { fontSize: size * 0.36 }]}>{initials(name)}</Text>
+        <Text style={[styles.initials, { fontFamily: fonts.body, fontSize: size * 0.36 }]}>{initials(name)}</Text>
       </View>
     );
   }

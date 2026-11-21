@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
 import { Platform, StyleSheet, Text, View, ViewStyle } from 'react-native';
-import { colors, radius, spacing } from '@/theme';
+import { colors, radius, spacing, fonts } from '@/theme';
 
 type BadgeProps = {
   children: ReactNode;
@@ -40,5 +40,5 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     ...Platform.select({ web: { userSelect: 'none' as const }, default: {} }),
   },
-  text: { fontSize: 12, fontWeight: '800', letterSpacing: 0.3 },
+  text: { fontFamily: fonts.body, fontSize: 12, fontWeight: '800', letterSpacing: 0.3 },
 });

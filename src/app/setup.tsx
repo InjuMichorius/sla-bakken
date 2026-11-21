@@ -22,7 +22,7 @@ import { translateDefaultPlayerName, useI18n } from '@/i18n/LanguageProvider';
 import { getPlayerIdentity } from '@/lib/auth';
 import { haptics } from '@/lib/haptics';
 import { logAnalyticsEvent } from '@/lib/analytics';
-import { colors, noOutline, radius, spacing } from '@/theme';
+import { colors, noOutline, radius, spacing, fonts } from '@/theme';
 
 const TOTAL_STEPS = 3;
 
@@ -525,7 +525,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   playerPillEditing: { borderColor: colors.accent },
-  stepDotText: { color: colors.muted, fontSize: 13, fontWeight: '900' },
+  stepDotText: { fontFamily: fonts.body, color: colors.muted, fontSize: 13, fontWeight: '900' },
   stepDotTextActive: { color: '#241A00' },
   stepLine: { width: 56, height: 2, borderRadius: 1, backgroundColor: colors.border },
 
@@ -569,7 +569,7 @@ const styles = StyleSheet.create({
   swatchActive: { borderWidth: 2, borderColor: colors.text },
   swatchLocked: { opacity: 0.4 },
   headingRow: { alignItems: 'center', justifyContent: 'center', minHeight: 48 },
-  heading: { color: colors.text, fontSize: 30, fontWeight: '900', letterSpacing: -0.7 },
+  heading: { fontFamily: fonts.display, color: colors.text, fontSize: 30, fontWeight: '400', letterSpacing: -0.7 },
 
   players: { gap: spacing.sm },
   playerRow: { gap: spacing.xs },
@@ -597,7 +597,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.accent,
   },
-  playerName: { color: colors.text, fontSize: 17, fontWeight: '700' },
+  playerName: { fontFamily: fonts.body, color: colors.text, fontSize: 17, fontWeight: '700' },
   playerActions: { flexDirection: 'row', gap: spacing.sm },
   addPlayer: {
     flex: 1,
@@ -611,7 +611,7 @@ const styles = StyleSheet.create({
     borderStyle: 'dashed',
     borderColor: 'rgba(255, 255, 255, 0.28)',
   },
-  addPlayerText: { color: 'rgba(255, 255, 255, 0.72)', fontSize: 15, fontWeight: '400' },
+  addPlayerText: { fontFamily: fonts.body, color: 'rgba(255, 255, 255, 0.72)', fontSize: 15, fontWeight: '400' },
   scanPlayer: {
     flex: 1,
     flexDirection: 'row',
@@ -624,14 +624,14 @@ const styles = StyleSheet.create({
     borderStyle: 'dashed',
     borderColor: 'rgba(255, 255, 255, 0.28)',
   },
-  scanPlayerText: { color: 'rgba(255, 255, 255, 0.72)', fontSize: 15, fontWeight: '400' },
-  scanMessage: { color: colors.success, fontSize: 13, fontWeight: '700', lineHeight: 18, textAlign: 'center' },
+  scanPlayerText: { fontFamily: fonts.body, color: 'rgba(255, 255, 255, 0.72)', fontSize: 15, fontWeight: '400' },
+  scanMessage: { fontFamily: fonts.body, color: colors.success, fontSize: 13, fontWeight: '700', lineHeight: 18, textAlign: 'center' },
   scanMessageError: { color: colors.danger },
 
   editBlock: { flex: 1, gap: spacing.xs },
   editRow: { flex: 1, height: 48, flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  editTaken: { color: colors.danger, fontSize: 12, fontWeight: '800', textAlign: 'center' },
-  editInput: {
+  editTaken: { fontFamily: fonts.body, color: colors.danger, fontSize: 12, fontWeight: '800', textAlign: 'center' },
+  editInput: { fontFamily: fonts.body,
     flex: 1,
     height: 48,
     color: colors.text,

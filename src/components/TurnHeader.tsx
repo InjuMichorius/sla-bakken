@@ -4,7 +4,7 @@ import { Avatar } from '@/components/Avatar';
 import { Badge } from '@/components/Badge';
 import type { Player, Team } from '@/game/types';
 import { translateDefaultPlayerName, useI18n } from '@/i18n/LanguageProvider';
-import { colors, spacing } from '@/theme';
+import { colors, spacing, fonts } from '@/theme';
 
 type TurnHeaderProps = {
   team: Team;
@@ -37,6 +37,6 @@ const styles = StyleSheet.create({
   headRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   headText: { flex: 1 },
   headLabelRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  headLabel: { color: colors.muted, fontSize: 11, fontWeight: '800', letterSpacing: 1.2, textTransform: 'uppercase' },
-  headName: { color: colors.text, fontSize: 26, fontWeight: '900', letterSpacing: -0.5, marginTop: spacing.sm },
+  headLabel: { fontFamily: fonts.body, color: colors.muted, fontSize: 11, fontWeight: '800', letterSpacing: 1.2, textTransform: 'uppercase' },
+  headName: { fontFamily: fonts.display, color: colors.text, fontSize: 26, fontWeight: '400', letterSpacing: -0.5, marginTop: spacing.sm },
 });

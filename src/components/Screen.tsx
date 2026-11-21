@@ -1,7 +1,7 @@
 import { ReactNode } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View, ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { colors, spacing } from '@/theme';
+import { colors, spacing, fonts } from '@/theme';
 
 const MAX_WIDTH = 560;
 
@@ -71,7 +71,7 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     gap: spacing.lg,
   },
-  title: { color: colors.text, fontSize: 28, fontWeight: '900', letterSpacing: -0.5 },
+  title: { fontFamily: fonts.display, color: colors.text, fontSize: 28, fontWeight: '400', letterSpacing: -0.5 },
   topBarOuter: {
     width: '100%',
     maxWidth: MAX_WIDTH,
@@ -80,7 +80,7 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.md,
   },
   topBar: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, minHeight: 44 },
-  subtitle: { color: colors.muted, fontSize: 15, lineHeight: 22, marginTop: -spacing.sm },
+  subtitle: { fontFamily: fonts.body, color: colors.muted, fontSize: 15, lineHeight: 22, marginTop: -spacing.sm },
   footer: {
     paddingTop: spacing.md,
     paddingHorizontal: spacing.lg,

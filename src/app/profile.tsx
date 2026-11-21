@@ -13,7 +13,7 @@ import { EmailAuthForm } from '@/components/EmailAuthForm';
 import { QrScannerDialog } from '@/components/QrScannerDialog';
 import { Screen } from '@/components/Screen';
 import { useI18n } from '@/i18n/LanguageProvider';
-import { colors, radius, spacing } from '@/theme';
+import { colors, radius, spacing, fonts } from '@/theme';
 
 function formatDate(value: string | null | undefined, locale: string): string | null {
   if (!value) return null;
@@ -263,7 +263,7 @@ export default function ProfileScreen() {
 
 const styles = StyleSheet.create({
   content: { justifyContent: 'flex-start' },
-  headerTitle: {
+  headerTitle: { fontFamily: fonts.body,
     flex: 1,
     textAlign: 'center',
     color: colors.text,
@@ -299,7 +299,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.lg,
     paddingHorizontal: spacing.lg,
   },
-  name: { color: colors.text, fontSize: 24, fontWeight: '900', textAlign: 'center' },
+  name: { fontFamily: fonts.display, color: colors.text, fontSize: 24, fontWeight: '400', textAlign: 'center' },
   pointsPill: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -309,7 +309,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: 6,
   },
-  pointsText: { color: colors.accent, fontSize: 13, fontWeight: '800' },
+  pointsText: { fontFamily: fonts.body, color: colors.accent, fontSize: 13, fontWeight: '800' },
   qrButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -321,8 +321,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
   },
-  qrButtonText: { color: colors.text, fontSize: 13, fontWeight: '800' },
-  scanMessage: {
+  qrButtonText: { fontFamily: fonts.body, color: colors.text, fontSize: 13, fontWeight: '800' },
+  scanMessage: { fontFamily: fonts.body,
     color: colors.success,
     fontSize: 13,
     fontWeight: '800',
@@ -339,13 +339,13 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   friendsHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  friendsTitle: { color: colors.text, fontSize: 16, fontWeight: '900' },
-  friendsCount: { color: colors.muted, fontSize: 13, fontWeight: '800' },
+  friendsTitle: { fontFamily: fonts.body, color: colors.text, fontSize: 16, fontWeight: '900' },
+  friendsCount: { fontFamily: fonts.body, color: colors.muted, fontSize: 13, fontWeight: '800' },
   friendRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   friendInfo: { flex: 1, gap: 2 },
-  friendName: { color: colors.text, fontSize: 15, fontWeight: '700' },
+  friendName: { fontFamily: fonts.body, color: colors.text, fontSize: 15, fontWeight: '700' },
   friendPointsRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
-  friendPoints: { color: colors.muted, fontSize: 12, fontWeight: '700' },
+  friendPoints: { fontFamily: fonts.body, color: colors.muted, fontSize: 12, fontWeight: '700' },
   removeFriendButton: {
     width: 32,
     height: 32,
@@ -354,8 +354,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: colors.dangerSoft,
   },
-  friendsEmpty: { color: colors.muted, fontSize: 13, lineHeight: 19 },
-  hint: { color: colors.muted, fontSize: 14, lineHeight: 20, textAlign: 'center' },
+  friendsEmpty: { fontFamily: fonts.body, color: colors.muted, fontSize: 13, lineHeight: 19 },
+  hint: { fontFamily: fonts.body, color: colors.muted, fontSize: 14, lineHeight: 20, textAlign: 'center' },
   card: {
     backgroundColor: colors.surface,
     borderRadius: radius.lg,
@@ -377,8 +377,8 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     paddingVertical: spacing.lg,
   },
-  rowLabel: { color: colors.muted, fontSize: 14, fontWeight: '700' },
-  rowValue: { color: colors.text, fontSize: 15, fontWeight: '800', flexShrink: 1, textAlign: 'right' },
+  rowLabel: { fontFamily: fonts.body, color: colors.muted, fontSize: 14, fontWeight: '700' },
+  rowValue: { fontFamily: fonts.body, color: colors.text, fontSize: 15, fontWeight: '800', flexShrink: 1, textAlign: 'right' },
   divider: { height: 1, backgroundColor: colors.border },
-  error: { color: colors.danger, fontSize: 13, lineHeight: 18, textAlign: 'center' },
+  error: { fontFamily: fonts.body, color: colors.danger, fontSize: 13, lineHeight: 18, textAlign: 'center' },
 });
