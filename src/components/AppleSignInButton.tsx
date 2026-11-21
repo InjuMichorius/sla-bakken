@@ -56,8 +56,8 @@ export function AppleSignInButton({ onSuccess, style }: AppleSignInButtonProps) 
       const result = await signIn();
       if (!result.ok) return;
 
-      if (result.suggestedName !== null) {
-        setSuggestedName(result.suggestedName);
+      if (result.needsName) {
+        setSuggestedName(result.suggestedName ?? '');
         setCurrentName(result.currentName);
         setNamePromptOpen(true);
         return;

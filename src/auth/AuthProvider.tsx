@@ -13,6 +13,7 @@ import {
   signUpWithEmail as signUpWithEmailFromSupabase,
   updateProfileName as updateProfileNameFromSupabase,
   MAX_PROFILE_NAME_LENGTH,
+  isReservedProfileName,
   type Friend,
   type GameResultEntry,
   type PlayerGameStats,
@@ -25,6 +26,7 @@ export type AppleSignInOutcome = {
   canceled: boolean;
   suggestedName: string | null;
   currentName: string | null;
+  needsName: boolean;
 };
 
 type AuthContextValue = {
@@ -174,21 +176,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const result = await signInWithApple();
       if (result.canceled) {
-        return { ok: false, canceled: true, suggestedName: null, currentName: null };
+        return { ok: false, canceled: true, suggestedName: null, currentName: null, needsName: false };
       }
 
       const loadedProfile = result.userId ? await loadProfile(result.userId) : null;
       const needsName = !result.nameConfirmed;
+      const profileName = loadedProfile?.name;
+      const fallbackName = profileName && !isReservedProfileName(profileName) ? profileName : '';
+      const suggestedName = result.suggestedName && !isReservedProfileName(result.suggestedName)
+        ? result.suggestedName
+        : fallbackName;
 
       return {
         ok: true,
         canceled: false,
-        suggestedName: needsName ? (result.suggestedName ?? loadedProfile?.name ?? '') : null,
-        currentName: needsName ? (loadedProfile?.name ?? null) : null,
+        suggestedName: needsName ? suggestedName : null,
+        currentName: needsName ? (profileName ?? null) : null,
+        needsName,
       };
     } catch (signInError) {
       setError(errorMessage(signInError));
-      return { ok: false, canceled: false, suggestedName: null, currentName: null };
+      return { ok: false, canceled: false, suggestedName: null, currentName: null, needsName: false };
     }
   }, [loadProfile]);
 

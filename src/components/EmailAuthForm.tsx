@@ -5,7 +5,7 @@ import { useFeedback } from '@/audio/FeedbackProvider';
 import { useAuth } from '@/auth/AuthProvider';
 import { AppButton } from '@/components/AppButton';
 import { useI18n } from '@/i18n/LanguageProvider';
-import { MAX_PROFILE_NAME_LENGTH } from '@/lib/auth';
+import { isReservedProfileName, MAX_PROFILE_NAME_LENGTH } from '@/lib/auth';
 import { haptics } from '@/lib/haptics';
 import { colors, radius, spacing, fonts } from '@/theme';
 
@@ -61,6 +61,10 @@ export function EmailAuthForm() {
     }
     if (mode === 'signUp' && trimmedName.length > MAX_PROFILE_NAME_LENGTH) {
       setLocalError(t('auth.usernameTooLong', { n: MAX_PROFILE_NAME_LENGTH }));
+      return;
+    }
+    if (mode === 'signUp' && isReservedProfileName(trimmedName)) {
+      setLocalError(t('common.taken'));
       return;
     }
 

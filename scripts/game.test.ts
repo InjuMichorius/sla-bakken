@@ -7,6 +7,7 @@ import { DE_WORD_BANK } from '../src/game/wordBank.de.ts';
 import { FR_WORD_BANK } from '../src/game/wordBank.fr.ts';
 import type { GameState } from '../src/game/types.ts';
 import { initialGameState } from '../src/game/types.ts';
+import { isProfileNameFormatValid, isReservedProfileName, MAX_PROFILE_NAME_LENGTH } from '../src/lib/profileName.ts';
 
 let failures = 0;
 function check(name: string, fn: () => void) {
@@ -605,6 +606,25 @@ check('teamScoresOf gebruikt teamkleuren en scores', () => {
   assert.equal(rows[2].score, 0, 'ontbrekende score telt als 0');
   assert.equal(rows[0].color, '#60A5FA');
   assert.equal(rows[1].color, '#FB923C');
+});
+
+console.log('\nprofile names');
+check('standaardnamen zijn gereserveerd', () => {
+  for (const name of ['Speler', 'Speler 1', ' speler 12 ', 'Player 2', 'Spieler 3', 'Joueur 4']) {
+    assert.equal(isReservedProfileName(name), true, name);
+    assert.equal(isProfileNameFormatValid(name), false, name);
+  }
+});
+check('gewone namen blijven beschikbaar', () => {
+  for (const name of ['Inju', 'San ne', 'Spelers', 'Speler 1x']) {
+    assert.equal(isReservedProfileName(name), false, name);
+    assert.equal(isProfileNameFormatValid(name), true, name);
+  }
+});
+check('naamlimiet blijft maximaal 10 tekens', () => {
+  assert.equal(MAX_PROFILE_NAME_LENGTH, 10);
+  assert.equal(isProfileNameFormatValid('1234567890'), true);
+  assert.equal(isProfileNameFormatValid('12345678901'), false);
 });
 
 console.log(failures === 0 ? '\nAlles slaagt\n' : `\n${failures} test(s) gefaald\n`);

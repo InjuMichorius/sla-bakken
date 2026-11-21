@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
-import { LogOut, QrCode, ScanLine, Star, Trash2 } from 'lucide-react-native';
+import { LogOut, QrCode, ScanLine, SquarePen, Star, Trash2 } from 'lucide-react-native';
 import { useAuth } from '@/auth/AuthProvider';
 import { AccountQrDialog } from '@/components/AccountQrDialog';
+import { AppleNameDialog } from '@/components/AppleNameDialog';
 import { AppleSignInButton } from '@/components/AppleSignInButton';
 import { AuthDivider } from '@/components/AuthDivider';
 import { Avatar } from '@/components/Avatar';
@@ -30,6 +31,7 @@ export default function ProfileScreen() {
   const [scannerVisible, setScannerVisible] = useState(false);
   const [scanMessage, setScanMessage] = useState<string | null>(null);
   const [scanFailed, setScanFailed] = useState(false);
+  const [nameEditorOpen, setNameEditorOpen] = useState(false);
   const [friendToRemove, setFriendToRemove] = useState<(typeof friends)[number] | null>(null);
 
   const name = profile?.name?.trim() || t('common.unknown');
@@ -90,7 +92,16 @@ export default function ProfileScreen() {
         <>
           <View style={styles.hero}>
             <Avatar name={name} color={colors.accent} size={76} />
-            <Text style={styles.name}>{name}</Text>
+            <Pressable
+              onPress={() => setNameEditorOpen(true)}
+              accessibilityRole="button"
+              accessibilityLabel={t('profile.editName')}
+              hitSlop={8}
+              style={({ pressed }) => [styles.nameEditButton, pressed && styles.pressed]}
+            >
+              <Text style={styles.name}>{name}</Text>
+              <SquarePen size={16} color={colors.muted} />
+            </Pressable>
             <View style={styles.pointsPill}>
               <Star size={15} color={colors.accent} fill={colors.accent} />
               <Text style={styles.pointsText}>{t('settings.accountPoints', { n: points })}</Text>
@@ -115,7 +126,16 @@ export default function ProfileScreen() {
           <View style={styles.card}>
             <View style={styles.row}>
               <Text style={styles.rowLabel}>{t('profile.name')}</Text>
-              <Text style={styles.rowValue}>{name}</Text>
+              <Pressable
+                onPress={() => setNameEditorOpen(true)}
+                accessibilityRole="button"
+                accessibilityLabel={t('profile.editName')}
+                hitSlop={8}
+                style={({ pressed }) => [styles.rowValueButton, pressed && styles.pressed]}
+              >
+                <Text style={styles.rowValue}>{name}</Text>
+                <SquarePen size={14} color={colors.muted} />
+              </Pressable>
             </View>
             <View style={styles.divider} />
             <View style={styles.row}>
@@ -220,6 +240,14 @@ export default function ProfileScreen() {
 
       {session ? (
         <>
+          {nameEditorOpen ? (
+            <AppleNameDialog
+              initialName={profile?.name ?? ''}
+              currentName={profile?.name ?? null}
+              onSaved={() => setNameEditorOpen(false)}
+              onCancel={() => setNameEditorOpen(false)}
+            />
+          ) : null}
           <AccountQrDialog
             visible={qrVisible}
             userId={session.user.id}
@@ -300,6 +328,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
   },
   name: { fontFamily: fonts.display, color: colors.text, fontSize: 24, fontWeight: '400', textAlign: 'center' },
+  nameEditButton: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   pointsPill: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -379,6 +408,7 @@ const styles = StyleSheet.create({
   },
   rowLabel: { fontFamily: fonts.body, color: colors.muted, fontSize: 14, fontWeight: '700' },
   rowValue: { fontFamily: fonts.body, color: colors.text, fontSize: 15, fontWeight: '800', flexShrink: 1, textAlign: 'right' },
+  rowValueButton: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, flexShrink: 1 },
   divider: { height: 1, backgroundColor: colors.border },
   error: { fontFamily: fonts.body, color: colors.danger, fontSize: 13, lineHeight: 18, textAlign: 'center' },
 });

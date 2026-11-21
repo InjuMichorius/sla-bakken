@@ -3,6 +3,9 @@ import { FunctionsHttpError } from '@supabase/supabase-js';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import * as Crypto from 'expo-crypto';
 import { getSupabase } from './supabase';
+import { isProfileNameFormatValid, isReservedProfileName, MAX_PROFILE_NAME_LENGTH } from './profileName';
+
+export { MAX_PROFILE_NAME_LENGTH, isProfileNameFormatValid, isReservedProfileName } from './profileName';
 
 export type Profile = {
   id: string;
@@ -44,8 +47,6 @@ export type AppleSignInResult = {
   suggestedName: string | null;
   nameConfirmed: boolean;
 };
-
-export const MAX_PROFILE_NAME_LENGTH = 10;
 
 function formatFullName(fullName: AppleAuthentication.AppleAuthenticationFullName | null): string | null {
   if (!fullName) return null;
@@ -141,6 +142,8 @@ export async function signInWithEmail(email: string, password: string): Promise<
 }
 
 export async function isNameAvailable(name: string): Promise<boolean> {
+  if (!isProfileNameFormatValid(name)) return false;
+
   const { data, error } = await getSupabase().rpc('is_name_available', { p_name: name.trim() });
   if (error) throw error;
   return data === true;
@@ -150,6 +153,7 @@ export async function updateProfileName(name: string): Promise<void> {
   const trimmed = name.trim();
   if (!trimmed) throw new Error('name_required');
   if (trimmed.length > MAX_PROFILE_NAME_LENGTH) throw new Error('name_too_long');
+  if (isReservedProfileName(trimmed)) throw new Error('name_taken');
 
   const supabase = getSupabase();
   const {
@@ -216,6 +220,7 @@ export async function signUpWithEmail(
   const trimmedName = name.trim();
   if (!trimmedName) throw new Error('name_required');
   if (trimmedName.length > MAX_PROFILE_NAME_LENGTH) throw new Error('name_too_long');
+  if (isReservedProfileName(trimmedName)) throw new Error('name_taken');
   if (!(await isNameAvailable(trimmedName))) {
     throw new Error('name_taken');
   }

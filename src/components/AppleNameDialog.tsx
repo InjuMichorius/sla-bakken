@@ -3,6 +3,7 @@ import {
   KeyboardAvoidingView,
   Modal,
   Platform,
+  Pressable,
   StyleSheet,
   Text,
   TextInput,
@@ -12,7 +13,7 @@ import { useFeedback } from '@/audio/FeedbackProvider';
 import { useAuth } from '@/auth/AuthProvider';
 import { AppButton } from '@/components/AppButton';
 import { useI18n } from '@/i18n/LanguageProvider';
-import { isNameAvailable, MAX_PROFILE_NAME_LENGTH } from '@/lib/auth';
+import { isNameAvailable, isReservedProfileName, MAX_PROFILE_NAME_LENGTH } from '@/lib/auth';
 import { colors, noOutline, radius, spacing, fonts } from '@/theme';
 
 type CheckState = 'idle' | 'checking' | 'available' | 'taken' | 'error';
@@ -21,9 +22,10 @@ type AppleNameDialogProps = {
   initialName: string;
   currentName: string | null;
   onSaved: () => void;
+  onCancel?: () => void;
 };
 
-export function AppleNameDialog({ initialName, currentName, onSaved }: AppleNameDialogProps) {
+export function AppleNameDialog({ initialName, currentName, onSaved, onCancel }: AppleNameDialogProps) {
   const { t } = useI18n();
   const { play } = useFeedback();
   const { updateName, error, clearError } = useAuth();
@@ -33,14 +35,22 @@ export function AppleNameDialog({ initialName, currentName, onSaved }: AppleName
   );
   const [localError, setLocalError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const isEditing = onCancel !== undefined;
+  const title = t(isEditing ? 'auth.editNameTitle' : 'auth.appleNameTitle');
+  const hint = t(isEditing ? 'auth.editNameHint' : 'auth.appleNameHint', { n: MAX_PROFILE_NAME_LENGTH });
+  const saveLabel = t(isEditing ? 'auth.editNameSave' : 'auth.appleNameSave');
   const isCurrentName =
-    currentName !== null && name.trim().toLowerCase() === currentName.trim().toLowerCase();
+    !isReservedProfileName(name) &&
+    currentName !== null &&
+    name.trim().toLowerCase() === currentName.trim().toLowerCase();
   const effectiveCheckState: CheckState = isCurrentName ? 'available' : checkState;
 
   useEffect(() => {
     const trimmed = name.trim();
     if (!trimmed || trimmed.length > MAX_PROFILE_NAME_LENGTH) return;
-    if (currentName !== null && trimmed.toLowerCase() === currentName.trim().toLowerCase()) return;
+    if (!isReservedProfileName(trimmed) && currentName !== null && trimmed.toLowerCase() === currentName.trim().toLowerCase()) {
+      return;
+    }
 
     let active = true;
 
@@ -74,6 +84,10 @@ export function AppleNameDialog({ initialName, currentName, onSaved }: AppleName
     }
     if (trimmed.length > MAX_PROFILE_NAME_LENGTH) {
       setLocalError(t('auth.usernameTooLong', { n: MAX_PROFILE_NAME_LENGTH }));
+      return;
+    }
+    if (isReservedProfileName(trimmed)) {
+      setLocalError(t('auth.appleNameTaken'));
       return;
     }
     if (effectiveCheckState === 'checking') return;
@@ -110,19 +124,27 @@ export function AppleNameDialog({ initialName, currentName, onSaved }: AppleName
     !saving &&
     name.trim().length > 0 &&
     name.trim().length <= MAX_PROFILE_NAME_LENGTH &&
+    !isReservedProfileName(name) &&
     effectiveCheckState !== 'checking' &&
     effectiveCheckState !== 'taken' &&
     effectiveCheckState !== 'error';
 
   return (
-    <Modal visible transparent animationType="fade" onRequestClose={() => undefined}>
+    <Modal visible transparent animationType="fade" onRequestClose={onCancel ?? (() => undefined)}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={styles.backdrop}
       >
+        {onCancel ? (
+          <Pressable
+            style={StyleSheet.absoluteFill}
+            onPress={onCancel}
+            accessibilityLabel={t('common.cancel')}
+          />
+        ) : null}
         <View style={styles.card}>
-          <Text style={styles.title}>{t('auth.appleNameTitle')}</Text>
-          <Text style={styles.hint}>{t('auth.appleNameHint', { n: MAX_PROFILE_NAME_LENGTH })}</Text>
+          <Text style={styles.title}>{title}</Text>
+          <Text style={styles.hint}>{hint}</Text>
 
           <View style={styles.field}>
             <View style={styles.labelRow}>
@@ -162,8 +184,8 @@ export function AppleNameDialog({ initialName, currentName, onSaved }: AppleName
               accessibilityLiveRegion="polite"
               style={[
                 styles.status,
-                checkState === 'available' && styles.statusSuccess,
-                checkState === 'taken' && styles.statusDanger,
+                effectiveCheckState === 'available' && styles.statusSuccess,
+                effectiveCheckState === 'taken' && styles.statusDanger,
               ]}
             >
               {status}
@@ -177,13 +199,25 @@ export function AppleNameDialog({ initialName, currentName, onSaved }: AppleName
           ) : null}
 
           <AppButton
-            label={saving ? t('auth.busy') : t('auth.appleNameSave')}
+            label={saving ? t('auth.busy') : saveLabel}
             onPress={() => {
               void submit();
             }}
             disabled={!canSubmit}
             sound={null}
           />
+          {onCancel ? (
+            <AppButton
+              label={t('common.cancel')}
+              variant="secondary"
+              onPress={() => {
+                play('decline');
+                onCancel();
+              }}
+              disabled={saving}
+              sound={null}
+            />
+          ) : null}
         </View>
       </KeyboardAvoidingView>
     </Modal>
